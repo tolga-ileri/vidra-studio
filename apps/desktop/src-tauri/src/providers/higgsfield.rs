@@ -26,8 +26,15 @@ impl Higgsfield {
         }
     }
     fn auth(creds: &Creds) -> AppResult<String> {
-        let id = cred(creds, "key_id")?;
-        let secret = cred(creds, "key_secret")?;
+        let id = cred(creds, "key_id")?.trim();
+        // Higgsfield also shows keys as one "KEY_ID:KEY_SECRET" string; accept
+        // that pasted into the ID field (the secret field is then ignored).
+        if let Some((kid, ksecret)) = id.split_once(':') {
+            if !kid.trim().is_empty() && !ksecret.trim().is_empty() {
+                return Ok(format!("Key {}:{}", kid.trim(), ksecret.trim()));
+            }
+        }
+        let secret = cred(creds, "key_secret")?.trim();
         Ok(format!("Key {id}:{secret}"))
     }
     fn url(&self, path: &str) -> String {
@@ -73,8 +80,14 @@ impl Provider for Higgsfield {
         let auth = Self::auth(creds)?;
         let url = self.url(&format!("requests/{}/status", uuid::Uuid::new_v4()));
         let (status, body) = api_json(&self.net, Method::GET, &url, &auth, None, &[]).await?;
+        // Only an authentication failure means a bad key. The live API answers an
+        // unknown request id with 400/404/422 after accepting the key.
         match status.as_u16() {
-            200..=299 | 404 => Ok(()),
+            401 | 403 => Err(AppError::new(
+                ErrorCode::InvalidCredentials,
+                "Higgsfield rejected the credentials.",
+            )),
+            200..=299 | 400 | 404 | 422 => Ok(()),
             _ => Err(map_http(status, &body, self.id())),
         }
     }
@@ -249,6 +262,32 @@ mod tests {
     }
     fn c() -> Creds {
         creds(&[("key_id", "kid"), ("key_secret", "ksecret")])
+    }
+
+    #[tokio::test]
+    async fn validate_accepts_any_non_auth_answer_and_combined_keys() {
+        for code in [400u16, 404, 422] {
+            let s = MockServer::start().await;
+            Mock::given(method("GET"))
+                .and(path_regex("^/requests/.+/status$"))
+                .and(header("authorization", "Key kid:ksecret"))
+                .respond_with(ResponseTemplate::new(code).set_body_json(json!({"detail": "x"})))
+                .mount(&s)
+                .await;
+            hf(&s).validate(&c()).await.unwrap();
+            // "KEY_ID:KEY_SECRET" pasted into the ID field, with stray spaces.
+            let combined = creds(&[("key_id", " kid:ksecret "), ("key_secret", "")]);
+            hf(&s).validate(&combined).await.unwrap();
+        }
+        for code in [401u16, 403] {
+            let s = MockServer::start().await;
+            Mock::given(method("GET"))
+                .respond_with(ResponseTemplate::new(code))
+                .mount(&s)
+                .await;
+            let e = hf(&s).validate(&c()).await.unwrap_err();
+            assert_eq!(e.code, ErrorCode::InvalidCredentials);
+        }
     }
 
     #[tokio::test]

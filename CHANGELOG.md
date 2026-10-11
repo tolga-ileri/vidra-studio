@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-10-11
+
+### Fixed
+
+- Higgsfield key check: a valid key was reported as "Some values are not accepted by this model". Only 401/403 now count as a rejected key.
+- Higgsfield keys pasted as one `KEY_ID:KEY_SECRET` string, or with surrounding spaces, are accepted.
+
 ## [0.1.0] - 2026-10-11
 
 First public release.

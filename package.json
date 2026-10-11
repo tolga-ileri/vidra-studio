@@ -1,7 +1,7 @@
 {
   "name": "vidra-studio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vidra Studio — independent open-source AI video and image creation desktop app. By Tolga İleri.",
   "license": "MIT",
   "author": "Tolga İleri",
