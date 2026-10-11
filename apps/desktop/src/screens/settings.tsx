@@ -4,8 +4,9 @@ import { toast } from "sonner"
 import type { ImportPreview, Language } from "@vidra/core"
 
 import { BudgetPanel } from "@/components/app/budget-panel"
-import { Kv, PageHeader, Section, UrlField } from "@/components/app/common"
+import { Kv, PageHeader, Section } from "@/components/app/common"
 import { StorageSection } from "@/components/app/storage"
+import { offerUpdate } from "@/components/app/updater"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -158,13 +159,18 @@ export function SettingsScreen() {
               {checking ? <Loader2 className="animate-spin" /> : <RefreshCw />}
               {t("settings.checkUpdates")}
             </Button>
+            <span className="text-xs text-muted-foreground">{t("update.auto")}</span>
             {update === "none" && <span className="text-sm text-muted-foreground">{t("settings.updateUnknown")}</span>}
             {update && update !== "none" && (
               <div className="space-y-1 text-sm" role="status">
                 <p className={update.newer ? "text-success" : "text-muted-foreground"}>
                   {update.newer ? t("settings.updateAvailable", { version: update.latestVersion }) : t("settings.upToDate", { version: update.currentVersion })}
                 </p>
-                {update.newer && <UrlField url={update.url} />}
+                {update.newer && (
+                  <Button size="sm" onClick={() => offerUpdate(update.latestVersion)}>
+                    {t("update.install")}
+                  </Button>
+                )}
               </div>
             )}
           </div>

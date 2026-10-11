@@ -1,7 +1,9 @@
 name: Release
 
-# Builds the Windows installers from a version tag and creates a DRAFT
-# GitHub release. A maintainer reviews and publishes it manually.
+# Builds the Windows installers from a version tag and publishes the GitHub
+# release with a signed updater manifest (latest.json). Installed copies of
+# Vidra Studio pick the update up automatically through the Tauri updater,
+# which refuses any installer whose signature does not match the public key.
 on:
   push:
     tags: ["v*.*.*"]
@@ -48,6 +50,11 @@ jobs:
 
       - name: Build installers
         shell: pwsh
+        env:
+          # Updater signing key (minisign). Without it the build fails, so an
+          # unsigned update can never be published.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           $extra = @()
           if ($env:SIGNING_THUMBPRINT) {
@@ -59,7 +66,10 @@ jobs:
 
       - name: Collect artifacts, checksums and signing status
         shell: pwsh
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
+          if ($env:TAG -notmatch '^v\d+\.\d+\.\d+$') { throw "Unexpected tag: $env:TAG" }
           New-Item -ItemType Directory -Force release-artifacts | Out-Null
           # GitHub replaces spaces in asset names with dots; name files that way
           # up front so SHA256SUMS.txt matches the published asset names.
@@ -67,6 +77,22 @@ jobs:
           Copy-Item apps/desktop/src-tauri/target/release/vidra-studio.exe release-artifacts/Vidra-Studio-portable.exe
           $sums = Get-ChildItem release-artifacts -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
           $sums | Set-Content release-artifacts/SHA256SUMS.txt
+          # Updater manifest: points at the published installer and carries its signature.
+          $setup = Get-ChildItem apps/desktop/src-tauri/target/release/bundle/nsis -Filter *-setup.exe | Select-Object -First 1
+          $sig = Get-Content "$($setup.FullName).sig" -Raw
+          $asset = $setup.Name -replace ' ', '.'
+          $version = $env:TAG.TrimStart('v')
+          $manifest = [ordered]@{
+            version = $version
+            notes = "See https://github.com/tolga-ileri/vidra-studio/blob/main/CHANGELOG.md"
+            pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+            platforms = @{ "windows-x86_64" = @{ signature = $sig.Trim(); url = "https://github.com/tolga-ileri/vidra-studio/releases/download/$($env:TAG)/$asset" } }
+          }
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content release-artifacts/latest.json
+          # Gate: the published signature must verify against the public key
+          # embedded in the app, independently of Tauri, or nothing is released.
+          node scripts/verify-update-signature.mjs (Join-Path release-artifacts $asset) release-artifacts/latest.json
+          if ($LASTEXITCODE -ne 0) { throw "Updater signature verification failed" }
           $state = if ($env:SIGNING_THUMBPRINT) { "Authenticode-signed" } else { "UNSIGNED (no code-signing certificate configured)" }
           "Windows binaries in this release are: $state." | Set-Content release-artifacts/SIGNING.txt
 
@@ -75,7 +101,7 @@ jobs:
           name: vidra-studio-windows
           path: release-artifacts/
 
-      - name: Create draft release
+      - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }} # passed via env, never interpolated into the script
@@ -83,4 +109,4 @@ jobs:
         run: |
           if ($env:TAG -notmatch '^v\d+\.\d+\.\d+$') { throw "Unexpected tag: $env:TAG" }
           $notes = (Get-Content release-artifacts/SIGNING.txt -Raw) + "`nVerify downloads against SHA256SUMS.txt. See CHANGELOG.md for changes."
-          gh release create $env:TAG (Get-ChildItem release-artifacts -File).FullName --draft --title "Vidra Studio $env:TAG" --notes $notes
+          gh release create $env:TAG (Get-ChildItem release-artifacts -File).FullName --latest --title "Vidra Studio $env:TAG" --notes $notes

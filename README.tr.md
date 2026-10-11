@@ -86,6 +86,9 @@ Node.js, veritabanı veya komut satırı gerekmez.
 - **Model kataloğu güncellemeleri.** İmzalı (Ed25519), sürümlü model kaydı
   doğrulanmış model bilgilerini getirir. Bu sürümün güvenle çalıştıramadığı
   modeller *Güncelleme gerekli* olarak gösterilir.
+- **Otomatik güncelleme.** Vidra açılışta GitHub Releases'ı denetler ve imzalı
+  güncellemeyi tek tıkla kurup yeniden başlar. İmzasız ya da değiştirilmiş
+  kurulum dosyaları reddedilir.
 - Baştan sona **Türkçe ve İngilizce**.
 
 ## Desteklenen sağlayıcılar (v0.1)

@@ -138,3 +138,16 @@ pub fn validate_value(v: &str) -> AppResult<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod identity_tests {
+    /// Credentials and the default archive folder follow the app identity.
+    /// The shipped identity must keep matching what existing installs use.
+    #[test]
+    fn shipped_identity_keeps_existing_credentials_and_archive() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        assert_eq!(conf["identifier"], super::SERVICE);
+        assert_eq!(conf["productName"], "Vidra Studio");
+    }
+}

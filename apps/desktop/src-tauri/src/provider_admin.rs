@@ -44,8 +44,9 @@ pub fn list(core: &Core) -> AppResult<Vec<ProviderStatus>> {
 pub fn set_credentials(
     core: &Core,
     id: ProviderId,
-    values: HashMap<String, String>,
+    mut values: HashMap<String, String>,
 ) -> AppResult<()> {
+    split_combined_key(id, &mut values);
     let p = core.providers.get(id);
     let fields = p.credential_fields();
     for k in values.keys() {
@@ -67,6 +68,30 @@ pub fn set_credentials(
     )?;
     core.emit(StoreEvent::ProvidersChanged);
     Ok(())
+}
+
+/// Higgsfield shows its key as one "KEY_ID:KEY_SECRET" string. Accept it pasted
+/// into either field (the other left empty) by splitting it into both.
+fn split_combined_key(id: ProviderId, values: &mut HashMap<String, String>) {
+    if id != ProviderId::Higgsfield {
+        return;
+    }
+    let get = |v: &HashMap<String, String>, k: &str| {
+        v.get(k).map(|s| s.trim().to_string()).unwrap_or_default()
+    };
+    let (kid, secret) = (get(values, "key_id"), get(values, "key_secret"));
+    let combined = match (kid.contains(':'), secret.contains(':')) {
+        (true, _) if secret.is_empty() || secret == kid => kid,
+        (_, true) if kid.is_empty() => secret,
+        _ => return,
+    };
+    if let Some((a, b)) = combined.split_once(':') {
+        let (a, b) = (a.trim(), b.trim());
+        if !a.is_empty() && !b.is_empty() {
+            values.insert("key_id".into(), a.into());
+            values.insert("key_secret".into(), b.into());
+        }
+    }
 }
 
 pub fn remove_credentials(core: &Core, id: ProviderId) -> AppResult<()> {
@@ -169,5 +194,35 @@ mod tests {
         assert!(set_credentials(&e.core, ProviderId::Replicate, unknown).is_err());
         remove_credentials(&e.core, ProviderId::Higgsfield).unwrap();
         assert!(!status(&e.core, ProviderId::Higgsfield).unwrap().configured);
+    }
+}
+
+#[cfg(test)]
+mod split_tests {
+    use super::*;
+
+    fn run(kid: &str, secret: &str) -> (String, String) {
+        let mut v = HashMap::from([
+            ("key_id".to_string(), kid.to_string()),
+            ("key_secret".to_string(), secret.to_string()),
+        ]);
+        split_combined_key(ProviderId::Higgsfield, &mut v);
+        (v["key_id"].clone(), v["key_secret"].clone())
+    }
+
+    #[test]
+    fn splits_a_combined_higgsfield_key_from_either_field() {
+        let want = ("id-1".to_string(), "sec-2".to_string());
+        assert_eq!(run(" id-1:sec-2 ", ""), want);
+        assert_eq!(run("", "id-1:sec-2"), want);
+        assert_eq!(run("id-1:sec-2", "id-1:sec-2"), want);
+        assert_eq!(run("id-1", "sec-2"), want);
+    }
+
+    #[test]
+    fn leaves_other_providers_untouched() {
+        let mut v = HashMap::from([("api_token".to_string(), "a:b".to_string())]);
+        split_combined_key(ProviderId::Replicate, &mut v);
+        assert_eq!(v["api_token"], "a:b");
     }
 }

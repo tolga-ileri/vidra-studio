@@ -47,7 +47,7 @@ fn default_root<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
         .video_dir()
         .or_else(|_| app.path().home_dir().map(|h| h.join("Videos")))
         .unwrap_or_else(|_| PathBuf::from("."))
-        .join("Vidra Studio")
+        .join(&app.package_info().name)
 }
 
 /// `--smoke-test`: self-checks for packaged builds; prints JSON and exits.
@@ -114,6 +114,7 @@ pub fn smoke_test(archive_root: &Path) -> serde_json::Value {
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let handle = app.handle().clone();
             let root_default = default_root(&handle);
@@ -134,8 +135,11 @@ pub fn run() {
             let mut net = net::Net::new();
             // e2e builds use the real Windows Credential Manager in a
             // separate namespace so tests never touch real credentials.
+            // The credential namespace follows the app identifier
+            // ("dev.tolgaileri.vidra" for Vidra Studio), so a differently
+            // identified build never reads or writes Vidra Studio's keys.
             #[cfg(not(feature = "e2e-mock"))]
-            let secret_store = secrets::KeyringStore::new();
+            let secret_store = secrets::KeyringStore::with_service(&handle.config().identifier);
             #[cfg(feature = "e2e-mock")]
             let secret_store = secrets::KeyringStore::with_service("dev.tolgaileri.vidra.e2e");
             #[cfg(feature = "e2e-mock")]
@@ -197,6 +201,7 @@ pub fn run() {
             commands::reconnect_archive_root,
             commands::choose_export_dir,
             commands::check_for_updates,
+            commands::install_update,
             commands::open_external_url,
             commands::save_text_file,
             commands::list_providers,

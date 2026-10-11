@@ -164,8 +164,20 @@ pub async fn choose_export_dir<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn check_for_updates(core: S<'_>) -> AppResult<Option<UpdateInfo>> {
-    Ok(crate::updates::check(&core.net).await)
+pub async fn check_for_updates<R: Runtime>(app: AppHandle<R>) -> AppResult<Option<UpdateInfo>> {
+    Ok(crate::updates::check(&app).await)
+}
+
+#[tauri::command]
+pub async fn install_update<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    acknowledge_active: bool,
+) -> AppResult<()> {
+    let core = core.inner().clone();
+    let (jobs, downloads) = blocking(move || crate::updates::active_work(&core)).await??;
+    crate::updates::require_ack(jobs, downloads, acknowledge_active)?;
+    crate::updates::install(&app).await
 }
 
 /* ── Providers / models ────────────────────────────────────────────────── */
@@ -730,6 +742,7 @@ pub const COMMANDS: &[&str] = &[
     "reconnect_archive_root",
     "choose_export_dir",
     "check_for_updates",
+    "install_update",
     "open_external_url",
     "save_text_file",
     "list_providers",

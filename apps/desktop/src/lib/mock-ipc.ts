@@ -671,6 +671,7 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
     },
     checkForUpdates: () =>
       delay({ currentVersion: "0.1.0", latestVersion: "0.1.0", url: "https://github.com/tolga-ileri/vidra-studio/releases", newer: false }, 300),
+    installUpdate: async (_acknowledgeActive) => fail("not_found", "Vidra Studio is up to date."),
 
     openExternalUrl: async (url) => {
       window.open(url, "_blank", "noopener,noreferrer")

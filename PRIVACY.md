@@ -21,8 +21,10 @@ telemetry, no analytics and no crash reporting**. There is no Vidra server.
   Each provider's own privacy policy and terms apply to that data.
 - **To the provider's media host:** the download request that saves your
   finished output into your archive.
-- **To the GitHub API**, only when you click "Check for updates". This
-  request contains no personal data.
+- **To GitHub Releases**, once when Vidra starts and when you click "Check
+  for updates", to fetch the signed update manifest (`latest.json`). The
+  request contains no personal data. An update downloads only after you
+  click "Update now", and it installs only if its signature verifies.
 
 ## Exports
 

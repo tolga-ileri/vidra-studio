@@ -13,6 +13,7 @@ fn main() {
             "reconnect_archive_root",
             "choose_export_dir",
             "check_for_updates",
+            "install_update",
             "open_external_url",
             "save_text_file",
             "list_providers",
