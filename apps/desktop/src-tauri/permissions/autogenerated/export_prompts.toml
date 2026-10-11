@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-prompts"
+description = "Enables the export_prompts command without any pre-configured scope."
+commands.allow = ["export_prompts"]
+
+[[permission]]
+identifier = "deny-export-prompts"
+description = "Denies the export_prompts command without any pre-configured scope."
+commands.deny = ["export_prompts"]

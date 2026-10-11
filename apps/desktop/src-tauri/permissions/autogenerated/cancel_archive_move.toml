@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cancel-archive-move"
+description = "Enables the cancel_archive_move command without any pre-configured scope."
+commands.allow = ["cancel_archive_move"]
+
+[[permission]]
+identifier = "deny-cancel-archive-move"
+description = "Denies the cancel_archive_move command without any pre-configured scope."
+commands.deny = ["cancel_archive_move"]

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/tolga-ileri/vidra-studio/security/advisories/new
+    about: Report security issues privately.
+  - name: Provider billing or account questions
+    url: https://github.com/tolga-ileri/vidra-studio/blob/main/docs/providers
+    about: Vidra Studio is independent; contact the provider for account and billing issues.

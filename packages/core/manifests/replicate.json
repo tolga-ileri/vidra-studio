@@ -1,0 +1,2255 @@
+{
+  "format": "vidra.models",
+  "formatVersion": 2,
+  "provider": "replicate",
+  "version": "2026.10.11.1",
+  "source": "manifest",
+  "models": [
+    {
+      "id": "replicate:google/veo-3",
+      "provider": "replicate",
+      "providerModelId": "google/veo-3",
+      "displayName": "Veo 3",
+      "family": "Veo",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            4,
+            6,
+            8
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 8,
+          "unit": "s"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1080p"
+        },
+        {
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": false
+        },
+        {
+          "key": "image",
+          "apiField": "image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 8,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.4,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "generate_audio",
+              "op": "eq",
+              "value": false
+            },
+            "rate": 0.2,
+            "note": "without_audio tier"
+          }
+        ],
+        "source": "https://replicate.com/google/veo-3",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/google/veo-3/api",
+      "schemaVersion": "5e80c73750ffc5dfbe5cee2d694c6ed3da7706660d9132613e6736443b365464",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Start image ideally 1280x720 or 720x1280 (schema guidance, not enforced).",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:google/veo-3-fast",
+      "provider": "replicate",
+      "providerModelId": "google/veo-3-fast",
+      "displayName": "Veo 3 Fast",
+      "family": "Veo",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            4,
+            6,
+            8
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 8,
+          "unit": "s"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1080p"
+        },
+        {
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": false
+        },
+        {
+          "key": "image",
+          "apiField": "image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 8,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.15,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "generate_audio",
+              "op": "eq",
+              "value": false
+            },
+            "rate": 0.1,
+            "note": "without_audio tier"
+          }
+        ],
+        "source": "https://replicate.com/google/veo-3-fast",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/google/veo-3-fast/api",
+      "schemaVersion": "368d4063e21ecf73746b8e6d27989837d97ba07b5eca43a4e5488c852e10c2ec",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Start image ideally 1280x720 or 720x1280 (schema guidance, not enforced).",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:google/veo-3.1",
+      "provider": "replicate",
+      "providerModelId": "google/veo-3.1",
+      "displayName": "Veo 3.1",
+      "family": "Veo",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            4,
+            6,
+            8
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 8,
+          "unit": "s"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1080p"
+        },
+        {
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": false
+        },
+        {
+          "key": "image",
+          "apiField": "image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "last_frame",
+          "apiField": "last_frame",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "reference_images",
+          "apiField": "reference_images",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 3,
+          "shape": "url_array"
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "last_frame_needs_start",
+          "then": [
+            {
+              "op": "required",
+              "param": "image"
+            }
+          ],
+          "message": {
+            "en": "An end frame requires a start frame.",
+            "tr": "Bitiş karesi için başlangıç karesi gerekir."
+          },
+          "when": {
+            "param": "last_frame",
+            "op": "present"
+          }
+        },
+        {
+          "id": "refs_16_9_8s",
+          "then": [
+            {
+              "op": "in",
+              "param": "aspect_ratio",
+              "values": [
+                "16:9"
+              ]
+            },
+            {
+              "op": "in",
+              "param": "duration",
+              "values": [
+                8
+              ]
+            },
+            {
+              "op": "forbidden",
+              "param": "last_frame"
+            }
+          ],
+          "message": {
+            "en": "Reference images work only with 16:9 and 8 seconds; the end frame is ignored with references.",
+            "tr": "Referans görseller yalnızca 16:9 ve 8 saniye ile çalışır; referanslarla bitiş karesi yok sayılır."
+          },
+          "when": {
+            "param": "reference_images",
+            "op": "present"
+          }
+        },
+        {
+          "id": "refs_max3",
+          "then": [
+            {
+              "op": "max",
+              "param": "reference_images",
+              "value": 3
+            }
+          ],
+          "message": {
+            "en": "Up to 3 reference images.",
+            "tr": "En fazla 3 referans görsel."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 8,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.4,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "generate_audio",
+              "op": "eq",
+              "value": false
+            },
+            "rate": 0.2,
+            "note": "without_audio tier"
+          }
+        ],
+        "source": "https://replicate.com/google/veo-3.1",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/google/veo-3.1/api",
+      "schemaVersion": "9c6ca0c25d89ac6102278405a0673fd929b7793856870d2718e3a84a5aa4ad4d",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Start image ideally 1280x720 or 720x1280 (schema guidance, not enforced).",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:kwaivgi/kling-v2.1",
+      "provider": "replicate",
+      "providerModelId": "kwaivgi/kling-v2.1",
+      "displayName": "Kling v2.1",
+      "family": "Kling",
+      "workflow": "image-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "start_image",
+          "apiField": "start_image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": true,
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            5,
+            10
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "key": "mode",
+          "apiField": "mode",
+          "label": {
+            "en": "Mode",
+            "tr": "Mod"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "pro"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "standard",
+          "help": {
+            "en": "Standard is 720p, pro is 1080p; both 24 fps.",
+            "tr": "Standart 720p, pro 1080p; ikisi de 24 fps."
+          },
+          "valueLabels": {
+            "standard": {
+              "en": "Standard (720p)",
+              "tr": "Standart (720p)"
+            },
+            "pro": {
+              "en": "Pro (1080p)",
+              "tr": "Pro (1080p)"
+            }
+          }
+        },
+        {
+          "key": "end_image",
+          "apiField": "end_image",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        }
+      ],
+      "rules": [
+        {
+          "id": "end_needs_pro",
+          "then": [
+            {
+              "op": "in",
+              "param": "mode",
+              "values": [
+                "pro"
+              ]
+            }
+          ],
+          "message": {
+            "en": "An end frame requires pro mode.",
+            "tr": "Bitiş karesi için pro mod gerekir."
+          },
+          "when": {
+            "param": "end_image",
+            "op": "present"
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 10,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.05,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "mode",
+              "op": "eq",
+              "value": "pro"
+            },
+            "rate": 0.09,
+            "note": "pro tier"
+          }
+        ],
+        "source": "https://replicate.com/kwaivgi/kling-v2.1",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/kwaivgi/kling-v2.1/api",
+      "schemaVersion": "daad218feb714b03e2a1ac445986aebb9d05243cd00da2af17be2e4049f48f69",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:kwaivgi/kling-v2.5-turbo-pro",
+      "provider": "replicate",
+      "providerModelId": "kwaivgi/kling-v2.5-turbo-pro",
+      "displayName": "Kling v2.5 Turbo Pro",
+      "family": "Kling",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            5,
+            10
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9",
+          "help": {
+            "en": "Ignored when a start frame is given.",
+            "tr": "Başlangıç karesi verilirse yok sayılır."
+          }
+        },
+        {
+          "key": "start_image",
+          "apiField": "start_image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "end_image",
+          "apiField": "end_image",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 10,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.07,
+          "durationParam": "duration"
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/kwaivgi/kling-v2.5-turbo-pro",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/kwaivgi/kling-v2.5-turbo-pro/api",
+      "schemaVersion": "a3ccc39250a72749ced345996ec06d96d1d032b1a1369f45f3b9f654324036b5",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Deprecated inputs image and guidance_scale (unused) not exposed.",
+        "Whether end_image works without start_image is not documented.",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:minimax/hailuo-02",
+      "provider": "replicate",
+      "providerModelId": "minimax/hailuo-02",
+      "displayName": "Hailuo 02",
+      "family": "Hailuo",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            6,
+            10
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 6,
+          "unit": "s"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "512p",
+            "768p",
+            "1080p"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1080p"
+        },
+        {
+          "key": "first_frame_image",
+          "apiField": "first_frame_image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "last_frame_image",
+          "apiField": "last_frame_image",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "prompt_optimizer",
+          "apiField": "prompt_optimizer",
+          "label": {
+            "en": "Prompt optimizer",
+            "tr": "İstem iyileştirici"
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "no_1080p_10s",
+          "then": [
+            {
+              "op": "in",
+              "param": "resolution",
+              "values": [
+                "512p",
+                "768p"
+              ]
+            }
+          ],
+          "message": {
+            "en": "10-second videos are not available at 1080p.",
+            "tr": "10 saniyelik video 1080p çözünürlükte kullanılamaz."
+          },
+          "when": {
+            "param": "duration",
+            "op": "eq",
+            "value": 10
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 10,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.48
+        },
+        "adjustments": [
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "512p"
+                },
+                {
+                  "param": "duration",
+                  "op": "eq",
+                  "value": 6
+                }
+              ]
+            },
+            "rate": 0.1,
+            "note": "512p 6s"
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "512p"
+                },
+                {
+                  "param": "duration",
+                  "op": "eq",
+                  "value": 10
+                }
+              ]
+            },
+            "rate": 0.15,
+            "note": "512p 10s"
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "768p"
+                },
+                {
+                  "param": "duration",
+                  "op": "eq",
+                  "value": 6
+                }
+              ]
+            },
+            "rate": 0.27,
+            "note": "768p 6s"
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "768p"
+                },
+                {
+                  "param": "duration",
+                  "op": "eq",
+                  "value": 10
+                }
+              ]
+            },
+            "rate": 0.45,
+            "note": "768p 10s"
+          }
+        ],
+        "source": "https://replicate.com/minimax/hailuo-02",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11",
+        "notes": "Billed per output video; base rate is 1080p 6s."
+      },
+      "docsUrl": "https://replicate.com/minimax/hailuo-02/api",
+      "schemaVersion": "baaadb886e09b1e711387e270d841930e8253f08775bc6cb176580658f0f2fd9",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Schema text says 10 s is only for 768p, but the billing table also lists 512p 10 s; 512p 10 s left allowed.",
+        "Output aspect ratio follows the first frame image; no aspect_ratio input.",
+        "Whether last_frame_image requires first_frame_image is not documented.",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:bytedance/seedance-1-pro",
+      "provider": "replicate",
+      "providerModelId": "bytedance/seedance-1-pro",
+      "displayName": "Seedance 1 Pro",
+      "family": "Seedance",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 12,
+          "advanced": false,
+          "default": 5,
+          "step": 1
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1080p"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9",
+            "9:21"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9",
+          "help": {
+            "en": "Ignored when a start frame is given.",
+            "tr": "Başlangıç karesi verilirse yok sayılır."
+          }
+        },
+        {
+          "key": "fps",
+          "apiField": "fps",
+          "label": {
+            "en": "Frame rate",
+            "tr": "Kare hızı"
+          },
+          "type": "enum",
+          "values": [
+            24
+          ],
+          "valueType": "number",
+          "advanced": true,
+          "default": 24,
+          "unit": "fps"
+        },
+        {
+          "key": "camera_fixed",
+          "apiField": "camera_fixed",
+          "label": {
+            "en": "Fixed camera",
+            "tr": "Sabit kamera"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": false
+        },
+        {
+          "key": "image",
+          "apiField": "image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "last_frame_image",
+          "apiField": "last_frame_image",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "last_frame_needs_start",
+          "then": [
+            {
+              "op": "required",
+              "param": "image"
+            }
+          ],
+          "message": {
+            "en": "An end frame requires a start frame.",
+            "tr": "Bitiş karesi için başlangıç karesi gerekir."
+          },
+          "when": {
+            "param": "last_frame_image",
+            "op": "present"
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 12,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.15,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "480p"
+            },
+            "rate": 0.03,
+            "note": "480p"
+          },
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "720p"
+            },
+            "rate": 0.06,
+            "note": "720p"
+          }
+        ],
+        "source": "https://replicate.com/bytedance/seedance-1-pro",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/bytedance/seedance-1-pro/api",
+      "schemaVersion": "a5fd550893da3b6f67997812759065652454ddaca10e96b83b59cbae1814cb36",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:luma/ray-2-720p",
+      "provider": "replicate",
+      "providerModelId": "luma/ray-2-720p",
+      "displayName": "Ray 2 (720p)",
+      "family": "Ray",
+      "workflow": "text-to-video",
+      "output": "video",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "type": "enum",
+          "values": [
+            5,
+            9
+          ],
+          "valueType": "number",
+          "advanced": false,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "3:4",
+            "4:3",
+            "9:16",
+            "16:9",
+            "9:21",
+            "21:9"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "16:9"
+        },
+        {
+          "key": "loop",
+          "apiField": "loop",
+          "label": {
+            "en": "Loop",
+            "tr": "Döngü"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": false
+        },
+        {
+          "key": "start_image",
+          "apiField": "start_image",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        },
+        {
+          "key": "end_image",
+          "apiField": "end_image",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url"
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 9,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.18,
+          "durationParam": "duration"
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/luma/ray-2-720p",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/luma/ray-2-720p/api",
+      "schemaVersion": "3ca2bc3597e124149bcae1f9c239790a58ba0f1aa72e1c8747192d2b44284dc4",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "concepts (array of camera-concept strings) not exposed: manifest v2 has no multi-select string param type.",
+        "Deprecated start_image_url/end_image_url not exposed.",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:black-forest-labs/flux-1.1-pro",
+      "provider": "replicate",
+      "providerModelId": "black-forest-labs/flux-1.1-pro",
+      "displayName": "FLUX1.1 [pro]",
+      "family": "FLUX",
+      "workflow": "text-to-image",
+      "output": "image",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "custom",
+            "1:1",
+            "16:9",
+            "3:2",
+            "2:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "3:4",
+            "4:3"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1:1"
+        },
+        {
+          "key": "width",
+          "apiField": "width",
+          "label": {
+            "en": "Width",
+            "tr": "Genişlik"
+          },
+          "type": "integer",
+          "min": 256,
+          "max": 1440,
+          "advanced": false,
+          "step": 32
+        },
+        {
+          "key": "height",
+          "apiField": "height",
+          "label": {
+            "en": "Height",
+            "tr": "Yükseklik"
+          },
+          "type": "integer",
+          "min": 256,
+          "max": 1440,
+          "advanced": false,
+          "step": 32
+        },
+        {
+          "key": "image_prompt",
+          "apiField": "image_prompt",
+          "label": {
+            "en": "Image prompt (Redux)",
+            "tr": "Görsel istem (Redux)"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "gif",
+            "webp"
+          ]
+        },
+        {
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "Output format",
+            "tr": "Çıktı biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "webp",
+            "jpg",
+            "png"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "webp"
+        },
+        {
+          "key": "output_quality",
+          "apiField": "output_quality",
+          "label": {
+            "en": "Output quality",
+            "tr": "Çıktı kalitesi"
+          },
+          "type": "integer",
+          "min": 0,
+          "max": 100,
+          "advanced": true,
+          "default": 80,
+          "help": {
+            "en": "Not used for PNG output.",
+            "tr": "PNG çıktısında kullanılmaz."
+          }
+        },
+        {
+          "key": "safety_tolerance",
+          "apiField": "safety_tolerance",
+          "label": {
+            "en": "Safety tolerance",
+            "tr": "Güvenlik toleransı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 6,
+          "advanced": true,
+          "default": 2,
+          "help": {
+            "en": "Lower is stricter.",
+            "tr": "Düşük değer daha katıdır."
+          }
+        },
+        {
+          "key": "prompt_upsampling",
+          "apiField": "prompt_upsampling",
+          "label": {
+            "en": "Prompt upsampling",
+            "tr": "İstemi otomatik geliştir"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": true
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "custom_dims",
+          "then": [
+            {
+              "op": "required",
+              "param": "width"
+            },
+            {
+              "op": "required",
+              "param": "height"
+            }
+          ],
+          "message": {
+            "en": "Custom aspect ratio needs width and height.",
+            "tr": "Özel en-boy oranı için genişlik ve yükseklik gerekir."
+          },
+          "when": {
+            "param": "aspect_ratio",
+            "op": "eq",
+            "value": "custom"
+          }
+        },
+        {
+          "id": "dims_only_custom",
+          "then": [
+            {
+              "op": "forbidden",
+              "param": "width"
+            },
+            {
+              "op": "forbidden",
+              "param": "height"
+            }
+          ],
+          "message": {
+            "en": "Width and height are used only with the custom aspect ratio.",
+            "tr": "Genişlik ve yükseklik yalnızca özel en-boy oranıyla kullanılır."
+          },
+          "when": {
+            "param": "aspect_ratio",
+            "op": "neq",
+            "value": "custom"
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.04
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/black-forest-labs/flux-1.1-pro",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/black-forest-labs/flux-1.1-pro/api",
+      "schemaVersion": "609793a667ed94b210242837d3c3c9fc9a64ae93685f15d75002ba0ed9a97f2b",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Width/height that are not multiples of 32 are rounded by the provider.",
+        "Requiring width+height with custom is inferred from 'only used when aspect_ratio=custom'.",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:black-forest-labs/flux-1.1-pro-ultra",
+      "provider": "replicate",
+      "providerModelId": "black-forest-labs/flux-1.1-pro-ultra",
+      "displayName": "FLUX1.1 [pro] ultra",
+      "family": "FLUX",
+      "workflow": "text-to-image",
+      "output": "image",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "21:9",
+            "16:9",
+            "3:2",
+            "4:3",
+            "5:4",
+            "1:1",
+            "4:5",
+            "3:4",
+            "2:3",
+            "9:16",
+            "9:21"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1:1"
+        },
+        {
+          "key": "image_prompt",
+          "apiField": "image_prompt",
+          "label": {
+            "en": "Image prompt (Redux)",
+            "tr": "Görsel istem (Redux)"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "gif",
+            "webp"
+          ]
+        },
+        {
+          "key": "image_prompt_strength",
+          "apiField": "image_prompt_strength",
+          "label": {
+            "en": "Image prompt strength",
+            "tr": "Görsel istem gücü"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "advanced": true,
+          "default": 0.1,
+          "step": 0.05
+        },
+        {
+          "key": "raw",
+          "apiField": "raw",
+          "label": {
+            "en": "Raw mode",
+            "tr": "Ham mod"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": false,
+          "help": {
+            "en": "Less processed, more natural images.",
+            "tr": "Daha az işlenmiş, daha doğal görseller."
+          }
+        },
+        {
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "Output format",
+            "tr": "Çıktı biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "jpg",
+            "png"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "jpg"
+        },
+        {
+          "key": "safety_tolerance",
+          "apiField": "safety_tolerance",
+          "label": {
+            "en": "Safety tolerance",
+            "tr": "Güvenlik toleransı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 6,
+          "advanced": true,
+          "default": 2,
+          "help": {
+            "en": "Lower is stricter.",
+            "tr": "Düşük değer daha katıdır."
+          }
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.06
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/black-forest-labs/flux-1.1-pro-ultra",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/black-forest-labs/flux-1.1-pro-ultra/api",
+      "schemaVersion": "551f15a1f56b90795ed34e94f11efb17196a5145bf2ae58fbf2d7e7d8bb42aaf",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:black-forest-labs/flux-schnell",
+      "provider": "replicate",
+      "providerModelId": "black-forest-labs/flux-schnell",
+      "displayName": "FLUX.1 [schnell]",
+      "family": "FLUX",
+      "workflow": "text-to-image",
+      "output": "image",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "16:9",
+            "21:9",
+            "3:2",
+            "2:3",
+            "4:5",
+            "5:4",
+            "3:4",
+            "4:3",
+            "9:16",
+            "9:21"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1:1"
+        },
+        {
+          "key": "num_outputs",
+          "apiField": "num_outputs",
+          "label": {
+            "en": "Images",
+            "tr": "Görsel sayısı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 4,
+          "advanced": false,
+          "default": 1,
+          "step": 1
+        },
+        {
+          "key": "megapixels",
+          "apiField": "megapixels",
+          "label": {
+            "en": "Megapixels",
+            "tr": "Megapiksel"
+          },
+          "type": "enum",
+          "values": [
+            "1",
+            "0.25"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "1"
+        },
+        {
+          "key": "num_inference_steps",
+          "apiField": "num_inference_steps",
+          "label": {
+            "en": "Steps",
+            "tr": "Adım sayısı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 4,
+          "advanced": true,
+          "default": 4,
+          "step": 1
+        },
+        {
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "Output format",
+            "tr": "Çıktı biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "webp",
+            "jpg",
+            "png"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "webp"
+        },
+        {
+          "key": "output_quality",
+          "apiField": "output_quality",
+          "label": {
+            "en": "Output quality",
+            "tr": "Çıktı kalitesi"
+          },
+          "type": "integer",
+          "min": 0,
+          "max": 100,
+          "advanced": true,
+          "default": 80,
+          "help": {
+            "en": "Not used for PNG output.",
+            "tr": "PNG çıktısında kullanılmaz."
+          }
+        },
+        {
+          "key": "go_fast",
+          "apiField": "go_fast",
+          "label": {
+            "en": "Go fast",
+            "tr": "Hızlı mod"
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": true
+        },
+        {
+          "key": "disable_safety_checker",
+          "apiField": "disable_safety_checker",
+          "label": {
+            "en": "Disable safety checker",
+            "tr": "Güvenlik denetleyicisini kapat"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": true
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 4
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output[]",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.003,
+          "countParam": "num_outputs"
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/black-forest-labs/flux-schnell",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11",
+        "notes": "Published as $3 per thousand output images."
+      },
+      "docsUrl": "https://replicate.com/black-forest-labs/flux-schnell/api",
+      "schemaVersion": "c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:black-forest-labs/flux-kontext-pro",
+      "provider": "replicate",
+      "providerModelId": "black-forest-labs/flux-kontext-pro",
+      "displayName": "FLUX.1 Kontext [pro]",
+      "family": "FLUX",
+      "workflow": "image-edit",
+      "output": "image",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "input_image",
+          "apiField": "input_image",
+          "label": {
+            "en": "Input image",
+            "tr": "Girdi görseli"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "required": false,
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "gif",
+            "webp"
+          ]
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "match_input_image",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "4:5",
+            "5:4",
+            "21:9",
+            "9:21",
+            "2:1",
+            "1:2"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "match_input_image"
+        },
+        {
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "Output format",
+            "tr": "Çıktı biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "jpg",
+            "png"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "png"
+        },
+        {
+          "key": "safety_tolerance",
+          "apiField": "safety_tolerance",
+          "label": {
+            "en": "Safety tolerance",
+            "tr": "Güvenlik toleransı"
+          },
+          "type": "integer",
+          "min": 0,
+          "max": 6,
+          "advanced": true,
+          "default": 2,
+          "help": {
+            "en": "Lower is stricter.",
+            "tr": "Düşük değer daha katıdır."
+          }
+        },
+        {
+          "key": "prompt_upsampling",
+          "apiField": "prompt_upsampling",
+          "label": {
+            "en": "Prompt upsampling",
+            "tr": "İstemi otomatik geliştir"
+          },
+          "type": "boolean",
+          "default": false,
+          "advanced": true
+        },
+        {
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "type": "seed",
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "edit_input",
+          "then": [
+            {
+              "op": "anyOf",
+              "params": [
+                "input_image",
+                "prompt"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Add a prompt or an input image.",
+            "tr": "Bir istem ya da girdi görseli ekleyin."
+          }
+        },
+        {
+          "id": "safety_with_image",
+          "then": [
+            {
+              "op": "max",
+              "param": "safety_tolerance",
+              "value": 2
+            }
+          ],
+          "message": {
+            "en": "Safety tolerance is at most 2 when an input image is used.",
+            "tr": "Girdi görseli kullanıldığında güvenlik toleransı en fazla 2 olabilir."
+          },
+          "when": {
+            "param": "input_image",
+            "op": "present"
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.04
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/black-forest-labs/flux-kontext-pro",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/black-forest-labs/flux-kontext-pro/api",
+      "schemaVersion": "897a70f5a7dbd8a0611413b3b98cf417b45f266bd595c571a22947619d9ae462",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "input_image is optional in the schema (pure text-to-image also works).",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    },
+    {
+      "id": "replicate:google/imagen-4",
+      "provider": "replicate",
+      "providerModelId": "google/imagen-4",
+      "displayName": "Imagen 4",
+      "family": "Imagen",
+      "workflow": "text-to-image",
+      "output": "image",
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 5000
+      },
+      "params": [
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "9:16",
+            "16:9",
+            "3:4",
+            "4:3"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1:1"
+        },
+        {
+          "key": "image_size",
+          "apiField": "image_size",
+          "label": {
+            "en": "Image size",
+            "tr": "Görsel boyutu"
+          },
+          "type": "enum",
+          "values": [
+            "1K",
+            "2K"
+          ],
+          "valueType": "string",
+          "advanced": false,
+          "default": "1K"
+        },
+        {
+          "key": "safety_filter_level",
+          "apiField": "safety_filter_level",
+          "label": {
+            "en": "Safety filter",
+            "tr": "Güvenlik filtresi"
+          },
+          "type": "enum",
+          "values": [
+            "block_low_and_above",
+            "block_medium_and_above",
+            "block_only_high"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "block_only_high"
+        },
+        {
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "Output format",
+            "tr": "Çıktı biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "jpg",
+            "png"
+          ],
+          "valueType": "string",
+          "advanced": true,
+          "default": "jpg"
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "fixed": {}
+      },
+      "outputPath": "output",
+      "pricing": {
+        "status": "verified",
+        "currency": "USD",
+        "formula": {
+          "kind": "per_output",
+          "rate": 0.04
+        },
+        "adjustments": [],
+        "source": "https://replicate.com/google/imagen-4",
+        "pricingPageUrl": "https://replicate.com/pricing",
+        "verifiedAt": "2026-10-11"
+      },
+      "docsUrl": "https://replicate.com/google/imagen-4/api",
+      "schemaVersion": "238bcc930d7acb8dfbcd9b4363df1fc4746c1cdb6c3fc657d63df4749ea89471",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No seed or negative prompt input in the current schema.",
+        "Prompt max length is not documented in the schema; 5000 (and 2500 for negative prompt) are Vidra UI caps."
+      ]
+    }
+  ]
+}

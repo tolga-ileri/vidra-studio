@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-media-path"
+description = "Enables the media_path command without any pre-configured scope."
+commands.allow = ["media_path"]
+
+[[permission]]
+identifier = "deny-media-path"
+description = "Denies the media_path command without any pre-configured scope."
+commands.deny = ["media_path"]

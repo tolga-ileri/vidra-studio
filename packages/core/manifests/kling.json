@@ -1,0 +1,896 @@
+{
+  "format": "vidra.models",
+  "formatVersion": 2,
+  "provider": "kling",
+  "version": "2026.10.11.1",
+  "source": "manifest",
+  "models": [
+    {
+      "id": "kling:text-to-video/kling-3.0",
+      "provider": "kling",
+      "family": "Kling",
+      "output": "video",
+      "availability": "available",
+      "lastVerified": "2026-10-11",
+      "outputPath": "outputs[].url",
+      "providerModelId": "text-to-video/kling-3.0",
+      "displayName": "Kling 3.0",
+      "version": "3.0",
+      "workflow": "text-to-video",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 3072
+      },
+      "params": [
+        {
+          "key": "duration",
+          "apiField": "settings.duration",
+          "label": {
+            "en": "Duration (s)",
+            "tr": "Süre (sn)"
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "key": "resolution",
+          "apiField": "settings.resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p",
+              "tr": "720p"
+            },
+            "1080p": {
+              "en": "1080p",
+              "tr": "1080p"
+            },
+            "4k": {
+              "en": "4K",
+              "tr": "4K"
+            }
+          }
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "settings.aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "key": "generate_audio",
+          "apiField": "settings.audio",
+          "label": {
+            "en": "Native audio",
+            "tr": "Yerel ses"
+          },
+          "help": {
+            "en": "Generates audio matching the visuals.",
+            "tr": "Görüntüyle uyumlu ses üretir."
+          },
+          "type": "boolean",
+          "default": false,
+          "encode": [
+            "native",
+            "off"
+          ]
+        },
+        {
+          "key": "multi_shot",
+          "apiField": "settings.multi_shot",
+          "label": {
+            "en": "Multi-shot",
+            "tr": "Çoklu çekim"
+          },
+          "help": {
+            "en": "When off, multi-shot prompts (\"shot n, m, words;\") produce a single shot.",
+            "tr": "Kapalıyken çoklu çekim istemleri (\"shot n, m, words;\") tek çekim üretir."
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "pricing": {
+        "status": "verified",
+        "currency": "credits",
+        "unitName": "Kling units",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.6,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "4k"
+            },
+            "rate": 3,
+            "note": "4K: 3.0 units/s with or without audio"
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "generate_audio",
+                  "op": "eq",
+                  "value": true
+                },
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "1080p"
+                }
+              ]
+            },
+            "rate": 1.2,
+            "note": "1080p native audio"
+          },
+          {
+            "when": {
+              "param": "generate_audio",
+              "op": "eq",
+              "value": true
+            },
+            "rate": 0.9,
+            "note": "720p native audio"
+          },
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "1080p"
+            },
+            "rate": 0.8,
+            "note": "1080p no audio"
+          }
+        ],
+        "from": false,
+        "source": "https://kling.ai/document-api/pricing/base/video.md",
+        "pricingPageUrl": "https://kling.ai/document-api/pricing/base/video.md",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Kling 3.0 resource-package units per second (720p/1080p/4K): 0.6/0.8/3.0 without audio, 0.9/1.2/3.0 with native audio (no voice control). Units are not converted to money."
+      },
+      "docsUrl": "https://kling.ai/document-api/api/video/3-0-omni/text-to-video.md",
+      "schemaVersion": "kling-api new design (3.0 & 3.0 Omni), fetched 2026-10-11",
+      "unverified": [
+        "Voice control not exposed",
+        "options.watermark_info / callback_url not exposed",
+        "fps not documented"
+      ],
+      "request": {
+        "path": "text-to-video/kling-3.0",
+        "fixed": {}
+      }
+    },
+    {
+      "id": "kling:image-to-video/kling-3.0",
+      "provider": "kling",
+      "family": "Kling",
+      "output": "video",
+      "availability": "available",
+      "lastVerified": "2026-10-11",
+      "outputPath": "outputs[].url",
+      "providerModelId": "image-to-video/kling-3.0",
+      "displayName": "Kling 3.0 (image to video)",
+      "version": "3.0",
+      "workflow": "image-to-video",
+      "prompt": {
+        "apiField": "contents.prompt",
+        "required": false,
+        "maxLength": 3072
+      },
+      "params": [
+        {
+          "key": "image",
+          "apiField": "contents.first_frame",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "JPG or PNG, max 50 MB, at least 300 px per side, aspect between 1:2.5 and 2.5:1.",
+            "tr": "JPG veya PNG, en fazla 50 MB, her kenar en az 300 px, en-boy oranı 1:2,5 ile 2,5:1 arasında."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "maxItems": 1,
+          "shape": "url",
+          "required": true,
+          "maxSizeMb": 50,
+          "formats": [
+            "jpg",
+            "jpeg",
+            "png"
+          ]
+        },
+        {
+          "key": "end_image",
+          "apiField": "contents.last_frame",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional; needs a start frame. JPG or PNG, max 50 MB, at least 300 px, aspect 1:2.5–2.5:1.",
+            "tr": "İsteğe bağlı; başlangıç karesi gerektirir. JPG veya PNG, en fazla 50 MB, en az 300 px, en-boy oranı 1:2,5–2,5:1."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "maxItems": 1,
+          "shape": "url",
+          "required": false,
+          "maxSizeMb": 50,
+          "formats": [
+            "jpg",
+            "jpeg",
+            "png"
+          ]
+        },
+        {
+          "key": "duration",
+          "apiField": "settings.duration",
+          "label": {
+            "en": "Duration (s)",
+            "tr": "Süre (sn)"
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "key": "resolution",
+          "apiField": "settings.resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p",
+              "tr": "720p"
+            },
+            "1080p": {
+              "en": "1080p",
+              "tr": "1080p"
+            },
+            "4k": {
+              "en": "4K",
+              "tr": "4K"
+            }
+          }
+        },
+        {
+          "key": "generate_audio",
+          "apiField": "settings.audio",
+          "label": {
+            "en": "Native audio",
+            "tr": "Yerel ses"
+          },
+          "help": {
+            "en": "Generates audio matching the visuals.",
+            "tr": "Görüntüyle uyumlu ses üretir."
+          },
+          "type": "boolean",
+          "default": false,
+          "encode": [
+            "native",
+            "off"
+          ]
+        },
+        {
+          "key": "multi_shot",
+          "apiField": "settings.multi_shot",
+          "label": {
+            "en": "Multi-shot",
+            "tr": "Çoklu çekim"
+          },
+          "help": {
+            "en": "When off, multi-shot prompts (\"shot n, m, words;\") produce a single shot.",
+            "tr": "Kapalıyken çoklu çekim istemleri (\"shot n, m, words;\") tek çekim üretir."
+          },
+          "type": "boolean",
+          "default": true,
+          "advanced": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "last-frame-needs-first",
+          "when": {
+            "param": "end_image",
+            "op": "present"
+          },
+          "then": [
+            {
+              "op": "required",
+              "param": "image"
+            }
+          ],
+          "message": {
+            "en": "An end frame can only be used together with a start frame.",
+            "tr": "Bitiş karesi yalnızca başlangıç karesiyle birlikte kullanılabilir."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "pricing": {
+        "status": "verified",
+        "currency": "credits",
+        "unitName": "Kling units",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.6,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "4k"
+            },
+            "rate": 3,
+            "note": "4K: 3.0 units/s with or without audio"
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "param": "generate_audio",
+                  "op": "eq",
+                  "value": true
+                },
+                {
+                  "param": "resolution",
+                  "op": "eq",
+                  "value": "1080p"
+                }
+              ]
+            },
+            "rate": 1.2,
+            "note": "1080p native audio"
+          },
+          {
+            "when": {
+              "param": "generate_audio",
+              "op": "eq",
+              "value": true
+            },
+            "rate": 0.9,
+            "note": "720p native audio"
+          },
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "1080p"
+            },
+            "rate": 0.8,
+            "note": "1080p no audio"
+          }
+        ],
+        "from": false,
+        "source": "https://kling.ai/document-api/pricing/base/video.md",
+        "pricingPageUrl": "https://kling.ai/document-api/pricing/base/video.md",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Kling 3.0 resource-package units per second (720p/1080p/4K): 0.6/0.8/3.0 without audio, 0.9/1.2/3.0 with native audio (no voice control). Units are not converted to money."
+      },
+      "docsUrl": "https://kling.ai/document-api/api/video/3-0-omni/image-to-video.md",
+      "schemaVersion": "kling-api new design (3.0 & 3.0 Omni), fetched 2026-10-11",
+      "unverified": [
+        "Inline base64 references: new-API pages do not state the data: prefix rule (legacy image API forbids it) - unverified live",
+        "Elements (up to 3 element items) not exposed",
+        "No aspect_ratio setting documented for image-to-video",
+        "Whether the prompt item is mandatory is not stated; sent only when non-empty",
+        "fps not documented"
+      ],
+      "request": {
+        "path": "image-to-video/kling-3.0",
+        "fixed": {}
+      }
+    },
+    {
+      "id": "kling:image-to-video/kling-2.5-turbo",
+      "provider": "kling",
+      "family": "Kling",
+      "output": "video",
+      "availability": "available",
+      "lastVerified": "2026-10-11",
+      "outputPath": "outputs[].url",
+      "providerModelId": "image-to-video/kling-2.5-turbo",
+      "displayName": "Kling 2.5 Turbo (image to video)",
+      "version": "2.5 Turbo",
+      "workflow": "image-to-video",
+      "prompt": {
+        "apiField": "contents.prompt",
+        "required": false,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "image",
+          "apiField": "contents.first_frame",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "JPG or PNG, max 50 MB, at least 300 px per side, aspect between 1:2.5 and 2.5:1.",
+            "tr": "JPG veya PNG, en fazla 50 MB, her kenar en az 300 px, en-boy oranı 1:2,5 ile 2,5:1 arasında."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "maxItems": 1,
+          "shape": "url",
+          "required": true,
+          "maxSizeMb": 50,
+          "formats": [
+            "jpg",
+            "jpeg",
+            "png"
+          ]
+        },
+        {
+          "key": "end_image",
+          "apiField": "contents.last_frame",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional; needs a start frame. JPG or PNG, max 50 MB, at least 300 px, aspect 1:2.5–2.5:1.",
+            "tr": "İsteğe bağlı; başlangıç karesi gerektirir. JPG veya PNG, en fazla 50 MB, en az 300 px, en-boy oranı 1:2,5–2,5:1."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "maxItems": 1,
+          "shape": "url",
+          "required": false,
+          "maxSizeMb": 50,
+          "formats": [
+            "jpg",
+            "jpeg",
+            "png"
+          ]
+        },
+        {
+          "key": "duration",
+          "apiField": "settings.duration",
+          "label": {
+            "en": "Duration (s)",
+            "tr": "Süre (sn)"
+          },
+          "type": "enum",
+          "values": [
+            5,
+            10
+          ],
+          "default": 5,
+          "valueType": "number",
+          "unit": "s"
+        },
+        {
+          "key": "resolution",
+          "apiField": "settings.resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p",
+              "tr": "720p"
+            },
+            "1080p": {
+              "en": "1080p",
+              "tr": "1080p"
+            }
+          }
+        }
+      ],
+      "rules": [
+        {
+          "id": "last-frame-needs-first",
+          "when": {
+            "param": "end_image",
+            "op": "present"
+          },
+          "then": [
+            {
+              "op": "required",
+              "param": "image"
+            }
+          ],
+          "message": {
+            "en": "An end frame can only be used together with a start frame.",
+            "tr": "Bitiş karesi yalnızca başlangıç karesiyle birlikte kullanılabilir."
+          }
+        },
+        {
+          "id": "first-last-1080p",
+          "when": {
+            "param": "end_image",
+            "op": "present"
+          },
+          "then": [
+            {
+              "op": "in",
+              "param": "resolution",
+              "values": [
+                "1080p"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Start + end frame generation is only supported at 1080p.",
+            "tr": "Başlangıç ve bitiş karesiyle üretim yalnızca 1080p çözünürlükte desteklenir."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 10,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "pricing": {
+        "status": "verified",
+        "currency": "credits",
+        "unitName": "Kling units",
+        "formula": {
+          "kind": "per_second",
+          "rate": 0.3,
+          "durationParam": "duration"
+        },
+        "adjustments": [
+          {
+            "when": {
+              "param": "resolution",
+              "op": "eq",
+              "value": "1080p"
+            },
+            "rate": 0.5,
+            "note": "1080p"
+          }
+        ],
+        "from": false,
+        "source": "https://kling.ai/document-api/pricing/base/video.md",
+        "pricingPageUrl": "https://kling.ai/document-api/pricing/base/video.md",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Kling 2.5 Turbo units per second: 0.3 (720p), 0.5 (1080p); no native audio."
+      },
+      "docsUrl": "https://kling.ai/document-api/api/video/2-5-turbo/image-to-video.md",
+      "schemaVersion": "kling-api new design (2.5 Turbo), fetched 2026-10-11",
+      "unverified": [
+        "Inline base64 references: new-API pages do not state the data: prefix rule (legacy image API forbids it) - unverified live",
+        "No audio, aspect_ratio or multi_shot settings documented",
+        "fps not documented"
+      ],
+      "request": {
+        "path": "image-to-video/kling-2.5-turbo",
+        "fixed": {}
+      }
+    },
+    {
+      "provider": "kling",
+      "family": "Kling Image",
+      "version": "kling-v3",
+      "output": "image",
+      "availability": "available",
+      "request": {
+        "path": "v1/images/generations",
+        "fixed": {
+          "model_name": "kling-v3"
+        }
+      },
+      "outputPath": "task_result.images[].url",
+      "pricing": {
+        "status": "verified",
+        "currency": "credits",
+        "unitName": "Kling units",
+        "formula": {
+          "kind": "per_output",
+          "rate": 8,
+          "countParam": "num_images"
+        },
+        "adjustments": [],
+        "from": false,
+        "source": "https://kling.ai/document-api/pricing/base/image.md",
+        "pricingPageUrl": "https://kling.ai/document-api/pricing/base/image.md",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Kling Image 3.0: 8 units per image at 1K and 2K (text-to-image and image-to-image)."
+      },
+      "docsUrl": "https://kling.ai/document-api/api/image/3-0-omni/image-generation.md",
+      "schemaVersion": "kling legacy image API v1/images/generations, fetched 2026-10-11",
+      "lastVerified": "2026-10-11",
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 9
+      },
+      "id": "kling:v1/images/generations#kling-v3",
+      "providerModelId": "v1/images/generations#kling-v3",
+      "displayName": "Kling Image 3.0",
+      "workflow": "text-to-image",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "1k",
+            "2k"
+          ],
+          "default": "1k",
+          "valueType": "string",
+          "valueLabels": {
+            "1k": {
+              "en": "1K",
+              "tr": "1K"
+            },
+            "2k": {
+              "en": "2K",
+              "tr": "2K"
+            }
+          }
+        },
+        {
+          "key": "num_images",
+          "apiField": "n",
+          "label": {
+            "en": "Number of images",
+            "tr": "Görsel sayısı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 9,
+          "step": 1,
+          "default": 1
+        }
+      ],
+      "rules": [],
+      "unverified": [
+        "element_list not exposed",
+        "watermark_info / callback_url not exposed"
+      ]
+    },
+    {
+      "provider": "kling",
+      "family": "Kling Image",
+      "version": "kling-v3",
+      "output": "image",
+      "availability": "available",
+      "request": {
+        "path": "v1/images/generations",
+        "fixed": {
+          "model_name": "kling-v3"
+        }
+      },
+      "outputPath": "task_result.images[].url",
+      "pricing": {
+        "status": "verified",
+        "currency": "credits",
+        "unitName": "Kling units",
+        "formula": {
+          "kind": "per_output",
+          "rate": 8,
+          "countParam": "num_images"
+        },
+        "adjustments": [],
+        "from": false,
+        "source": "https://kling.ai/document-api/pricing/base/image.md",
+        "pricingPageUrl": "https://kling.ai/document-api/pricing/base/image.md",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Kling Image 3.0: 8 units per image at 1K and 2K (text-to-image and image-to-image)."
+      },
+      "docsUrl": "https://kling.ai/document-api/api/image/3-0-omni/image-generation.md",
+      "schemaVersion": "kling legacy image API v1/images/generations, fetched 2026-10-11",
+      "lastVerified": "2026-10-11",
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 9
+      },
+      "id": "kling:v1/images/generations#kling-v3-image-to-image",
+      "providerModelId": "v1/images/generations#kling-v3-image-to-image",
+      "displayName": "Kling Image 3.0 Reference",
+      "workflow": "image-to-image",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "key": "image",
+          "apiField": "image",
+          "label": {
+            "en": "Reference image",
+            "tr": "Referans görsel"
+          },
+          "help": {
+            "en": "JPG or PNG, max 10 MB, at least 300 px, aspect 1:2.5–2.5:1.",
+            "tr": "JPG veya PNG, en fazla 10 MB, en az 300 px, en-boy oranı 1:2,5–2,5:1."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "required": true,
+          "maxItems": 1,
+          "shape": "url",
+          "maxSizeMb": 10,
+          "formats": [
+            "jpg",
+            "jpeg",
+            "png"
+          ]
+        },
+        {
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "1k",
+            "2k"
+          ],
+          "default": "1k",
+          "valueType": "string",
+          "valueLabels": {
+            "1k": {
+              "en": "1K",
+              "tr": "1K"
+            },
+            "2k": {
+              "en": "2K",
+              "tr": "2K"
+            }
+          }
+        },
+        {
+          "key": "num_images",
+          "apiField": "n",
+          "label": {
+            "en": "Number of images",
+            "tr": "Görsel sayısı"
+          },
+          "type": "integer",
+          "min": 1,
+          "max": 9,
+          "step": 1,
+          "default": 1
+        }
+      ],
+      "rules": [],
+      "unverified": [
+        "Negative prompt not supported in image-to-image (documented) - omitted",
+        "image_reference (subject/face) not exposed: kling-v3 support not explicitly stated",
+        "image_fidelity/human_fidelity are kling-v2-1 only - omitted",
+        "element_list not exposed"
+      ]
+    }
+  ]
+}

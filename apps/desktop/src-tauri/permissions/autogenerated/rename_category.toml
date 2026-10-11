@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rename-category"
+description = "Enables the rename_category command without any pre-configured scope."
+commands.allow = ["rename_category"]
+
+[[permission]]
+identifier = "deny-rename-category"
+description = "Denies the rename_category command without any pre-configured scope."
+commands.deny = ["rename_category"]

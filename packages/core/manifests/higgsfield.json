@@ -1,0 +1,4914 @@
+{
+  "format": "vidra.models",
+  "formatVersion": 2,
+  "provider": "higgsfield",
+  "version": "2026.10.11.1",
+  "source": "manifest",
+  "models": [
+    {
+      "id": "higgsfield:bytedance/seedance-2.0/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.0/text-to-video",
+      "displayName": "Seedance 2.0 · Text to video",
+      "family": "Seedance",
+      "version": "2.0",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "ByteDance Seedance 2.0 video from a text prompt.",
+        "tr": "Metin isteminden ByteDance Seedance 2.0 videosu."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–15 seconds, whole seconds.",
+            "tr": "4–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            },
+            "4k": {
+              "en": "4K",
+              "tr": "4K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.0/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.0 from $0.099/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2/text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Prompt maximum length not documented (Vidra caps at 20000).",
+        "No fps, seed, negative prompt or camera controls are documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.0/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.0/image-to-video",
+      "displayName": "Seedance 2.0 · Image to video",
+      "family": "Seedance",
+      "version": "2.0",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Animate a start frame, optionally to an end frame.",
+        "tr": "Başlangıç karesini canlandırır, isteğe bağlı bitiş karesine kadar."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": false,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "end_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–15 seconds, whole seconds.",
+            "tr": "4–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            },
+            "4k": {
+              "en": "4K",
+              "tr": "4K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.0/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.0 from $0.099/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2/image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio field: framing follows the start frame.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.0/reference-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.0/reference-to-video",
+      "displayName": "Seedance 2.0 · Reference to video",
+      "family": "Seedance",
+      "version": "2.0",
+      "workflow": "reference-to-video",
+      "output": "video",
+      "description": {
+        "en": "Video guided by image, video and audio references.",
+        "tr": "Görsel, video ve ses referanslarıyla yönlendirilen video."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": false,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 9,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 3,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ],
+          "help": {
+            "en": "Each clip is trimmed to 15 seconds.",
+            "tr": "Her klip 15 saniyeye kırpılır."
+          },
+          "maxDurationSec": 15
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_audio",
+          "apiField": "audio_urls",
+          "label": {
+            "en": "Reference audio",
+            "tr": "Referans ses"
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 3,
+          "shape": "url_array",
+          "formats": [
+            "wav"
+          ],
+          "help": {
+            "en": "2–15 s per file, 15 s total. Needs an image or video reference too.",
+            "tr": "Dosya başına 2–15 sn, toplam 15 sn. Ayrıca görsel veya video referansı gerekir."
+          },
+          "maxDurationSec": 15
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–15 seconds, whole seconds.",
+            "tr": "4–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            },
+            "4k": {
+              "en": "4K",
+              "tr": "4K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "needs-visual-ref",
+          "then": [
+            {
+              "op": "anyOf",
+              "params": [
+                "reference_images",
+                "reference_videos"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Add at least one reference image or video. Audio alone is not enough.",
+            "tr": "En az bir referans görsel veya video ekleyin. Yalnızca ses yeterli değildir."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.0/reference-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.0 from $0.099/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Reference audio total of 15 s is enforced by the provider, not by Vidra.",
+        "Frame fields (image_url/end_image_url/video_url) must not be mixed with references; they are not exposed here.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.5/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.5/text-to-video",
+      "displayName": "Seedance 2.5 · Text to video",
+      "family": "Seedance",
+      "version": "2.5",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Seedance 2.5 video from text, up to 30 seconds.",
+        "tr": "Metinden Seedance 2.5 videosu, 30 saniyeye kadar."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–30 seconds, whole seconds.",
+            "tr": "4–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "bitrate_mode",
+          "apiField": "bitrate_mode",
+          "label": {
+            "en": "Bitrate",
+            "tr": "Bit hızı"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "high"
+          ],
+          "default": "high",
+          "valueType": "string",
+          "valueLabels": {
+            "standard": {
+              "en": "Standard",
+              "tr": "Standart"
+            },
+            "high": {
+              "en": "High",
+              "tr": "Yüksek"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "output_format",
+          "apiField": "output_format",
+          "label": {
+            "en": "File format",
+            "tr": "Dosya biçimi"
+          },
+          "type": "enum",
+          "values": [
+            "mp4",
+            "mov"
+          ],
+          "default": "mp4",
+          "valueType": "string",
+          "valueLabels": {
+            "mp4": {
+              "en": "MP4",
+              "tr": "MP4"
+            },
+            "mov": {
+              "en": "MOV",
+              "tr": "MOV"
+            }
+          }
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.5/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.5 from $0.144/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2-5/text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No 4K tier on 2.5 (unlike 2.0).",
+        "Prompt maximum length not documented (Vidra caps at 20000)."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.5/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.5/image-to-video",
+      "displayName": "Seedance 2.5 · Image to video",
+      "family": "Seedance",
+      "version": "2.5",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Animate a start frame with Seedance 2.5, up to 30 seconds.",
+        "tr": "Başlangıç karesini Seedance 2.5 ile canlandırır, 30 saniyeye kadar."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": false,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "end_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–30 seconds, whole seconds.",
+            "tr": "4–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "bitrate_mode",
+          "apiField": "bitrate_mode",
+          "label": {
+            "en": "Bitrate",
+            "tr": "Bit hızı"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "high"
+          ],
+          "default": "high",
+          "valueType": "string",
+          "valueLabels": {
+            "standard": {
+              "en": "Standard",
+              "tr": "Standart"
+            },
+            "high": {
+              "en": "High",
+              "tr": "Yüksek"
+            }
+          }
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.5/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.5 from $0.144/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2-5/image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio or output_format field on this endpoint.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.5/reference-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.5/reference-to-video",
+      "displayName": "Seedance 2.5 · Reference to video",
+      "family": "Seedance",
+      "version": "2.5",
+      "workflow": "reference-to-video",
+      "output": "video",
+      "description": {
+        "en": "Up to 50 image, video and audio references.",
+        "tr": "En fazla 50 görsel, video ve ses referansı."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": false,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 30,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 10,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ],
+          "help": {
+            "en": "All videos together are normalized to at most 30 s.",
+            "tr": "Tüm videolar toplamda en fazla 30 sn'ye normalize edilir."
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_audio",
+          "apiField": "audio_urls",
+          "label": {
+            "en": "Reference audio",
+            "tr": "Referans ses"
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 10,
+          "shape": "url_array",
+          "formats": [
+            "wav"
+          ],
+          "help": {
+            "en": "All audio together is normalized to at most 30 s.",
+            "tr": "Tüm sesler toplamda en fazla 30 sn'ye normalize edilir."
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–30 seconds, whole seconds.",
+            "tr": "4–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "bitrate_mode",
+          "apiField": "bitrate_mode",
+          "label": {
+            "en": "Bitrate",
+            "tr": "Bit hızı"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "high"
+          ],
+          "default": "high",
+          "valueType": "string",
+          "valueLabels": {
+            "standard": {
+              "en": "Standard",
+              "tr": "Standart"
+            },
+            "high": {
+              "en": "High",
+              "tr": "Yüksek"
+            }
+          }
+        }
+      ],
+      "rules": [
+        {
+          "id": "needs-ref",
+          "then": [
+            {
+              "op": "anyOf",
+              "params": [
+                "reference_images",
+                "reference_videos",
+                "reference_audio"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Add at least one reference (image, video or audio).",
+            "tr": "En az bir referans ekleyin (görsel, video veya ses)."
+          }
+        },
+        {
+          "id": "ref-total",
+          "then": [
+            {
+              "op": "maxTotalItems",
+              "params": [
+                "reference_images",
+                "reference_videos",
+                "reference_audio"
+              ],
+              "value": 50
+            }
+          ],
+          "message": {
+            "en": "At most 50 references in total.",
+            "tr": "Toplamda en fazla 50 referans."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.5/reference-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.5 from $0.144/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2-5/reference-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "30 s total video/audio budgets are normalized by the provider, not enforced by Vidra.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.5/video-edit",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.5/video-edit",
+      "displayName": "Seedance 2.5 · Video edit",
+      "family": "Seedance",
+      "version": "2.5",
+      "workflow": "video-edit",
+      "output": "video",
+      "description": {
+        "en": "Edit a source video with an instruction and optional references.",
+        "tr": "Kaynak videoyu bir talimat ve isteğe bağlı referanslarla düzenler."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "source_video",
+          "apiField": "video_url",
+          "label": {
+            "en": "Source video",
+            "tr": "Kaynak video"
+          },
+          "help": {
+            "en": "Counts toward the 10-video limit.",
+            "tr": "10 video sınırına dahildir."
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "source_video",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "mp4"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 30,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 9,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ],
+          "help": {
+            "en": "Up to 9 besides the source video.",
+            "tr": "Kaynak video dışında en fazla 9."
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_audio",
+          "apiField": "audio_urls",
+          "label": {
+            "en": "Reference audio",
+            "tr": "Referans ses"
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 10,
+          "shape": "url_array",
+          "formats": [
+            "wav"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "bitrate_mode",
+          "apiField": "bitrate_mode",
+          "label": {
+            "en": "Bitrate",
+            "tr": "Bit hızı"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "high"
+          ],
+          "default": "high",
+          "valueType": "string",
+          "valueLabels": {
+            "standard": {
+              "en": "Standard",
+              "tr": "Standart"
+            },
+            "high": {
+              "en": "High",
+              "tr": "Yüksek"
+            }
+          }
+        }
+      ],
+      "rules": [
+        {
+          "id": "media-total",
+          "then": [
+            {
+              "op": "maxTotalItems",
+              "params": [
+                "source_video",
+                "reference_images",
+                "reference_videos",
+                "reference_audio"
+              ],
+              "value": 50
+            }
+          ],
+          "message": {
+            "en": "At most 50 media items including the source video.",
+            "tr": "Kaynak video dahil en fazla 50 medya öğesi."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.5/video-edit",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.5 from $0.144/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2-5/video-edit",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No duration field: output length follows the processed source video (normalized to at least 4 s; 30 s video/audio budgets).",
+        "capabilities.maxDurationSec is null because duration is not a parameter.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:bytedance/seedance-2.5/video-extend",
+      "provider": "higgsfield",
+      "providerModelId": "bytedance/seedance-2.5/video-extend",
+      "displayName": "Seedance 2.5 · Video extend",
+      "family": "Seedance",
+      "version": "2.5",
+      "workflow": "video-extend",
+      "output": "video",
+      "description": {
+        "en": "Extend a source video with Seedance 2.5.",
+        "tr": "Kaynak videoyu Seedance 2.5 ile uzatır."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "source_video",
+          "apiField": "video_url",
+          "label": {
+            "en": "Source video",
+            "tr": "Kaynak video"
+          },
+          "help": {
+            "en": "Counts toward the 10-video limit.",
+            "tr": "10 video sınırına dahildir."
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "source_video",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "mp4"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 30,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 9,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ],
+          "help": {
+            "en": "Up to 9 besides the source video.",
+            "tr": "Kaynak video dışında en fazla 9."
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_audio",
+          "apiField": "audio_urls",
+          "label": {
+            "en": "Reference audio",
+            "tr": "Referans ses"
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 10,
+          "shape": "url_array",
+          "formats": [
+            "wav"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "4–30 seconds, whole seconds.",
+            "tr": "4–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "bitrate_mode",
+          "apiField": "bitrate_mode",
+          "label": {
+            "en": "Bitrate",
+            "tr": "Bit hızı"
+          },
+          "type": "enum",
+          "values": [
+            "standard",
+            "high"
+          ],
+          "default": "high",
+          "valueType": "string",
+          "valueLabels": {
+            "standard": {
+              "en": "Standard",
+              "tr": "Standart"
+            },
+            "high": {
+              "en": "High",
+              "tr": "Yüksek"
+            }
+          }
+        }
+      ],
+      "rules": [
+        {
+          "id": "media-total",
+          "then": [
+            {
+              "op": "maxTotalItems",
+              "params": [
+                "source_video",
+                "reference_images",
+                "reference_videos",
+                "reference_audio"
+              ],
+              "value": 50
+            }
+          ],
+          "message": {
+            "en": "At most 50 media items including the source video.",
+            "tr": "Kaynak video dahil en fazla 50 medya öğesi."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "bytedance/seedance-2.5/video-extend",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Seedance 2.5 from $0.144/s (promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/seedance-2-5/video-extend",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Docs do not state whether duration is the added length or the total output length.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/std/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/std/text-to-video",
+      "displayName": "Kling 3.0 Standard · Text to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 Standard video from text.",
+        "tr": "Metinden Kling 3.0 Standard videosu."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/std/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Kling 3.0 Standard at $0.042/s (50% promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/standard-text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/std/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/std/image-to-video",
+      "displayName": "Kling 3.0 Standard · Image to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 Standard from a first frame, optional last frame.",
+        "tr": "İlk kareden Kling 3.0 Standard, isteğe bağlı son kare."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "last_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/std/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Kling 3.0 Standard at $0.042/s (50% promotional, 2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/standard-image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio field: framing follows the first frame.",
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/pro/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/pro/text-to-video",
+      "displayName": "Kling 3.0 Pro · Text to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 Pro video from text.",
+        "tr": "Metinden Kling 3.0 Pro videosu."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/pro/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/pro-text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/pro/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/pro/image-to-video",
+      "displayName": "Kling 3.0 Pro · Image to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 Pro from a first frame, optional last frame.",
+        "tr": "İlk kareden Kling 3.0 Pro, isteğe bağlı son kare."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "last_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/pro/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/pro-image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio field: framing follows the first frame.",
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/4k/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/4k/text-to-video",
+      "displayName": "Kling 3.0 4K · Text to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 4K video from text.",
+        "tr": "Metinden Kling 3.0 4K videosu."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/4k/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/4k-text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0/4k/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0/4k/image-to-video",
+      "displayName": "Kling 3.0 4K · Image to video",
+      "family": "Kling",
+      "version": "3.0",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Kling 3.0 4K from a first frame, optional last frame.",
+        "tr": "İlk kareden Kling 3.0 4K, isteğe bağlı son kare."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "last_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "sound",
+          "apiField": "sound",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio (sent as on/off).",
+            "tr": "Yerel ses (açık/kapalı olarak gönderilir)."
+          },
+          "type": "boolean",
+          "default": true,
+          "encode": [
+            "on",
+            "off"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "cfg_scale",
+          "apiField": "cfg_scale",
+          "label": {
+            "en": "Prompt adherence (CFG)",
+            "tr": "İsteme bağlılık (CFG)"
+          },
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0.01,
+          "default": 0.5
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0/4k/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/4k-image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio field: framing follows the first frame.",
+        "multi_shots / multi_prompt (1–6 custom shots, 512 chars, 1–15 s each, durations summed) not exposed.",
+        "elements (account-owned Kling element IDs) not exposed.",
+        "Prompt over 2500 characters is truncated by the provider.",
+        "Output resolution of this tier is not stated on the page.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0-turbo/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0-turbo/text-to-video",
+      "displayName": "Kling 3.0 Turbo · Text to video",
+      "family": "Kling",
+      "version": "3.0 Turbo",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Faster Kling 3.0 variant without audio.",
+        "tr": "Sessiz, daha hızlı Kling 3.0 sürümü."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 3072
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0-turbo/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/turbo-text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No sound, multi_shots, elements or last-frame field (docs).",
+        "Prompt over 3072 characters is truncated by the provider."
+      ]
+    },
+    {
+      "id": "higgsfield:kling-video/v3.0-turbo/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "kling-video/v3.0-turbo/image-to-video",
+      "displayName": "Kling 3.0 Turbo · Image to video",
+      "family": "Kling",
+      "version": "3.0 Turbo",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Faster Kling 3.0 from a first frame, without audio.",
+        "tr": "İlk kareden sessiz, daha hızlı Kling 3.0."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 2500
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "3–15 seconds, whole seconds.",
+            "tr": "3–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "kling-video/v3.0-turbo/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/kling-3/turbo-image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No sound, multi_shots, elements, aspect ratio or last-frame field (docs).",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:wan/v2.7/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "wan/v2.7/text-to-video",
+      "displayName": "Wan 2.7 · Text to video",
+      "family": "Wan",
+      "version": "2.7",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 2.7 video from text, optional driving audio.",
+        "tr": "Metinden Wan 2.7 videosu, isteğe bağlı yönlendirici ses."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–15 seconds, whole seconds.",
+            "tr": "2–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:3",
+            "3:4"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "driving_audio",
+          "apiField": "audio_url",
+          "label": {
+            "en": "Driving audio",
+            "tr": "Yönlendirici ses"
+          },
+          "help": {
+            "en": "Optional audio track that drives the video.",
+            "tr": "Videoyu yönlendiren isteğe bağlı ses."
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "wav"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Provider rewrites the prompt before generating.",
+            "tr": "Sağlayıcı istemi üretimden önce yeniden yazar."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483646
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "wan/v2.7/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-2-7/text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Stored schema title says \"Wan 2.6 Playground\"; endpoint and docs page are Wan 2.7.",
+        "Negative prompt max length not documented (Vidra caps at 2000).",
+        "Driving-audio length limits not documented.",
+        "No generated-audio toggle documented."
+      ]
+    },
+    {
+      "id": "higgsfield:wan/v2.7/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "wan/v2.7/image-to-video",
+      "displayName": "Wan 2.7 · Image to video",
+      "family": "Wan",
+      "version": "2.7",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 2.7 from a first frame, optional last frame and audio.",
+        "tr": "İlk kareden Wan 2.7, isteğe bağlı son kare ve ses."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": false,
+        "maxLength": 20000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "end_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–15 seconds, whole seconds.",
+            "tr": "2–15 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 15,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "driving_audio",
+          "apiField": "audio_url",
+          "label": {
+            "en": "Driving audio",
+            "tr": "Yönlendirici ses"
+          },
+          "help": {
+            "en": "Optional audio track that drives the video.",
+            "tr": "Videoyu yönlendiren isteğe bağlı ses."
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "wav"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Provider rewrites the prompt before generating.",
+            "tr": "Sağlayıcı istemi üretimden önce yeniden yazar."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483646
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 15,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "wan/v2.7/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-2-7/image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "No aspect_ratio field.",
+        "Stored schema title says \"Wan 2.6 Playground\"; endpoint and docs page are Wan 2.7.",
+        "Negative prompt max length not documented (Vidra caps at 2000).",
+        "Driving-audio length limits not documented.",
+        "No generated-audio toggle documented.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:wan/v2.7/reference-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "wan/v2.7/reference-to-video",
+      "displayName": "Wan 2.7 · Reference to video",
+      "family": "Wan",
+      "version": "2.7",
+      "workflow": "reference-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 2.7 guided by up to 5 image/video references.",
+        "tr": "En fazla 5 görsel/video referansıyla Wan 2.7."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 5,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 5,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–10 seconds, whole seconds.",
+            "tr": "2–10 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 10,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "16:9",
+            "9:16"
+          ],
+          "default": "16:9",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Provider rewrites the prompt before generating.",
+            "tr": "Sağlayıcı istemi üretimden önce yeniden yazar."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483646
+        }
+      ],
+      "rules": [
+        {
+          "id": "needs-ref",
+          "then": [
+            {
+              "op": "anyOf",
+              "params": [
+                "reference_images",
+                "reference_videos"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Add at least one reference image or video.",
+            "tr": "En az bir referans görsel veya video ekleyin."
+          }
+        },
+        {
+          "id": "ref-total",
+          "then": [
+            {
+              "op": "maxTotalItems",
+              "params": [
+                "reference_images",
+                "reference_videos"
+              ],
+              "value": 5
+            }
+          ],
+          "message": {
+            "en": "At most 5 references in total.",
+            "tr": "Toplamda en fazla 5 referans."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 10,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "wan/v2.7/reference-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-2-7/reference-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Per-file reference video duration limits not documented.",
+        "Negative prompt max length not documented (Vidra caps at 2000).",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:alibaba/wan-3.0/text-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "alibaba/wan-3.0/text-to-video",
+      "displayName": "Wan 3.0 · Text to video",
+      "family": "Wan",
+      "version": "3.0",
+      "workflow": "text-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 3.0 video from text, up to 30 seconds.",
+        "tr": "Metinden Wan 3.0 videosu, 30 saniyeye kadar."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "default": "adaptive",
+          "valueType": "string",
+          "valueLabels": {
+            "adaptive": {
+              "en": "Adaptive",
+              "tr": "Uyarlanır"
+            },
+            "16:9": {
+              "en": "16:9",
+              "tr": "16:9"
+            },
+            "4:3": {
+              "en": "4:3",
+              "tr": "4:3"
+            },
+            "1:1": {
+              "en": "1:1",
+              "tr": "1:1"
+            },
+            "3:4": {
+              "en": "3:4",
+              "tr": "3:4"
+            },
+            "9:16": {
+              "en": "9:16",
+              "tr": "9:16"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–30 seconds, whole seconds.",
+            "tr": "2–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "1080p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enable_thinking",
+          "apiField": "enable_thinking",
+          "label": {
+            "en": "Deep thinking",
+            "tr": "Derin düşünme"
+          },
+          "help": {
+            "en": "Model reasoning to improve quality.",
+            "tr": "Kaliteyi artırmak için model akıl yürütmesi."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483647
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "alibaba/wan-3.0/text-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-3/text-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Seed 0 is accepted by the schema but not forwarded; Vidra starts at 1.",
+        "Explore and model-page prices for Wan 3.0 conflict; rely on /estimate."
+      ]
+    },
+    {
+      "id": "higgsfield:alibaba/wan-3.0/image-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "alibaba/wan-3.0/image-to-video",
+      "displayName": "Wan 3.0 · Image to video",
+      "family": "Wan",
+      "version": "3.0",
+      "workflow": "image-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 3.0 from a first frame, optional last frame.",
+        "tr": "İlk kareden Wan 3.0, isteğe bağlı son kare."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "start_image",
+          "apiField": "image_url",
+          "label": {
+            "en": "Start frame",
+            "tr": "Başlangıç karesi"
+          },
+          "help": {
+            "en": "First frame; output framing follows this image.",
+            "tr": "İlk kare; çıktı kadrajı bu görseli izler."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "start_frame",
+          "minItems": 1,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "end_image",
+          "apiField": "end_image_url",
+          "label": {
+            "en": "End frame",
+            "tr": "Bitiş karesi"
+          },
+          "help": {
+            "en": "Optional last frame.",
+            "tr": "İsteğe bağlı son kare."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "end_frame",
+          "minItems": 0,
+          "maxItems": 1,
+          "shape": "url",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "default": "adaptive",
+          "valueType": "string",
+          "valueLabels": {
+            "adaptive": {
+              "en": "Adaptive",
+              "tr": "Uyarlanır"
+            },
+            "16:9": {
+              "en": "16:9",
+              "tr": "16:9"
+            },
+            "4:3": {
+              "en": "4:3",
+              "tr": "4:3"
+            },
+            "1:1": {
+              "en": "1:1",
+              "tr": "1:1"
+            },
+            "3:4": {
+              "en": "3:4",
+              "tr": "3:4"
+            },
+            "9:16": {
+              "en": "9:16",
+              "tr": "9:16"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–30 seconds, whole seconds.",
+            "tr": "2–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "1080p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enable_thinking",
+          "apiField": "enable_thinking",
+          "label": {
+            "en": "Deep thinking",
+            "tr": "Derin düşünme"
+          },
+          "help": {
+            "en": "Model reasoning to improve quality.",
+            "tr": "Kaliteyi artırmak için model akıl yürütmesi."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483647
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "alibaba/wan-3.0/image-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-3/image-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Seed 0 is accepted by the schema but not forwarded; Vidra starts at 1.",
+        "Explore and model-page prices for Wan 3.0 conflict; rely on /estimate.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:alibaba/wan-3.0/reference-to-video",
+      "provider": "higgsfield",
+      "providerModelId": "alibaba/wan-3.0/reference-to-video",
+      "displayName": "Wan 3.0 · Reference to video",
+      "family": "Wan",
+      "version": "3.0",
+      "workflow": "reference-to-video",
+      "output": "video",
+      "description": {
+        "en": "Wan 3.0 guided by image, video and audio references.",
+        "tr": "Görsel, video ve ses referanslarıyla Wan 3.0."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Reference images",
+            "tr": "Referans görseller"
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 10,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_videos",
+          "apiField": "video_urls",
+          "label": {
+            "en": "Reference videos",
+            "tr": "Referans videolar"
+          },
+          "type": "media",
+          "mediaKind": "video",
+          "role": "reference",
+          "minItems": 0,
+          "maxItems": 5,
+          "shape": "url_array",
+          "formats": [
+            "mp4"
+          ],
+          "help": {
+            "en": "Each clip 1–30 s, 30 s total.",
+            "tr": "Her klip 1–30 sn, toplam 30 sn."
+          },
+          "maxDurationSec": 30
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "reference_audio",
+          "apiField": "audio_urls",
+          "label": {
+            "en": "Reference audio",
+            "tr": "Referans ses"
+          },
+          "type": "media",
+          "mediaKind": "audio",
+          "role": "audio",
+          "minItems": 0,
+          "maxItems": 5,
+          "shape": "url_array",
+          "formats": [
+            "wav",
+            "mp3"
+          ],
+          "help": {
+            "en": "WAV or MP3, 30 s total.",
+            "tr": "WAV veya MP3, toplam 30 sn."
+          },
+          "maxDurationSec": 30
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "adaptive",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ],
+          "default": "adaptive",
+          "valueType": "string",
+          "valueLabels": {
+            "adaptive": {
+              "en": "Adaptive",
+              "tr": "Uyarlanır"
+            },
+            "16:9": {
+              "en": "16:9",
+              "tr": "16:9"
+            },
+            "4:3": {
+              "en": "4:3",
+              "tr": "4:3"
+            },
+            "1:1": {
+              "en": "1:1",
+              "tr": "1:1"
+            },
+            "3:4": {
+              "en": "3:4",
+              "tr": "3:4"
+            },
+            "9:16": {
+              "en": "9:16",
+              "tr": "9:16"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "duration",
+          "apiField": "duration",
+          "label": {
+            "en": "Duration",
+            "tr": "Süre"
+          },
+          "help": {
+            "en": "2–30 seconds, whole seconds.",
+            "tr": "2–30 saniye, tam saniye."
+          },
+          "type": "integer",
+          "min": 2,
+          "max": 30,
+          "step": 1,
+          "default": 5,
+          "unit": "s"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "default": "1080p",
+          "valueType": "string",
+          "valueLabels": {
+            "480p": {
+              "en": "480p",
+              "tr": "480p"
+            },
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "generate_audio",
+          "apiField": "generate_audio",
+          "label": {
+            "en": "Generate audio",
+            "tr": "Ses üret"
+          },
+          "help": {
+            "en": "Native audio generated with the video.",
+            "tr": "Videoyla birlikte yerel ses üretilir."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enable_thinking",
+          "apiField": "enable_thinking",
+          "label": {
+            "en": "Deep thinking",
+            "tr": "Derin düşünme"
+          },
+          "help": {
+            "en": "Model reasoning to improve quality.",
+            "tr": "Kaliteyi artırmak için model akıl yürütmesi."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 2147483647
+        }
+      ],
+      "rules": [
+        {
+          "id": "needs-ref",
+          "then": [
+            {
+              "op": "anyOf",
+              "params": [
+                "reference_images",
+                "reference_videos",
+                "reference_audio"
+              ]
+            }
+          ],
+          "message": {
+            "en": "Add at least one reference image, video or audio.",
+            "tr": "En az bir referans görsel, video veya ses ekleyin."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": 30,
+        "audio": true,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "alibaba/wan-3.0/reference-to-video",
+        "fixed": {}
+      },
+      "outputPath": "video.url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/wan-3/reference-to-video",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Docs make references optional (only prompt required); Vidra requires at least one reference on this endpoint.",
+        "file_url (docx/xlsx/pptx/pdf/md) and link_url (web page) references not exposed; they force deep thinking.",
+        "30 s total video/audio budgets are enforced by the provider, not Vidra.",
+        "Upload endpoint lists only audio/wav; MP3 upload is not confirmed.",
+        "Seed 0 is accepted by the schema but not forwarded; Vidra starts at 1.",
+        "Explore and model-page prices for Wan 3.0 conflict; rely on /estimate.",
+        "Media must be public URLs; asset:// references are rejected. Per-file size limits are not documented."
+      ]
+    },
+    {
+      "id": "higgsfield:higgsfield-ai/soul/v2/standard",
+      "provider": "higgsfield",
+      "providerModelId": "higgsfield-ai/soul/v2/standard",
+      "displayName": "Soul 2 · Text to image",
+      "family": "Soul",
+      "version": "v2",
+      "workflow": "text-to-image",
+      "output": "image",
+      "description": {
+        "en": "Higgsfield Soul portraits, fashion and editorial images.",
+        "tr": "Higgsfield Soul ile portre, moda ve editoryal görseller."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "9:16",
+            "16:9",
+            "4:3",
+            "3:4",
+            "2:3",
+            "3:2"
+          ],
+          "default": "1:1",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "720p",
+            "1080p"
+          ],
+          "default": "720p",
+          "valueType": "string",
+          "valueLabels": {
+            "720p": {
+              "en": "720p (HD)",
+              "tr": "720p (HD)"
+            },
+            "1080p": {
+              "en": "1080p (Full HD)",
+              "tr": "1080p (Full HD)"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "batch_size",
+          "apiField": "batch_size",
+          "label": {
+            "en": "Images",
+            "tr": "Görsel sayısı"
+          },
+          "help": {
+            "en": "1 or 4 images per request.",
+            "tr": "İstek başına 1 veya 4 görsel."
+          },
+          "type": "enum",
+          "values": [
+            1,
+            4
+          ],
+          "default": 1,
+          "valueType": "number"
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enhance_prompt",
+          "apiField": "enhance_prompt",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 1,
+          "max": 1000000
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 4
+      },
+      "request": {
+        "path": "higgsfield-ai/soul/v2/standard",
+        "fixed": {}
+      },
+      "outputPath": "images[].url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Soul 2 from $0.003/image (2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/soul-2/generate",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "style_id / style_strength not exposed (style_strength currently has no effect per docs).",
+        "custom_reference_id / custom_reference_strength (trained Soul ID) not exposed.",
+        "Short prompts may be auto-enhanced even when enhance_prompt=false.",
+        "Prompt maximum length not documented."
+      ],
+      "schemaVersion": "SoulV2ParamsSchema"
+    },
+    {
+      "id": "higgsfield:alibaba/qwen-image-3/text-to-image",
+      "provider": "higgsfield",
+      "providerModelId": "alibaba/qwen-image-3/text-to-image",
+      "displayName": "Qwen Image 3 · Text to image",
+      "family": "Qwen Image",
+      "version": "3",
+      "workflow": "text-to-image",
+      "output": "image",
+      "description": {
+        "en": "Alibaba Qwen Image 3 from text.",
+        "tr": "Metinden Alibaba Qwen Image 3."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2000
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "1k",
+            "2k"
+          ],
+          "default": "1k",
+          "valueType": "string",
+          "valueLabels": {
+            "1k": {
+              "en": "1K",
+              "tr": "1K"
+            },
+            "2k": {
+              "en": "2K",
+              "tr": "2K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "7:9",
+            "9:7",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "default": "1:1",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Provider rewrites the prompt before generating.",
+            "tr": "Sağlayıcı istemi üretimden önce yeniden yazar."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enable_thinking",
+          "apiField": "enable_thinking",
+          "label": {
+            "en": "Deep thinking",
+            "tr": "Derin düşünme"
+          },
+          "help": {
+            "en": "Model reasoning to improve quality.",
+            "tr": "Kaliteyi artırmak için model akıl yürütmesi."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend_mode",
+          "apiField": "prompt_extend_mode",
+          "label": {
+            "en": "Enhancement mode",
+            "tr": "Geliştirme modu"
+          },
+          "type": "enum",
+          "values": [
+            "direct",
+            "agent"
+          ],
+          "default": "direct",
+          "valueType": "string",
+          "valueLabels": {
+            "direct": {
+              "en": "Direct",
+              "tr": "Doğrudan"
+            },
+            "agent": {
+              "en": "Agent",
+              "tr": "Ajan"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 0,
+          "max": 2147483647
+        }
+      ],
+      "rules": [
+        {
+          "id": "thinking-needs-extend",
+          "when": {
+            "all": [
+              {
+                "param": "enable_thinking",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "param": "prompt_extend",
+                "op": "eq",
+                "value": false
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "forbidden",
+              "param": "enable_thinking"
+            }
+          ],
+          "message": {
+            "en": "Deep thinking requires prompt enhancement. Turn both off to disable.",
+            "tr": "Derin düşünme, istem geliştirmeyi gerektirir. Kapatmak için ikisini de kapatın."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "alibaba/qwen-image-3/text-to-image",
+        "fixed": {}
+      },
+      "outputPath": "images[].url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/qwen-image-3/text-to-image",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Output is PNG; 2k square is 1536×1536.",
+        "Prompt has no schema max (4500-token advisory).",
+        "Negative prompt max length not documented (Vidra caps at 2000).",
+        "Price not mapped from explore; rely on /estimate."
+      ]
+    },
+    {
+      "id": "higgsfield:alibaba/qwen-image-3/edit",
+      "provider": "higgsfield",
+      "providerModelId": "alibaba/qwen-image-3/edit",
+      "displayName": "Qwen Image 3 · Edit",
+      "family": "Qwen Image",
+      "version": "3",
+      "workflow": "image-edit",
+      "output": "image",
+      "description": {
+        "en": "Edit with 1–3 ordered reference images.",
+        "tr": "1–3 sıralı referans görselle düzenleme."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 20000
+      },
+      "negativePrompt": {
+        "apiField": "negative_prompt",
+        "maxLength": 2000
+      },
+      "params": [
+        {
+          "required": true,
+          "advanced": false,
+          "key": "images",
+          "apiField": "image_urls",
+          "label": {
+            "en": "Images to edit",
+            "tr": "Düzenlenecek görseller"
+          },
+          "help": {
+            "en": "1–3 ordered references.",
+            "tr": "1–3 sıralı referans."
+          },
+          "type": "media",
+          "mediaKind": "image",
+          "role": "reference",
+          "minItems": 1,
+          "maxItems": 3,
+          "shape": "url_array",
+          "formats": [
+            "jpeg",
+            "jpg",
+            "png",
+            "webp",
+            "gif"
+          ]
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "1k",
+            "2k"
+          ],
+          "default": "1k",
+          "valueType": "string",
+          "valueLabels": {
+            "1k": {
+              "en": "1K",
+              "tr": "1K"
+            },
+            "2k": {
+              "en": "2K",
+              "tr": "2K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "7:9",
+            "9:7",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "default": "1:1",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Provider rewrites the prompt before generating.",
+            "tr": "Sağlayıcı istemi üretimden önce yeniden yazar."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "enable_thinking",
+          "apiField": "enable_thinking",
+          "label": {
+            "en": "Deep thinking",
+            "tr": "Derin düşünme"
+          },
+          "help": {
+            "en": "Model reasoning to improve quality.",
+            "tr": "Kaliteyi artırmak için model akıl yürütmesi."
+          },
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend_mode",
+          "apiField": "prompt_extend_mode",
+          "label": {
+            "en": "Enhancement mode",
+            "tr": "Geliştirme modu"
+          },
+          "type": "enum",
+          "values": [
+            "direct"
+          ],
+          "default": "direct",
+          "valueType": "string",
+          "valueLabels": {
+            "direct": {
+              "en": "Direct",
+              "tr": "Doğrudan"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 0,
+          "max": 2147483647
+        }
+      ],
+      "rules": [
+        {
+          "id": "thinking-needs-extend",
+          "when": {
+            "all": [
+              {
+                "param": "enable_thinking",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "param": "prompt_extend",
+                "op": "eq",
+                "value": false
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "forbidden",
+              "param": "enable_thinking"
+            }
+          ],
+          "message": {
+            "en": "Deep thinking requires prompt enhancement. Turn both off to disable.",
+            "tr": "Derin düşünme, istem geliştirmeyi gerektirir. Kapatmak için ikisini de kapatın."
+          }
+        }
+      ],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "alibaba/qwen-image-3/edit",
+        "fixed": {}
+      },
+      "outputPath": "images[].url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/qwen-image-3/edit",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Output is PNG; 2k square is 1536×1536.",
+        "Prompt has no schema max (4500-token advisory).",
+        "Negative prompt max length not documented (Vidra caps at 2000).",
+        "Price not mapped from explore; rely on /estimate."
+      ]
+    },
+    {
+      "id": "higgsfield:z-image/turbo",
+      "provider": "higgsfield",
+      "providerModelId": "z-image/turbo",
+      "displayName": "Z-Image Turbo",
+      "family": "Z-Image",
+      "version": "Turbo",
+      "workflow": "text-to-image",
+      "output": "image",
+      "description": {
+        "en": "Fast text-to-image, PNG output.",
+        "tr": "Hızlı metinden görsel, PNG çıktı."
+      },
+      "availability": "available",
+      "prompt": {
+        "apiField": "prompt",
+        "required": true,
+        "maxLength": 800
+      },
+      "params": [
+        {
+          "required": false,
+          "advanced": false,
+          "key": "resolution",
+          "apiField": "resolution",
+          "label": {
+            "en": "Resolution",
+            "tr": "Çözünürlük"
+          },
+          "type": "enum",
+          "values": [
+            "1k",
+            "2k"
+          ],
+          "default": "1k",
+          "valueType": "string",
+          "valueLabels": {
+            "1k": {
+              "en": "1K",
+              "tr": "1K"
+            },
+            "2k": {
+              "en": "2K",
+              "tr": "2K"
+            }
+          }
+        },
+        {
+          "required": false,
+          "advanced": false,
+          "key": "aspect_ratio",
+          "apiField": "aspect_ratio",
+          "label": {
+            "en": "Aspect ratio",
+            "tr": "En-boy oranı"
+          },
+          "type": "enum",
+          "values": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "7:9",
+            "9:7",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "default": "1:1",
+          "valueType": "string"
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "prompt_extend",
+          "apiField": "prompt_extend",
+          "label": {
+            "en": "Enhance prompt",
+            "tr": "İstemi geliştir"
+          },
+          "help": {
+            "en": "Uses the enhanced price tier.",
+            "tr": "Geliştirilmiş fiyat katmanını kullanır."
+          },
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "required": false,
+          "advanced": true,
+          "key": "seed",
+          "apiField": "seed",
+          "label": {
+            "en": "Seed",
+            "tr": "Tohum"
+          },
+          "help": {
+            "en": "Same seed gives similar results.",
+            "tr": "Aynı tohum benzer sonuçlar verir."
+          },
+          "type": "seed",
+          "min": 0,
+          "max": 2147483647
+        }
+      ],
+      "rules": [],
+      "capabilities": {
+        "maxDurationSec": null,
+        "audio": false,
+        "maxOutputs": 1
+      },
+      "request": {
+        "path": "z-image/turbo",
+        "fixed": {}
+      },
+      "outputPath": "images[].url",
+      "pricing": {
+        "status": "provider_estimate",
+        "currency": "USD",
+        "adjustments": [],
+        "from": false,
+        "source": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+        "pricingPageUrl": "https://open.higgsfield.ai/explore",
+        "verifiedAt": "2026-10-11",
+        "maxAgeDays": 120,
+        "notes": "Exact cost comes from POST /estimate/<endpoint> (credits and USD strings). Explore lists Z-Image Turbo at $0.015/image; prompt_extend uses a higher tier (2026-10-11)."
+      },
+      "docsUrl": "https://docs.higgsfield.ai/docs/models/z-image-turbo/generate",
+      "lastVerified": "2026-10-11",
+      "unverified": [
+        "Text-to-image only; no references."
+      ]
+    }
+  ]
+}

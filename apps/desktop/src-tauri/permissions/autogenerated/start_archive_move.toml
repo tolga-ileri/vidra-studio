@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-start-archive-move"
+description = "Enables the start_archive_move command without any pre-configured scope."
+commands.allow = ["start_archive_move"]
+
+[[permission]]
+identifier = "deny-start-archive-move"
+description = "Denies the start_archive_move command without any pre-configured scope."
+commands.deny = ["start_archive_move"]

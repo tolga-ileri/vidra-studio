@@ -1,0 +1,15 @@
+# Gitleaks: default rules plus narrow, documented allowlists.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Build output and self-describing fake test fixtures"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)target/''',
+  '''(^|/)dist/''',
+]
+regexes = [
+  # Test fixtures are deliberately self-describing.
+  '''test-only-not-a-secret[-_A-Za-z0-9]*''',
+]

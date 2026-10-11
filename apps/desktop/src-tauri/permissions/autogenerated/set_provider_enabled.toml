@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-provider-enabled"
+description = "Enables the set_provider_enabled command without any pre-configured scope."
+commands.allow = ["set_provider_enabled"]
+
+[[permission]]
+identifier = "deny-set-provider-enabled"
+description = "Denies the set_provider_enabled command without any pre-configured scope."
+commands.deny = ["set_provider_enabled"]

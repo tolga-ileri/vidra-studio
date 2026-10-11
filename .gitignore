@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+target/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+apps/desktop/src-tauri/gen/schemas/
+release-artifacts/
+.DS_Store
+
+apps/desktop/tests/native/.fixtures/
+apps/desktop/tests/native/.run/
+
+# Integrations excluded from the public release (pending provider authorization)
+.private/
+# Registry signing keys (never commit)
+.signing/

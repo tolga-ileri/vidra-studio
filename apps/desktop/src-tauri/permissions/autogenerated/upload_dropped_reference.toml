@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-upload-dropped-reference"
+description = "Enables the upload_dropped_reference command without any pre-configured scope."
+commands.allow = ["upload_dropped_reference"]
+
+[[permission]]
+identifier = "deny-upload-dropped-reference"
+description = "Denies the upload_dropped_reference command without any pre-configured scope."
+commands.deny = ["upload_dropped_reference"]

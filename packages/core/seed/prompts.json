@@ -1,0 +1,932 @@
+{
+  "format": "vidra.seed-prompts",
+  "formatVersion": 1,
+  "categories": [
+    {
+      "slug": "cinematic-advertising",
+      "name": {
+        "en": "Cinematic Advertising",
+        "tr": "Sinematik Reklam"
+      }
+    },
+    {
+      "slug": "product-commercials",
+      "name": {
+        "en": "Product Commercials",
+        "tr": "Ürün Reklamları"
+      }
+    },
+    {
+      "slug": "social-media-reels",
+      "name": {
+        "en": "Social Media Reels",
+        "tr": "Sosyal Medya Reels"
+      }
+    },
+    {
+      "slug": "character-animation",
+      "name": {
+        "en": "Character Animation",
+        "tr": "Karakter Animasyonu"
+      }
+    },
+    {
+      "slug": "realistic-human-scenes",
+      "name": {
+        "en": "Realistic Human Scenes",
+        "tr": "Gerçekçi İnsan Sahneleri"
+      }
+    },
+    {
+      "slug": "educational-videos",
+      "name": {
+        "en": "Educational Videos",
+        "tr": "Eğitim Videoları"
+      }
+    },
+    {
+      "slug": "storytelling",
+      "name": {
+        "en": "Storytelling",
+        "tr": "Hikâye Anlatımı"
+      }
+    },
+    {
+      "slug": "nature-landscapes",
+      "name": {
+        "en": "Nature & Landscapes",
+        "tr": "Doğa ve Manzaralar"
+      }
+    },
+    {
+      "slug": "sports",
+      "name": {
+        "en": "Sports",
+        "tr": "Spor"
+      }
+    },
+    {
+      "slug": "fashion",
+      "name": {
+        "en": "Fashion",
+        "tr": "Moda"
+      }
+    },
+    {
+      "slug": "music-videos",
+      "name": {
+        "en": "Music Videos",
+        "tr": "Müzik Videoları"
+      }
+    },
+    {
+      "slug": "animation",
+      "name": {
+        "en": "Animation",
+        "tr": "Animasyon"
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "slug": "hero-reveal-slow-push",
+      "category": "cinematic-advertising",
+      "title": {
+        "en": "Hero reveal with slow push-in",
+        "tr": "Yavaş yaklaşan kahraman tanıtımı"
+      },
+      "body": "Cinematic slow dolly push-in toward {subject} standing in {location} at {time_of_day}. Anamorphic lens, shallow depth of field, volumetric haze, rich contrast, subtle film grain. The camera settles on a confident close-up as the light catches the edges. Premium brand commercial look.",
+      "tags": [
+        "dolly",
+        "brand",
+        "hero"
+      ],
+      "variableDefaults": {
+        "subject": "a lone runner in a black jacket",
+        "location": "an empty rain-soaked city street",
+        "time_of_day": "blue hour"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "brand-manifesto-montage",
+      "category": "cinematic-advertising",
+      "title": {
+        "en": "Brand manifesto montage",
+        "tr": "Marka manifestosu montajı"
+      },
+      "body": "A fast-paced montage of everyday people embodying {brand_value}: {scene_one}, {scene_two}, and a final wide shot of a crowd under {lighting}. Handheld energy, warm color grade, match cuts on movement, inspirational tone.",
+      "tags": [
+        "montage",
+        "emotional"
+      ],
+      "variableDefaults": {
+        "brand_value": "courage",
+        "scene_one": "a girl jumping into a cold lake",
+        "scene_two": "an old man opening a new bakery",
+        "lighting": "golden sunset light"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "luxury-car-night-drive",
+      "category": "cinematic-advertising",
+      "title": {
+        "en": "Luxury car night drive",
+        "tr": "Gece lüks araba sürüşü"
+      },
+      "body": "A {car} glides through {location} at night, reflections of neon signs sliding across its glossy paint. Low tracking shot alongside the wheels, then a crane up to reveal the skyline. Moody teal and amber grade, anamorphic flares.",
+      "tags": [
+        "automotive",
+        "night"
+      ],
+      "variableDefaults": {
+        "car": "sleek dark-green electric sedan",
+        "location": "a coastal highway tunnel"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "tabletop-product-orbit",
+      "category": "product-commercials",
+      "title": {
+        "en": "Tabletop product orbit",
+        "tr": "Masaüstü ürün turu"
+      },
+      "body": "Studio tabletop shot of {product} on a {surface}. Smooth 180-degree orbit, soft key light with a crisp rim light, tiny dust particles floating in the beam. Clean {background_color} backdrop, macro detail on textures, high-end commercial finish.",
+      "tags": [
+        "studio",
+        "orbit",
+        "macro"
+      ],
+      "variableDefaults": {
+        "product": "a matte black wireless earbud case",
+        "surface": "polished slate plinth",
+        "background_color": "warm beige"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/image-to-video",
+        "higgsfield:kling-video/v3.0/pro/image-to-video",
+        "replicate:kwaivgi/kling-v2.1"
+      ]
+    },
+    {
+      "slug": "splash-freshness",
+      "category": "product-commercials",
+      "title": {
+        "en": "Splash of freshness",
+        "tr": "Ferahlık sıçraması"
+      },
+      "body": "High-speed slow-motion shot of {product} dropping into {liquid}, droplets exploding outward and freezing mid-air. Backlit, bright and refreshing color palette, crisp focus on the logo-free label, studio commercial style.",
+      "tags": [
+        "slow-motion",
+        "beverage"
+      ],
+      "variableDefaults": {
+        "product": "a chilled glass bottle of lemon soda",
+        "liquid": "crystal-clear sparkling water"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "product-still-hero-image",
+      "category": "product-commercials",
+      "title": {
+        "en": "Product hero still",
+        "tr": "Ürün vitrin görseli"
+      },
+      "body": "Product photography of {product} on {surface}, {lighting}, minimal composition with generous negative space, soft reflections, photorealistic, catalog quality.",
+      "tags": [
+        "photo",
+        "ecommerce"
+      ],
+      "variableDefaults": {
+        "product": "a ceramic pour-over coffee set",
+        "surface": "a light oak table",
+        "lighting": "soft morning window light"
+      },
+      "preferredModelIds": [
+        "replicate:google/imagen-4",
+        "replicate:black-forest-labs/flux-1.1-pro",
+        "higgsfield:higgsfield-ai/soul/v2/standard"
+      ]
+    },
+    {
+      "slug": "pov-day-in-life",
+      "category": "social-media-reels",
+      "title": {
+        "en": "POV day in the life",
+        "tr": "POV bir günüm"
+      },
+      "body": "Vertical POV clip: {character} starts the day in {place}, quick cuts of {activity}, natural daylight, handheld phone-camera feel, upbeat and authentic, ready for a short-form reel.",
+      "tags": [
+        "vertical",
+        "pov",
+        "lifestyle"
+      ],
+      "variableDefaults": {
+        "character": "a young barista",
+        "place": "a tiny sunlit studio apartment",
+        "activity": "making latte art and greeting regulars"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "before-after-transformation",
+      "category": "social-media-reels",
+      "title": {
+        "en": "Before and after transformation",
+        "tr": "Önce ve sonra dönüşümü"
+      },
+      "body": "Vertical reel showing a {space} transforming from {before_state} to {after_state} in one continuous whip-pan transition. Bright, satisfying, trendy social media aesthetic.",
+      "tags": [
+        "vertical",
+        "transition"
+      ],
+      "variableDefaults": {
+        "space": "small balcony",
+        "before_state": "cluttered and grey",
+        "after_state": "a cozy green garden with string lights"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "trend-dance-loop",
+      "category": "social-media-reels",
+      "title": {
+        "en": "Trend dance loop",
+        "tr": "Trend dans döngüsü"
+      },
+      "body": "Vertical video of {dancer} performing a playful, rhythmic dance in {location}, static camera at chest height, bold {color} outfit, punchy contrast, seamless loop-friendly ending.",
+      "tags": [
+        "vertical",
+        "dance",
+        "loop"
+      ],
+      "variableDefaults": {
+        "dancer": "a friendly teenager",
+        "location": "a colorful rooftop",
+        "color": "yellow"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "creature-first-steps",
+      "category": "character-animation",
+      "title": {
+        "en": "Creature's first steps",
+        "tr": "Yaratığın ilk adımları"
+      },
+      "body": "A small {creature} takes its first wobbly steps across {terrain}, looks up curiously at the camera and smiles. Expressive face, soft subsurface lighting, stylized 3D animated feature-film look.",
+      "tags": [
+        "3d",
+        "cute"
+      ],
+      "variableDefaults": {
+        "creature": "fluffy blue dragon hatchling",
+        "terrain": "a mossy forest floor"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "character-turnaround",
+      "category": "character-animation",
+      "title": {
+        "en": "Character idle and gesture",
+        "tr": "Karakter bekleme ve jest"
+      },
+      "body": "The character in the image comes to life: {action}, subtle breathing and blinking, hair and clothing reacting naturally, camera static, consistent style with the source image.",
+      "tags": [
+        "image-to-video",
+        "idle"
+      ],
+      "variableDefaults": {
+        "action": "waves hello and tilts their head"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/image-to-video",
+        "higgsfield:kling-video/v3.0/pro/image-to-video",
+        "replicate:kwaivgi/kling-v2.1"
+      ]
+    },
+    {
+      "slug": "robot-workshop",
+      "category": "character-animation",
+      "title": {
+        "en": "Robot in the workshop",
+        "tr": "Atölyedeki robot"
+      },
+      "body": "A {robot} tinkers with {object} in a cluttered workshop, sparks flying, warm lamp light, curious and clumsy personality, whimsical animated short style.",
+      "tags": [
+        "robot",
+        "whimsical"
+      ],
+      "variableDefaults": {
+        "robot": "rusty little repair robot",
+        "object": "a broken music box"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "cafe-conversation",
+      "category": "realistic-human-scenes",
+      "title": {
+        "en": "Cafe conversation",
+        "tr": "Kafede sohbet"
+      },
+      "body": "Two friends, {person_a} and {person_b}, laugh during a conversation at a window seat in a busy cafe. Natural light, 50mm lens, realistic skin texture, gentle rack focus between them, documentary realism.",
+      "tags": [
+        "dialogue",
+        "realism"
+      ],
+      "variableDefaults": {
+        "person_a": "a woman in her thirties with curly hair",
+        "person_b": "a man with glasses and a grey sweater"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "street-portrait",
+      "category": "realistic-human-scenes",
+      "title": {
+        "en": "Street portrait",
+        "tr": "Sokak portresi"
+      },
+      "body": "Close-up portrait of {person} on a street in {city} at {time_of_day}, looking into the lens then smiling softly. Shallow depth of field, natural color, true-to-life skin tones.",
+      "tags": [
+        "portrait",
+        "realism"
+      ],
+      "variableDefaults": {
+        "person": "an elderly fisherman with a weathered face",
+        "city": "Istanbul",
+        "time_of_day": "late afternoon"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "family-kitchen",
+      "category": "realistic-human-scenes",
+      "title": {
+        "en": "Family kitchen moment",
+        "tr": "Mutfakta aile anı"
+      },
+      "body": "A warm candid moment of {family} cooking {dish} together in a home kitchen, steam rising, flour on hands, soft practical lighting, handheld documentary camera.",
+      "tags": [
+        "family",
+        "warm"
+      ],
+      "variableDefaults": {
+        "family": "a grandmother and her grandson",
+        "dish": "homemade dumplings"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "explainer-whiteboard",
+      "category": "educational-videos",
+      "title": {
+        "en": "Concept explainer",
+        "tr": "Kavram anlatımı"
+      },
+      "body": "Clean explainer animation illustrating {concept}: simple shapes and arrows build up step by step on a {background} background, friendly flat design, clear and readable, calm pacing.",
+      "tags": [
+        "explainer",
+        "flat"
+      ],
+      "variableDefaults": {
+        "concept": "how photosynthesis turns sunlight into energy",
+        "background": "soft white"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "science-macro",
+      "category": "educational-videos",
+      "title": {
+        "en": "Science up close",
+        "tr": "Yakından bilim"
+      },
+      "body": "Macro documentary shot of {subject}, extreme detail, slow camera slide, educational nature documentary tone, crisp focus and neutral color.",
+      "tags": [
+        "macro",
+        "documentary"
+      ],
+      "variableDefaults": {
+        "subject": "a snowflake crystal forming"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "history-recreation",
+      "category": "educational-videos",
+      "title": {
+        "en": "History recreation",
+        "tr": "Tarih canlandırması"
+      },
+      "body": "A historically inspired recreation of {era_scene}, wide establishing shot then slow push-in on {detail}, period-appropriate costumes and props, warm documentary grade.",
+      "tags": [
+        "history",
+        "documentary"
+      ],
+      "variableDefaults": {
+        "era_scene": "a busy ancient marketplace",
+        "detail": "a merchant weighing spices"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "lighthouse-keeper",
+      "category": "storytelling",
+      "title": {
+        "en": "The lighthouse keeper",
+        "tr": "Deniz feneri bekçisi"
+      },
+      "body": "{character} climbs the spiral stairs of a lighthouse during {weather}, lights the lamp, and watches a distant ship turn safely toward the harbor. Emotional, painterly lighting, slow deliberate camera.",
+      "tags": [
+        "emotional",
+        "drama"
+      ],
+      "variableDefaults": {
+        "character": "an old lighthouse keeper",
+        "weather": "a violent storm"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "letter-discovery",
+      "category": "storytelling",
+      "title": {
+        "en": "A forgotten letter",
+        "tr": "Unutulmuş mektup"
+      },
+      "body": "{character} finds an old letter inside {place}, reads it, and their expression shifts from curiosity to tears of joy. Soft window light, intimate close-ups, quiet cinematic drama.",
+      "tags": [
+        "drama",
+        "intimate"
+      ],
+      "variableDefaults": {
+        "character": "a young woman",
+        "place": "a dusty attic trunk"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "journey-begins",
+      "category": "storytelling",
+      "title": {
+        "en": "The journey begins",
+        "tr": "Yolculuk başlıyor"
+      },
+      "body": "Wide shot of {hero} stepping out of {home} onto a path that leads toward {destination}, morning mist, the camera rises slowly to reveal the vast world ahead. Epic, hopeful tone.",
+      "tags": [
+        "epic",
+        "adventure"
+      ],
+      "variableDefaults": {
+        "hero": "a boy with a backpack",
+        "home": "a small stone cottage",
+        "destination": "distant snowy mountains"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "aerial-mountains",
+      "category": "nature-landscapes",
+      "title": {
+        "en": "Aerial mountain range",
+        "tr": "Havadan dağ silsilesi"
+      },
+      "body": "Smooth drone flight over {landscape} at {time_of_day}, clouds drifting through the valleys, sweeping reveal, ultra-detailed, natural colors.",
+      "tags": [
+        "aerial",
+        "drone"
+      ],
+      "variableDefaults": {
+        "landscape": "jagged alpine peaks",
+        "time_of_day": "sunrise"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "forest-rain",
+      "category": "nature-landscapes",
+      "title": {
+        "en": "Rain in the forest",
+        "tr": "Ormanda yağmur"
+      },
+      "body": "Gentle rain falling in {forest}, droplets on leaves, mist between the trunks, slow lateral camera slide, calm and meditative mood, rich greens.",
+      "tags": [
+        "calm",
+        "rain"
+      ],
+      "variableDefaults": {
+        "forest": "an ancient redwood forest"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "ocean-timelapse",
+      "category": "nature-landscapes",
+      "title": {
+        "en": "Coastal timelapse",
+        "tr": "Kıyı zaman atlaması"
+      },
+      "body": "Timelapse of waves crashing against {coast} as the sky shifts from {start_sky} to a starry night, long-exposure water, static wide composition.",
+      "tags": [
+        "timelapse",
+        "ocean"
+      ],
+      "variableDefaults": {
+        "coast": "black volcanic rocks",
+        "start_sky": "pink sunset"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "sprint-finish",
+      "category": "sports",
+      "title": {
+        "en": "Sprint finish",
+        "tr": "Bitiş çizgisi koşusu"
+      },
+      "body": "Low-angle slow-motion shot of {athlete} sprinting toward the finish line in {venue}, muscles tense, sweat flying, crowd blurred in the background, dramatic sports broadcast look.",
+      "tags": [
+        "slow-motion",
+        "athletics"
+      ],
+      "variableDefaults": {
+        "athlete": "a female sprinter",
+        "venue": "a packed night stadium"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "skate-trick",
+      "category": "sports",
+      "title": {
+        "en": "Skateboard trick",
+        "tr": "Kaykay hareketi"
+      },
+      "body": "{skater} lands a {trick} in {location}, fisheye lens tracking shot, gritty street style, sunny afternoon.",
+      "tags": [
+        "action",
+        "street"
+      ],
+      "variableDefaults": {
+        "skater": "a young skater in a red hoodie",
+        "trick": "kickflip down a set of stairs",
+        "location": "an urban plaza"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "football-goal",
+      "category": "sports",
+      "title": {
+        "en": "Last-minute goal",
+        "tr": "Son dakika golü"
+      },
+      "body": "{player} curls a free kick into the top corner in the final minute, the ball spinning in slow motion, goalkeeper diving, stadium erupting under floodlights. Cinematic sports commercial.",
+      "tags": [
+        "football",
+        "slow-motion"
+      ],
+      "variableDefaults": {
+        "player": "a midfielder in a white kit"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "runway-walk",
+      "category": "fashion",
+      "title": {
+        "en": "Runway walk",
+        "tr": "Podyum yürüyüşü"
+      },
+      "body": "{model} walks confidently down a minimalist runway wearing {outfit}, front tracking shot, flashing cameras, high-fashion editorial lighting.",
+      "tags": [
+        "runway",
+        "editorial"
+      ],
+      "variableDefaults": {
+        "model": "a tall model with short platinum hair",
+        "outfit": "an oversized sculptural white coat"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "fabric-in-wind",
+      "category": "fashion",
+      "title": {
+        "en": "Fabric in the wind",
+        "tr": "Rüzgârda kumaş"
+      },
+      "body": "{model} stands on {location} as wind lifts a flowing {garment}, slow motion, golden hour backlight, dreamy fashion film aesthetic.",
+      "tags": [
+        "slow-motion",
+        "dreamy"
+      ],
+      "variableDefaults": {
+        "model": "a woman",
+        "location": "desert sand dunes",
+        "garment": "crimson silk dress"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "lookbook-still",
+      "category": "fashion",
+      "title": {
+        "en": "Lookbook still",
+        "tr": "Lookbook görseli"
+      },
+      "body": "Full-body fashion lookbook photo of {model} wearing {outfit}, {background}, soft studio light, editorial pose, sharp fabric detail.",
+      "tags": [
+        "photo",
+        "lookbook"
+      ],
+      "variableDefaults": {
+        "model": "a young man",
+        "outfit": "a relaxed linen suit in sand color",
+        "background": "a seamless pastel blue backdrop"
+      },
+      "preferredModelIds": [
+        "replicate:google/imagen-4",
+        "replicate:black-forest-labs/flux-1.1-pro",
+        "higgsfield:higgsfield-ai/soul/v2/standard"
+      ]
+    },
+    {
+      "slug": "neon-performer",
+      "category": "music-videos",
+      "title": {
+        "en": "Neon performance",
+        "tr": "Neon performans"
+      },
+      "body": "{artist} performs passionately in {location} bathed in {color} neon light, slow camera orbit, haze and lens flares, rhythmic cuts, music video aesthetic.",
+      "tags": [
+        "neon",
+        "performance"
+      ],
+      "variableDefaults": {
+        "artist": "a singer with a vintage microphone",
+        "location": "an empty warehouse",
+        "color": "magenta and cyan"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "band-rooftop",
+      "category": "music-videos",
+      "title": {
+        "en": "Rooftop band session",
+        "tr": "Çatıda grup performansı"
+      },
+      "body": "{band} plays on a rooftop at {time_of_day}, city skyline behind them, handheld camera weaving between musicians, energetic and joyful.",
+      "tags": [
+        "band",
+        "live"
+      ],
+      "variableDefaults": {
+        "band": "a four-piece indie band",
+        "time_of_day": "sunset"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "surreal-dreamscape",
+      "category": "music-videos",
+      "title": {
+        "en": "Surreal dreamscape",
+        "tr": "Gerçeküstü rüya dünyası"
+      },
+      "body": "A surreal music video scene: {artist} floats through {dreamscape}, objects drifting in slow motion, soft pastel palette, dreamlike transitions.",
+      "tags": [
+        "surreal",
+        "dreamy"
+      ],
+      "variableDefaults": {
+        "artist": "a dancer in a white dress",
+        "dreamscape": "a sky full of floating paper lanterns"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "watercolor-village",
+      "category": "animation",
+      "title": {
+        "en": "Watercolor village",
+        "tr": "Suluboya köy"
+      },
+      "body": "Hand-painted watercolor animation of {place}, gentle wind moving the trees, {detail}, soft paper texture, cozy storybook feel.",
+      "tags": [
+        "2d",
+        "watercolor"
+      ],
+      "variableDefaults": {
+        "place": "a sleepy seaside village",
+        "detail": "a cat stretching on a windowsill"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "claymation-chase",
+      "category": "animation",
+      "title": {
+        "en": "Claymation chase",
+        "tr": "Kil animasyonu kovalamaca"
+      },
+      "body": "Stop-motion claymation scene: {chaser} chases {target} around {location}, visible fingerprints in the clay, slightly choppy frame rate, playful comedy.",
+      "tags": [
+        "stop-motion",
+        "comedy"
+      ],
+      "variableDefaults": {
+        "chaser": "a clumsy clay dog",
+        "target": "a runaway sausage",
+        "location": "a kitchen table"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    },
+    {
+      "slug": "anime-skyline",
+      "category": "animation",
+      "title": {
+        "en": "Anime skyline",
+        "tr": "Anime şehir silüeti"
+      },
+      "body": "Anime-style shot of {character} on a rooftop overlooking {city} at {time_of_day}, wind in their hair, vibrant sky, cel-shaded detail, emotional atmosphere.",
+      "tags": [
+        "anime",
+        "2d"
+      ],
+      "variableDefaults": {
+        "character": "a high-school girl with a scarf",
+        "city": "a sprawling futuristic city",
+        "time_of_day": "dusk"
+      },
+      "preferredModelIds": [
+        "higgsfield:bytedance/seedance-2.0/text-to-video",
+        "replicate:google/veo-3.1",
+        "kling:text-to-video/kling-3.0",
+        "replicate:google/veo-3"
+      ]
+    }
+  ]
+}

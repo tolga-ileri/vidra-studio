@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-finalize-archive-move"
+description = "Enables the finalize_archive_move command without any pre-configured scope."
+commands.allow = ["finalize_archive_move"]
+
+[[permission]]
+identifier = "deny-finalize-archive-move"
+description = "Denies the finalize_archive_move command without any pre-configured scope."
+commands.deny = ["finalize_archive_move"]

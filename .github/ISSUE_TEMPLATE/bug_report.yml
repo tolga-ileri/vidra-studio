@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste API keys**, tokens, signed URLs or private media here.
+        For security issues, use private vulnerability reporting instead (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Vidra Studio version
+      description: Shown in Settings → About.
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options: [Not provider-specific, Higgsfield, fal.ai, Replicate, Kling AI]
+  - type: input
+    id: model
+    attributes:
+      label: Model and workflow
+      placeholder: e.g. Kling 3.0, image to video
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: request
+    attributes:
+      label: Provider request ID (if any)
+      description: Shown in the generation details. Request IDs are safe to share.
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
