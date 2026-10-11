@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.5] - 2026-10-12
+
+### Fixed
+
+- Higgsfield: a key pasted as one `KEY_ID:KEY_SECRET` string into the secret field was not split when the ID field held something else (often the key's display name), so Higgsfield rejected it. The full string in the secret field now always wins.
+- Credential errors now name the field and the problem (e.g. "API key ID can't contain spaces. Paste the key itself, not its name.") instead of the generic "Some values are not accepted by this model".
+
 ## [0.1.4] - 2026-10-11
 
 First release delivered through the in-app updater.

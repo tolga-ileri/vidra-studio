@@ -56,7 +56,22 @@ pub fn set_credentials(
     }
     for f in &fields {
         let v = values.get(&f.key).map(|s| s.trim()).unwrap_or("");
-        validate_value(v).map_err(|_| AppError::invalid(format!("{}: invalid value.", f.label)))?;
+        if let Err(e) = validate_value(v) {
+            // Field + reason let the UI say exactly what is wrong, e.g. a key
+            // *name* ("My key") typed where the key ID belongs.
+            let reason = if v.is_empty() {
+                "empty"
+            } else if v.chars().any(char::is_whitespace) {
+                "whitespace"
+            } else if v.len() > 1024 {
+                "too_long"
+            } else {
+                "invalid_chars"
+            };
+            return Err(e.with_details(serde_json::json!({
+                "code": "credential", "field": f.key, "reason": reason
+            })));
+        }
     }
     for f in &fields {
         core.secrets
@@ -80,10 +95,15 @@ fn split_combined_key(id: ProviderId, values: &mut HashMap<String, String>) {
         v.get(k).map(|s| s.trim().to_string()).unwrap_or_default()
     };
     let (kid, secret) = (get(values, "key_id"), get(values, "key_secret"));
-    let combined = match (kid.contains(':'), secret.contains(':')) {
-        (true, _) if secret.is_empty() || secret == kid => kid,
-        (_, true) if kid.is_empty() => secret,
-        _ => return,
+    // A Higgsfield secret never contains ':', so a colon there always means the
+    // whole "KEY_ID:KEY_SECRET" string was pasted, and it wins over whatever is
+    // in the ID field (often the key's display name).
+    let combined = if secret.contains(':') {
+        secret
+    } else if kid.contains(':') && (secret.is_empty() || secret == kid) {
+        kid
+    } else {
+        return;
     };
     if let Some((a, b)) = combined.split_once(':') {
         let (a, b) = (a.trim(), b.trim());
@@ -217,6 +237,24 @@ mod split_tests {
         assert_eq!(run("", "id-1:sec-2"), want);
         assert_eq!(run("id-1:sec-2", "id-1:sec-2"), want);
         assert_eq!(run("id-1", "sec-2"), want);
+        // Key name in the ID field + full string in the secret field.
+        assert_eq!(run("Tolga deneme", "id-1:sec-2"), want);
+        assert_eq!(run("Tolgadeneme", " id-1:sec-2 "), want);
+    }
+
+    #[test]
+    fn a_key_name_in_the_id_field_names_the_field_and_reason() {
+        let env = crate::core::testing::env();
+        let values = HashMap::from([
+            ("key_id".to_string(), "Tolga deneme".to_string()),
+            ("key_secret".to_string(), "abc123".to_string()),
+        ]);
+        let e = set_credentials(&env.core, ProviderId::Higgsfield, values).unwrap_err();
+        assert_eq!(e.code, ErrorCode::InvalidInput);
+        let d = e.details.unwrap();
+        assert_eq!(d["code"], "credential");
+        assert_eq!(d["field"], "key_id");
+        assert_eq!(d["reason"], "whitespace");
     }
 
     #[test]
