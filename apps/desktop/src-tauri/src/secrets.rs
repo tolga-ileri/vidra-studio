@@ -150,4 +150,13 @@ mod identity_tests {
         assert_eq!(conf["identifier"], super::SERVICE);
         assert_eq!(conf["productName"], "Vidra Studio");
     }
+
+    /// Settings shows the Cargo version while the updater compares the
+    /// tauri.conf.json version; they must never drift apart.
+    #[test]
+    fn app_and_updater_versions_match() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        assert_eq!(conf["version"], env!("CARGO_PKG_VERSION"));
+    }
 }

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-10-11
+
+First release delivered through the in-app updater.
+
+### Added
+
+- A test that keeps the app version (shown in Settings) and the updater version identical.
+
 ## [0.1.3] - 2026-10-11
 
 ### Added
