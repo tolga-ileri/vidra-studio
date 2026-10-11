@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vidra Studio promo</title>
+<style>
+  :root { --bg: #0a0a0b; --fg: #f4f4f5; --muted: #a1a1aa; --line: rgba(255,255,255,.10); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--fg); font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .canvas { position: relative; overflow: hidden; width: var(--w); height: var(--h);
+    background:
+      radial-gradient(1200px 600px at 75% -10%, rgba(255,255,255,.07), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(255,255,255,.05), transparent 60%),
+      var(--bg); }
+  .grain { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(closest-side, #000, transparent); pointer-events: none; }
+  .brand { display: flex; align-items: center; gap: .55em; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+  .brand img { width: 1.9em; height: 1.9em; }
+  h1 { font-weight: 650; letter-spacing: -.025em; line-height: 1.04; }
+  .sub { color: var(--muted); line-height: 1.35; }
+  .tag { color: var(--fg); font-weight: 500; }
+  .dots { color: var(--muted); letter-spacing: .32em; text-transform: uppercase; font-weight: 600; }
+  .by { color: var(--muted); }
+  .note { color: #71717a; letter-spacing: .02em; }
+  .pill { display: inline-flex; align-items: center; gap: .5em; border: 1px solid var(--line); border-radius: 999px; padding: .35em .9em; color: var(--muted); background: rgba(255,255,255,.03); }
+  .pill i { width: .5em; height: .5em; border-radius: 50%; background: #22c55e; display: inline-block; }
+  .window { position: absolute; border-radius: 14px; overflow: hidden; background: #0b0b0c;
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 40px 120px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.6), 0 0 80px rgba(255,255,255,.04); }
+  .window .bar { height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; background: #111113; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 12px; color: #71717a; }
+  .window .bar b { font-weight: 500; }
+  .window .ctl { display: flex; gap: 14px; color: #52525b; font-size: 12px; }
+  .window img { display: block; width: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const P = new URLSearchParams(location.search)
+const v = P.get("v")
+const shot = (n) => `../../docs/assets/screenshots/${n}.png`
+const LOGO = "../../branding/vidra-mark.svg"
+// Plain window frame (title text only: no fabricated controls or content).
+const win = (src, style) => `<div class="window" style="${style}"><div class="bar"><b>Vidra Studio</b><span class="ctl"><span>&#8212;</span><span>&#9633;</span><span>&#10005;</span></span></div><img src="${src}" alt=""></div>`
+const brand = (size) => `<div class="brand" style="font-size:${size}px"><img src="${LOGO}" alt="">Vidra Studio</div>`
+const note = (size) => `<p class="note" style="font-size:${size}px">Real app interface &middot; demo profile with a local mock provider &middot; media is test footage</p>`
+
+const layouts = {
+  // 1080x1350 launch poster
+  poster: { w: 1080, h: 1350, html: `
+    <div style="position:absolute;left:84px;top:84px;right:84px">
+      ${brand(22)}
+      <h1 style="font-size:76px;margin-top:56px">Open-Source AI<br>Video &amp; Image<br>Creation</h1>
+      <p class="sub" style="font-size:30px;margin-top:28px">Multiple AI Providers. One Creative Workspace.</p>
+      <p class="tag" style="font-size:26px;margin-top:14px">Your API Keys. Your Creations. Your Control.</p>
+    </div>
+    ${win(shot("video-studio"), "left:84px;top:575px;width:912px")}
+    <div style="position:absolute;left:84px;right:84px;top:1205px">
+      <p class="dots" style="font-size:18px">Create &bull; Manage &bull; Archive</p>
+      <p class="by" style="font-size:20px;margin-top:12px">Built by Tolga İleri &middot; MIT licensed &middot; Windows 10/11</p>
+      <p style="margin-top:22px">${note(14)}</p>
+    </div>` },
+
+  // 1280x640 GitHub social preview (keep 40px safe margin)
+  social: { w: 1280, h: 640, html: `
+    <div style="position:absolute;left:72px;top:76px;width:470px">
+      ${brand(18)}
+      <h1 style="font-size:54px;margin-top:40px">Open-Source AI Video &amp; Image Creation</h1>
+      <p class="sub" style="font-size:21px;margin-top:22px">Multiple AI Providers.<br>One Creative Workspace.</p>
+      <p class="dots" style="font-size:14px;margin-top:34px">Create &bull; Manage &bull; Archive</p>
+      <p class="by" style="font-size:15px;margin-top:40px">github.com/tolga-ileri/vidra-studio</p>
+    </div>
+    ${win(shot("video-studio"), "left:600px;top:84px;width:860px")}
+    <div style="position:absolute;left:72px;bottom:36px">${note(12)}</div>` },
+
+  // 1500x500 LinkedIn / X banner (avatar-safe area bottom-left kept clear)
+  banner: { w: 1500, h: 500, html: `
+    <div style="position:absolute;left:420px;top:72px;width:470px">
+      ${brand(16)}
+      <h1 style="font-size:46px;margin-top:26px">Open-Source AI Video &amp; Image Creation</h1>
+      <p class="sub" style="font-size:19px;margin-top:16px">Your API Keys. Your Creations. Your Control.</p>
+      <p class="dots" style="font-size:13px;margin-top:22px">Create &bull; Manage &bull; Archive</p>
+    </div>
+    ${win(shot("archive"), "left:930px;top:56px;width:720px")}
+    <div style="position:absolute;left:420px;bottom:26px">${note(11)}</div>` },
+
+  // 1080x1920 Instagram story / vertical announcement
+  story: { w: 1080, h: 1920, html: `
+    <div style="position:absolute;left:84px;right:84px;top:120px;text-align:center">
+      <div style="display:flex;justify-content:center">${brand(24)}</div>
+      <p style="margin-top:44px"><span class="pill" style="font-size:22px"><i></i>Now open source &middot; v0.1.0</span></p>
+      <h1 style="font-size:92px;margin-top:44px">Open-Source AI<br>Video &amp; Image<br>Creation</h1>
+      <p class="sub" style="font-size:32px;margin-top:30px">Multiple AI Providers.<br>One Creative Workspace.</p>
+    </div>
+    ${win(shot("video-studio"), "left:60px;top:860px;width:960px")}
+    <div style="position:absolute;left:84px;right:84px;top:1560px;text-align:center">
+      <p class="tag" style="font-size:30px">Your API Keys. Your Creations. Your Control.</p>
+      <p class="dots" style="font-size:20px;margin-top:22px">Create &bull; Manage &bull; Archive</p>
+      <p class="by" style="font-size:22px;margin-top:22px">Built by Tolga İleri</p>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:44px;text-align:center">${note(16)}</div>` },
+
+  // 1440x900 video title and end cards
+  title: { w: 1440, h: 900, html: `
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <img src="${LOGO}" alt="" style="width:120px;height:120px">
+      <h1 style="font-size:76px;margin-top:40px">Vidra Studio</h1>
+      <p class="sub" style="font-size:30px;margin-top:18px">Open-Source AI Video &amp; Image Creation</p>
+      <p class="tag" style="font-size:24px;margin-top:30px">Multiple AI Providers. One Creative Workspace.</p>
+    </div>` },
+  end: { w: 1440, h: 900, html: `
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      ${brand(22)}
+      <h1 style="font-size:58px;margin-top:40px">Your API Keys. Your Creations.<br>Your Control.</h1>
+      <p class="dots" style="font-size:20px;margin-top:34px">Create &bull; Manage &bull; Archive</p>
+      <p class="sub" style="font-size:26px;margin-top:44px">github.com/tolga-ileri/vidra-studio</p>
+      <p class="by" style="font-size:20px;margin-top:14px">Free &amp; open source (MIT) &middot; Windows 10/11 &middot; Built by Tolga İleri</p>
+    </div>` },
+  // transparent label overlaid on the UI footage
+  label: { w: 1440, h: 900, transparent: true, html: `
+    <div style="position:absolute;right:20px;bottom:20px;padding:8px 14px;border-radius:8px;background:rgba(10,10,11,.82);border:1px solid rgba(255,255,255,.14);font-size:14px;color:#d4d4d8">
+      Real Vidra Studio UI &middot; local mock provider &middot; test footage, no paid calls
+    </div>` },
+}
+const L = layouts[v]
+document.documentElement.style.setProperty("--w", L.w + "px")
+document.documentElement.style.setProperty("--h", L.h + "px")
+if (L.transparent) { document.documentElement.style.background = "transparent"; document.body.style.background = "transparent" }
+document.getElementById("root").innerHTML = L.transparent
+  ? `<div style="position:relative;width:${L.w}px;height:${L.h}px">${L.html}</div>`
+  : `<div class="canvas"><div class="grain"></div>${L.html}</div>`
+</script>
+</body>
+</html>

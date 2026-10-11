@@ -201,19 +201,25 @@ test("capture demo media", async () => {
     await pause(1500)
     await shot("providers")
 
-    // Switch the whole app to Turkish.
-    await nav("Settings")
-    await page.locator("#set-lang").click()
-    await pause(600)
-    await page.getByRole("option", { name: "Türkçe" }).click()
-    await pause(1200)
-    await nav("Video Stüdyosu")
-    await typeSlowly('[data-testid="prompt-input"]', "Sisli bir ormanda yürüyen kızıl bir tilki, sinematik çekim")
-    await expect(page.getByTestId("studio-estimate")).toContainText("$")
-    await pause(1500)
-    await shot("video-studio-tr")
-    await nav("Arşiv")
-    await pause(2500)
+    // DEMO_EN_ONLY=1 records the English-only promo cut (no language switch).
+    if (process.env.DEMO_EN_ONLY !== "1") {
+      // Switch the whole app to Turkish.
+      await nav("Settings")
+      await page.locator("#set-lang").click()
+      await pause(600)
+      await page.getByRole("option", { name: "Türkçe" }).click()
+      await pause(1200)
+      await nav("Video Stüdyosu")
+      await typeSlowly('[data-testid="prompt-input"]', "Sisli bir ormanda yürüyen kızıl bir tilki, sinematik çekim")
+      await expect(page.getByTestId("studio-estimate")).toContainText("$")
+      await pause(1500)
+      await shot("video-studio-tr")
+      await nav("Arşiv")
+      await pause(2500)
+    } else {
+      await nav("Video Studio")
+      await pause(2500)
+    }
 
     await cdp.send("Page.stopScreencast")
   } finally {

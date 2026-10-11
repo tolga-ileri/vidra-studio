@@ -41,3 +41,17 @@ See `docs/architecture.md` for the full design.
   enforced by the providers.
 - An attacker with code execution as your Windows user can read entries in
   the Windows Credential Manager. That is outside this app's threat model.
+
+## Dependency advisories (reviewed 2026-10-11)
+
+`cargo audit` runs in CI on every push and fails on any vulnerability. No
+advisory is ignored. It currently reports **0 vulnerabilities** and two
+informational warnings:
+
+| Advisory | Crate | Kind | Assessment |
+| --- | --- | --- | --- |
+| RUSTSEC-2024-0429 | `glib` 0.18.5 | unsound (`VariantStrIter`) | Linux-only: pulled in by Tauri's GTK backend (`tauri → muda → gtk 0.18`). It is not compiled into the Windows build that Vidra ships (`cargo tree -i glib --target x86_64-pc-windows-msvc` is empty), and Vidra does not call the affected API. It will be resolved when Tauri moves to gtk-rs 0.20+. |
+| RUSTSEC-2024-0370 | `proc-macro-error` 1.0.4 | unmaintained | Build-time proc macro used by `glib-macros` in the same Linux-only GTK chain. Not present in the Windows build, with no runtime exposure. |
+
+Both warnings stay visible in CI output and will be re-reviewed when Tauri
+updates its GTK stack.

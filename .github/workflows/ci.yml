@@ -52,16 +52,15 @@ jobs:
   rust-audit:
     name: cargo audit
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write # audit-check reports its result as a check run
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }
-      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          working-directory: apps/desktop/src-tauri
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+      # cargo-audit CLI, pinned and installed from the lockfile. Vulnerabilities
+      # fail the job; informational warnings (unmaintained/unsound) are printed
+      # and reviewed in SECURITY.md. Nothing is ignored.
+      - run: cargo install cargo-audit --version 0.22.2 --locked
+      - run: cargo audit --file apps/desktop/src-tauri/Cargo.lock
 
   secrets:
     name: Gitleaks
@@ -76,7 +75,7 @@ jobs:
   semgrep:
     name: Semgrep
     runs-on: ubuntu-latest
-    container: { image: semgrep/semgrep }
+    container: { image: "semgrep/semgrep:1.179.0" } # pinned for reproducible results
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { persist-credentials: false }

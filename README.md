@@ -121,6 +121,12 @@ Node.js, database or command line is needed.
 The screenshots show a demo profile running against a local mock provider.
 The media is generated test footage, not AI output.
 
+## Media kit
+
+English launch assets (poster, GitHub social preview, LinkedIn/X banner,
+Instagram story and promo video) built from real app captures are in
+[media/promo](media/promo/README.md).
+
 ## Security and privacy
 
 - API keys are stored in the Windows Credential Manager and read only by
