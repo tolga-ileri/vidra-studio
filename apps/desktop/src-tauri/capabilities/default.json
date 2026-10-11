@@ -18,6 +18,7 @@
     "allow-reconnect-archive-root",
     "allow-choose-export-dir",
     "allow-check-for-updates",
+    "allow-install-update",
     "allow-open-external-url",
     "allow-save-text-file",
     "allow-list-providers",

@@ -83,6 +83,9 @@ Node.js, database or command line is needed.
 - **Model catalog updates.** A signed (Ed25519), versioned model registry
   delivers verified model data. Models this app version can't run safely are
   shown as *Update required*.
+- **Automatic updates.** Vidra checks GitHub Releases at startup and installs
+  signed updates in one click, then restarts. Unsigned or tampered
+  installers are refused.
 - **English and Turkish** throughout.
 
 ## Supported providers (v0.1)

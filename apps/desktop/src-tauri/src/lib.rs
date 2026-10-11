@@ -114,6 +114,7 @@ pub fn smoke_test(archive_root: &Path) -> serde_json::Value {
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let handle = app.handle().clone();
             let root_default = default_root(&handle);
@@ -197,6 +198,7 @@ pub fn run() {
             commands::reconnect_archive_root,
             commands::choose_export_dir,
             commands::check_for_updates,
+            commands::install_update,
             commands::open_external_url,
             commands::save_text_file,
             commands::list_providers,

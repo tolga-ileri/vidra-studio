@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from "react-router"
 
 import { AppShell, DemoBanner } from "@/components/app/shell"
 import { StorageBanner } from "@/components/app/storage"
+import { AutoUpdate } from "@/components/app/updater"
 import { ErrorBoundary, Mark } from "@/components/app/common"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/sonner"
@@ -99,6 +100,7 @@ export default function App() {
       <div className="flex h-full flex-col">
         <DemoBanner />
         {ready && onboarded && <StorageBanner />}
+        {ready && onboarded && <AutoUpdate />}
         <div className="min-h-0 flex-1">
           <ErrorBoundary>{body}</ErrorBoundary>
         </div>

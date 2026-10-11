@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.3] - 2026-10-11
+
+### Added
+
+- In-app automatic updates. Vidra checks GitHub Releases at startup and offers "Update now", which downloads the installer, verifies its minisign signature against the key embedded in the app, installs it and restarts. Settings has the same button.
+- Releases are published automatically from version tags, with a signed `latest.json` updater manifest.
+
 ## [0.1.2] - 2026-10-11
 
 ### Fixed

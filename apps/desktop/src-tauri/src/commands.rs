@@ -164,8 +164,13 @@ pub async fn choose_export_dir<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn check_for_updates(core: S<'_>) -> AppResult<Option<UpdateInfo>> {
-    Ok(crate::updates::check(&core.net).await)
+pub async fn check_for_updates<R: Runtime>(app: AppHandle<R>) -> AppResult<Option<UpdateInfo>> {
+    Ok(crate::updates::check(&app).await)
+}
+
+#[tauri::command]
+pub async fn install_update<R: Runtime>(app: AppHandle<R>) -> AppResult<()> {
+    crate::updates::install(&app).await
 }
 
 /* ── Providers / models ────────────────────────────────────────────────── */
