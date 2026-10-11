@@ -32,7 +32,7 @@ test amaçlı üretilmiş içeriktir ve ücretli çağrı yapılmadı.
 
 ## İndirme
 
-Windows yükleyicisini **[GitHub Releases](https://github.com/tolga-ileri/vidra-studio/releases/latest)** sayfasından indir.
+Windows yükleyicisini **[GitHub Releases](https://github.com/tolga-ileri/vidra-studio/releases)** sayfasından indir.
 
 - `Vidra.Studio_<sürüm>_x64-setup.exe` önerilen yükleyicidir. Kullanıcıya
   özel kurulur ve yönetici izni gerektirmez.

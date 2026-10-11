@@ -61,7 +61,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release-artifacts | Out-Null
-          Get-ChildItem apps/desktop/src-tauri/target/release/bundle -Recurse -Include *-setup.exe | Copy-Item -Destination release-artifacts
+          # GitHub replaces spaces in asset names with dots; name files that way
+          # up front so SHA256SUMS.txt matches the published asset names.
+          Get-ChildItem apps/desktop/src-tauri/target/release/bundle -Recurse -Include *-setup.exe | ForEach-Object { Copy-Item $_.FullName (Join-Path release-artifacts ($_.Name -replace ' ', '.')) }
           Copy-Item apps/desktop/src-tauri/target/release/vidra-studio.exe release-artifacts/Vidra-Studio-portable.exe
           $sums = Get-ChildItem release-artifacts -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name }
           $sums | Set-Content release-artifacts/SHA256SUMS.txt

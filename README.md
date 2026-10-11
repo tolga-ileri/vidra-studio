@@ -33,7 +33,7 @@ generated test footage and no paid calls were made.
 
 ## Download
 
-Get the Windows installer from **[GitHub Releases](https://github.com/tolga-ileri/vidra-studio/releases/latest)**.
+Get the Windows installer from **[GitHub Releases](https://github.com/tolga-ileri/vidra-studio/releases)**.
 
 - `Vidra.Studio_<version>_x64-setup.exe` is the recommended installer. It
   installs per user and does not need administrator rights.
