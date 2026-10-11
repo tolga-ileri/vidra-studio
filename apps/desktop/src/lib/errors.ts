@@ -70,6 +70,12 @@ export function describeError(error: unknown): { title: string; description: str
     const titleKey = `error.${error.code}`
     const title = hasKey(titleKey) ? translate(lang, titleKey) : translate(lang, "error.unknown")
     const details = error.details ?? {}
+    if (error.code === "invalid_input" && details.code === "credential" && typeof details.reason === "string") {
+      const fieldKey = `credential.${String(details.field ?? "")}`
+      const field = hasKey(fieldKey) ? translate(lang, fieldKey) : String(details.field ?? "")
+      const bodyKey = `credentialError.${details.reason}`
+      if (hasKey(bodyKey)) return { title, description: translate(lang, bodyKey, { field }) }
+    }
     if (error.code === "invalid_input" && typeof details.code === "string") {
       const field = typeof details.field === "string" ? details.field : typeof details.key === "string" ? details.key : ""
       const models = useApp.getState().models
