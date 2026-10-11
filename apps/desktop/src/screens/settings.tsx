@@ -6,7 +6,7 @@ import type { ImportPreview, Language } from "@vidra/core"
 import { BudgetPanel } from "@/components/app/budget-panel"
 import { Kv, PageHeader, Section } from "@/components/app/common"
 import { StorageSection } from "@/components/app/storage"
-import { installUpdate } from "@/components/app/updater"
+import { offerUpdate } from "@/components/app/updater"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -167,7 +167,7 @@ export function SettingsScreen() {
                   {update.newer ? t("settings.updateAvailable", { version: update.latestVersion }) : t("settings.upToDate", { version: update.currentVersion })}
                 </p>
                 {update.newer && (
-                  <Button size="sm" onClick={() => void installUpdate()}>
+                  <Button size="sm" onClick={() => offerUpdate(update.latestVersion)}>
                     {t("update.install")}
                   </Button>
                 )}

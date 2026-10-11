@@ -161,7 +161,7 @@ export const ipc = {
   chooseExportDir: () => call<AppSettings | null>("choose_export_dir"),
   checkForUpdates: () => call<UpdateInfo | null>("check_for_updates"),
   /** Downloads and verifies the signed update, installs it and restarts. */
-  installUpdate: () => call<void>("install_update"),
+  installUpdate: (acknowledgeActive: boolean) => call<void>("install_update", { acknowledgeActive }),
   /** Opens an allowlisted official docs/project URL in the system browser. */
   openExternalUrl: (url: string) => call<void>("open_external_url", { url }),
   /** Native save dialog for text exports (csv/json/txt); false if cancelled. */

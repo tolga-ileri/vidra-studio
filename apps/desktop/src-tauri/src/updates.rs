@@ -3,6 +3,7 @@
 //! run after its minisign signature verifies against the public key embedded
 //! in tauri.conf.json, so a tampered download is refused.
 
+use crate::core::Core;
 use crate::error::{AppError, AppResult, ErrorCode};
 use crate::types::UpdateInfo;
 use tauri::{AppHandle, Runtime};
@@ -42,6 +43,36 @@ pub async fn check<R: Runtime>(app: &AppHandle<R>) -> Option<UpdateInfo> {
     }
 }
 
+/// Generations still running at the provider and downloads not yet saved.
+/// Installing restarts the app, so these are surfaced before any update.
+pub fn active_work(core: &Core) -> AppResult<(i64, i64)> {
+    let c = core.db.conn();
+    let jobs = c.query_row(
+        "SELECT COUNT(*) FROM generation_jobs WHERE status IN ('submitting','queued','generating')",
+        [],
+        |r| r.get(0),
+    )?;
+    let downloads = c.query_row(
+        "SELECT COUNT(*) FROM download_tasks WHERE status IN ('pending','downloading')",
+        [],
+        |r| r.get(0),
+    )?;
+    Ok((jobs, downloads))
+}
+
+/// Never interrupts active work silently: the user must confirm again,
+/// knowing how many generations and downloads are in progress.
+pub fn require_ack(jobs: i64, downloads: i64, acknowledged: bool) -> AppResult<()> {
+    if (jobs > 0 || downloads > 0) && !acknowledged {
+        return Err(AppError::new(
+            ErrorCode::ConfirmationRequired,
+            "Generations or downloads are still in progress.",
+        )
+        .with_details(serde_json::json!({ "activeJobs": jobs, "activeDownloads": downloads })));
+    }
+    Ok(())
+}
+
 /// Downloads, verifies and installs the newest release, then restarts.
 pub async fn install<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
     let update = app
@@ -73,6 +104,15 @@ pub fn parse_version(s: &str) -> Option<(u64, u64, u64)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn active_work_needs_a_second_confirmation() {
+        assert!(require_ack(0, 0, false).is_ok());
+        let e = require_ack(1, 2, false).unwrap_err();
+        assert_eq!(e.code, ErrorCode::ConfirmationRequired);
+        assert_eq!(e.details.unwrap()["activeDownloads"], 2);
+        assert!(require_ack(1, 2, true).is_ok());
+    }
 
     #[test]
     fn semver_parse() {

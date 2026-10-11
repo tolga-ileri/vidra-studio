@@ -89,6 +89,10 @@ jobs:
             platforms = @{ "windows-x86_64" = @{ signature = $sig.Trim(); url = "https://github.com/tolga-ileri/vidra-studio/releases/download/$($env:TAG)/$asset" } }
           }
           $manifest | ConvertTo-Json -Depth 5 | Set-Content release-artifacts/latest.json
+          # Gate: the published signature must verify against the public key
+          # embedded in the app, independently of Tauri, or nothing is released.
+          node scripts/verify-update-signature.mjs (Join-Path release-artifacts $asset) release-artifacts/latest.json
+          if ($LASTEXITCODE -ne 0) { throw "Updater signature verification failed" }
           $state = if ($env:SIGNING_THUMBPRINT) { "Authenticode-signed" } else { "UNSIGNED (no code-signing certificate configured)" }
           "Windows binaries in this release are: $state." | Set-Content release-artifacts/SIGNING.txt
 

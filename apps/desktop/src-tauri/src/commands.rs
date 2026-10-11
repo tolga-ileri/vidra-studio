@@ -169,7 +169,14 @@ pub async fn check_for_updates<R: Runtime>(app: AppHandle<R>) -> AppResult<Optio
 }
 
 #[tauri::command]
-pub async fn install_update<R: Runtime>(app: AppHandle<R>) -> AppResult<()> {
+pub async fn install_update<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    acknowledge_active: bool,
+) -> AppResult<()> {
+    let core = core.inner().clone();
+    let (jobs, downloads) = blocking(move || crate::updates::active_work(&core)).await??;
+    crate::updates::require_ack(jobs, downloads, acknowledge_active)?;
     crate::updates::install(&app).await
 }
 
@@ -735,6 +742,7 @@ pub const COMMANDS: &[&str] = &[
     "reconnect_archive_root",
     "choose_export_dir",
     "check_for_updates",
+    "install_update",
     "open_external_url",
     "save_text_file",
     "list_providers",
