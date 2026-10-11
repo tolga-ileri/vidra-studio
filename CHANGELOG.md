@@ -11,6 +11,14 @@ All notable changes to this project are documented here. The format follows
 - In-app automatic updates. Vidra checks GitHub Releases at startup and shows an "update available" notice. Nothing is downloaded or installed until you approve it in the update dialog. The installer's minisign signature is verified against the key embedded in the app before it runs, and Vidra restarts afterwards.
 - If generations or downloads are in progress, installing asks for a second confirmation with their counts (enforced natively). Active work is never interrupted silently.
 - `scripts/verify-update-signature.mjs` is an independent signature verifier. The release workflow refuses to publish when the signature does not verify.
+
+### Changed
+
+- The credential namespace and default archive folder now follow the app identity. Vidra Studio keeps `dev.tolgaileri.vidra` and `Videos\Vidra Studio`, guarded by a test; differently identified test builds stay isolated.
+
+### Fixed
+
+- Rust tests left their temporary database folders behind on Windows (the test environment deleted the folder before closing SQLite).
 - Releases are published automatically from version tags, with a signed `latest.json` updater manifest.
 
 ## [0.1.2] - 2026-10-11

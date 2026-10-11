@@ -47,7 +47,7 @@ fn default_root<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
         .video_dir()
         .or_else(|_| app.path().home_dir().map(|h| h.join("Videos")))
         .unwrap_or_else(|_| PathBuf::from("."))
-        .join("Vidra Studio")
+        .join(&app.package_info().name)
 }
 
 /// `--smoke-test`: self-checks for packaged builds; prints JSON and exits.
@@ -135,8 +135,11 @@ pub fn run() {
             let mut net = net::Net::new();
             // e2e builds use the real Windows Credential Manager in a
             // separate namespace so tests never touch real credentials.
+            // The credential namespace follows the app identifier
+            // ("dev.tolgaileri.vidra" for Vidra Studio), so a differently
+            // identified build never reads or writes Vidra Studio's keys.
             #[cfg(not(feature = "e2e-mock"))]
-            let secret_store = secrets::KeyringStore::new();
+            let secret_store = secrets::KeyringStore::with_service(&handle.config().identifier);
             #[cfg(feature = "e2e-mock")]
             let secret_store = secrets::KeyringStore::with_service("dev.tolgaileri.vidra.e2e");
             #[cfg(feature = "e2e-mock")]

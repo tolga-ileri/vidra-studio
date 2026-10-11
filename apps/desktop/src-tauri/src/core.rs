@@ -208,11 +208,14 @@ pub mod testing {
     use super::*;
     use crate::secrets::MemoryStore;
 
+    /// Fields drop in declaration order: `core` (which holds the open SQLite
+    /// file) must close before `dir` is deleted, or Windows keeps the file
+    /// locked and the temp folder silently stays behind.
     pub struct TestEnv {
-        pub dir: tempfile::TempDir,
         pub core: Arc<Core>,
         pub sink: Arc<VecSink>,
         pub secrets: Arc<MemoryStore>,
+        pub dir: tempfile::TempDir,
     }
 
     pub fn env_with(

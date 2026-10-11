@@ -19,3 +19,6 @@ apps/desktop/tests/native/.run/
 .private/
 # Registry signing keys (never commit)
 .signing/
+
+# Local data backups (never commit)
+.backups/
