@@ -76,7 +76,9 @@ jobs:
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }} # passed via env, never interpolated into the script
         shell: pwsh
         run: |
+          if ($env:TAG -notmatch '^v\d+\.\d+\.\d+$') { throw "Unexpected tag: $env:TAG" }
           $notes = (Get-Content release-artifacts/SIGNING.txt -Raw) + "`nVerify downloads against SHA256SUMS.txt. See CHANGELOG.md for changes."
-          gh release create "${{ github.ref_name }}" (Get-ChildItem release-artifacts -File).FullName --draft --title "Vidra Studio ${{ github.ref_name }}" --notes $notes
+          gh release create $env:TAG (Get-ChildItem release-artifacts -File).FullName --draft --title "Vidra Studio $env:TAG" --notes $notes
