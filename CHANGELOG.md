@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-10-11
+
+### Fixed
+
+- Saving a Higgsfield key pasted as one `KEY_ID:KEY_SECRET` string into one field (with the other left empty) failed with "Some values are not accepted by this model". It is now split into both fields.
+
 ## [0.1.1] - 2026-10-11
 
 ### Fixed
