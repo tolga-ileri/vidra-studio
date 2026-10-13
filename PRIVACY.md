@@ -19,6 +19,9 @@ telemetry, no analytics and no crash reporting**. There is no Vidra server.
   - your credential, sent as the provider requires.
 
   Each provider's own privacy policy and terms apply to that data.
+- **To the provider's upload endpoint:** reference images you attach to a
+  generation, through the provider's documented upload flow, only when you
+  attach them. Saved library copies stay in your archive folder.
 - **To the provider's media host:** the download request that saves your
   finished output into your archive.
 - **To GitHub Releases**, once when Vidra starts and when you click "Check

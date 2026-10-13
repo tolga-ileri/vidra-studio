@@ -273,6 +273,62 @@ pub async fn upload_dropped_reference(
     references::upload(&core, provider, &path, None).await
 }
 
+/* ── Reference library ─────────────────────────────────────────────────── */
+
+#[tauri::command]
+pub fn list_references(core: S<'_>) -> AppResult<Vec<ReferenceAsset>> {
+    crate::reference_library::list(&core)
+}
+
+#[tauri::command]
+pub async fn save_reference(
+    core: S<'_>,
+    sha256: String,
+    name: String,
+    ref_type: String,
+) -> AppResult<ReferenceAsset> {
+    let core = core.inner().clone();
+    blocking(move || crate::reference_library::save(&core, &sha256, &name, &ref_type)).await?
+}
+
+#[tauri::command]
+pub fn update_reference(
+    core: S<'_>,
+    id: String,
+    name: Option<String>,
+    ref_type: Option<String>,
+) -> AppResult<ReferenceAsset> {
+    crate::reference_library::update(&core, &id, name.as_deref(), ref_type.as_deref())
+}
+
+#[tauri::command]
+pub fn delete_reference(core: S<'_>, id: String) -> AppResult<()> {
+    crate::reference_library::delete(&core, &id)
+}
+
+/// Uploads a saved (library) or staged image to the provider for a new
+/// generation. Exactly one of `saved_id` / `sha256` is given.
+#[tauri::command]
+pub async fn attach_reference(
+    core: S<'_>,
+    provider: String,
+    saved_id: Option<String>,
+    sha256: Option<String>,
+) -> AppResult<UploadedReference> {
+    use crate::reference_library::AttachSource;
+    let provider = self::provider(&provider)?;
+    let source = match (&saved_id, &sha256) {
+        (Some(id), _) => AttachSource::Saved(id),
+        (None, Some(sha)) => AttachSource::Staged(sha),
+        _ => {
+            return Err(AppError::invalid(
+                "A saved reference or a staged image is required.",
+            ))
+        }
+    };
+    crate::reference_library::attach(&core, provider, source).await
+}
+
 /* ── Generation ────────────────────────────────────────────────────────── */
 
 #[tauri::command]
@@ -756,6 +812,11 @@ pub const COMMANDS: &[&str] = &[
     "list_models",
     "pick_reference",
     "upload_dropped_reference",
+    "list_references",
+    "save_reference",
+    "update_reference",
+    "delete_reference",
+    "attach_reference",
     "estimate_generation",
     "submit_generation",
     "cancel_generation",

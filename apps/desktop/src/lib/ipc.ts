@@ -6,13 +6,13 @@ import type {
   ArchiveEntry,
   ArchiveMovePlan,
   ArchiveMoveResult,
+  ArchiveQuery,
   CatalogEntry,
   CatalogStatus,
   CatalogSyncResult,
-  StorageStatus,
-  ArchiveQuery,
   DownloadTask,
   GenerationJob,
+  GenerationReference,
   Id,
   ImportPreview,
   ImportResult,
@@ -26,7 +26,10 @@ import type {
   PromptVersion,
   ProviderId,
   ProviderStatus,
+  ReferenceAsset,
+  ReferenceType,
   StorageStats,
+  StorageStatus,
   StoreEvent,
 } from "@vidra/core"
 
@@ -116,6 +119,10 @@ export interface GenerationInput {
   prompt: string
   negativePrompt: string | null
   params: ParamValues
+  /** Reference images included in `params`, with what they stand for. */
+  references?: GenerationReference[]
+  /** "Keep character consistency" was on (its guidance is part of `prompt`). */
+  preserveIdentity?: boolean
 }
 
 export interface UploadedReference {
@@ -124,6 +131,14 @@ export interface UploadedReference {
   name: string
   /** Small data: URL preview for images, null otherwise. */
   previewDataUrl: string | null
+  /** Content hash; identifies the staged file for saving or re-uploading. */
+  sha256: string
+  mime: string
+  sizeBytes: number
+  width: number | null
+  height: number | null
+  /** Set when the upload came from the reference library. */
+  savedId: Id | null
 }
 
 export interface AppInfo {
@@ -191,6 +206,20 @@ export const ipc = {
     call<UploadedReference | null>("pick_reference", { provider, kind }),
   uploadDroppedReference: (provider: ProviderId, dropToken: string) =>
     call<UploadedReference>("upload_dropped_reference", { provider, dropToken }),
+  /* Reference library (saved mascots, products, styles, scenes, frames) */
+  listReferences: () => call<ReferenceAsset[]>("list_references"),
+  saveReference: (sha256: string, name: string, refType: ReferenceType) =>
+    call<ReferenceAsset>("save_reference", { sha256, name, refType }),
+  updateReference: (id: Id, patch: { name?: string; refType?: ReferenceType }) =>
+    call<ReferenceAsset>("update_reference", { id, name: patch.name ?? null, refType: patch.refType ?? null }),
+  deleteReference: (id: Id) => call<void>("delete_reference", { id }),
+  /** Uploads a saved or staged image to the provider for a new generation. */
+  attachReference: (provider: ProviderId, source: { savedId: Id } | { sha256: string }) =>
+    call<UploadedReference>("attach_reference", {
+      provider,
+      savedId: "savedId" in source ? source.savedId : null,
+      sha256: "sha256" in source ? source.sha256 : null,
+    }),
 
   /* Generation */
   estimateGeneration: (input: GenerationInput) => call<Estimate>("estimate_generation", { input }),

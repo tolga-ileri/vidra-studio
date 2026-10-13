@@ -157,7 +157,7 @@ pub fn validate_file(path: &Path, expected: Option<&str>) -> AppResult<ValidFile
     })
 }
 
-fn preview(bytes: &[u8], mime: &str) -> Option<String> {
+pub(crate) fn preview(bytes: &[u8], mime: &str) -> Option<String> {
     let fmt = match mime {
         "image/png" => image::ImageFormat::Png,
         "image/jpeg" => image::ImageFormat::Jpeg,
@@ -309,6 +309,28 @@ pub async fn upload(
     } else {
         None
     };
+    // Keep the bytes until the user saves the image or a day passes, so it
+    // can be stored in the library or re-uploaded for another provider.
+    let sha256 = crate::reference_library::stage(core, &file)?;
+    let (width, height) = if file.kind == "image" {
+        crate::reference_library::image_dimensions(&file.bytes)
+            .map_or((None, None), |(w, h)| (Some(w), Some(h)))
+    } else {
+        (None, None)
+    };
+    let size_bytes = file.bytes.len() as i64;
+    let describe = |url: String| UploadedReference {
+        url,
+        kind: file.kind.to_string(),
+        name: file.name.clone(),
+        preview_data_url: preview_data_url.clone(),
+        sha256: sha256.clone(),
+        mime: file.mime.to_string(),
+        size_bytes,
+        width,
+        height,
+        saved_id: None,
+    };
     if takes_inline_references(provider) {
         // Kling: documented inputs are URL or Base64; jpg/png only for frames.
         if !matches!(file.mime, "image/jpeg" | "image/png") {
@@ -316,23 +338,14 @@ pub async fn upload(
                 "Kling AI accepts JPG or PNG images for reference frames.",
             ));
         }
+        let described = describe(String::new());
         let url = store_inline(core, file.bytes);
-        return Ok(UploadedReference {
-            url,
-            kind: file.kind.to_string(),
-            name: file.name,
-            preview_data_url,
-        });
+        return Ok(UploadedReference { url, ..described });
     }
     let url = p
-        .upload_reference(&creds, file.bytes, file.mime, &file.name)
+        .upload_reference(&creds, file.bytes.clone(), file.mime, &file.name)
         .await?;
-    Ok(UploadedReference {
-        url,
-        kind: file.kind.to_string(),
-        name: file.name,
-        preview_data_url,
-    })
+    Ok(describe(url))
 }
 
 #[cfg(test)]

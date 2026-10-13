@@ -100,6 +100,10 @@ async function launch() {
       VIDRA_E2E_DATA_DIR: dataDir,
       VIDRA_E2E_DIALOG_DIR: dialogDir,
       VIDRA_E2E_OPEN_FILE: fixtures.png,
+      // Own WebView2 profile: the test app must not share (or fight over) the
+      // profile of a Vidra Studio the user may have open.
+      // A fresh profile per launch: a hard kill can leave the previous one locked.
+      WEBVIEW2_USER_DATA_FOLDER: join(run, `webview-${Date.now()}`),
       // CDP for the test driver, plus Chromium's switches that stop throttling
       // when the window is covered by other windows on this desktop (the run
       // shares the user's screen). Without them requestAnimationFrame stalls
@@ -156,6 +160,9 @@ async function generate(prompt: string, model = "Seedance 2.0 · Text to video")
   await nav("Video Studio").click()
   await expect(page.getByRole("heading", { name: "Video Studio", level: 1 })).toBeVisible()
   await selectModel(model)
+  // Leftover references from a previous step would (rightly) block a model
+  // that cannot take them; a user removes them first, and so does this helper.
+  while ((await page.getByTestId("refs-remove").count()) > 0) await page.getByTestId("refs-remove").first().click()
   await page.getByTestId("prompt-input").fill(prompt)
   await expect(page.getByTestId("prompt-input")).toHaveValue(prompt)
   await expect(page.getByTestId("studio-estimate")).toContainText("$")
@@ -172,6 +179,19 @@ async function generate(prompt: string, model = "Seedance 2.0 · Text to video")
 async function archiveStates() {
   const cards = await archiveCard("E2E")
   return Promise.all((await cards.all()).map((c) => c.getAttribute("data-state")))
+}
+
+/** Submits the current studio form without navigating (keeps references). */
+async function submitPrompt(prompt: string) {
+  await page.getByTestId("prompt-input").fill(prompt)
+  await expect(page.getByTestId("prompt-input")).toHaveValue(prompt)
+  await expect(page.getByTestId("studio-estimate")).toContainText("$")
+  await page.getByTestId("generate-button").click()
+  const dialog = page.getByTestId("confirm-generate")
+  await expect(dialog).toContainText("not a provider billing cap")
+  await dialog.getByTestId("confirm-generate-button").click()
+  await expect(dialog).toBeHidden()
+  await expect(page.getByTestId("studio-jobs").getByRole("listitem").filter({ hasText: prompt.slice(0, 40) }).first()).toBeVisible()
 }
 
 async function archiveCard(search: string) {
@@ -534,17 +554,24 @@ test.describe.serial("native desktop journey (mock provider, no paid calls)", ()
     await fetch(`${mock.base}/__control`, { method: "POST", body: JSON.stringify({ expireMedia: false }) })
   })
 
-  test("image-to-video uploads the reference through the provider's storage flow", async () => {
+  test("image-to-video uploads the first frame through the provider's storage flow", async () => {
     await nav("Video Studio").click()
-    await page.getByTestId("model-picker").click()
-    await page.keyboard.press("Escape")
     await selectModel("Kling 3.0 Pro · Image to video")
     const uploadsBefore = mock.stats.uploads
-    await page.locator('[data-param-key="start_image"] button').last().click()
-    await expect(page.locator('[data-param-key="start_image"] img')).toBeVisible()
+    await page.getByTestId("refs-add").click()
+    const tile = page.getByTestId("refs-tile").first()
+    await expect(tile).toHaveAttribute("data-status", "ready")
+    await expect(tile.locator("img")).toBeVisible()
     expect(mock.stats.uploads).toBe(uploadsBefore + 1)
     expect(mock.stats.uploadPuts).toBeGreaterThan(0)
+    // A mascot has no input on image-to-video; as the first frame it fits.
+    await expect(page.getByTestId("refs-unsupported")).toContainText("no such input")
+    await tile.getByTestId("refs-type").click()
+    await page.getByRole("option", { name: "First frame" }).click()
+    await expect(tile).toHaveAttribute("data-placed", "true")
+    await expect(page.getByTestId("refs-unsupported")).toBeHidden()
   })
+
 
   test("a 30-second Seedance 2.5 request reaches the provider unchanged", async () => {
     await nav("Video Studio").click()
@@ -617,6 +644,96 @@ test.describe.serial("native desktop journey (mock provider, no paid calls)", ()
     const saved = states.filter((x) => x === "saved").length
     await expect.poll(async () => (await archiveStates()).length).toBe(states.length)
     await expect.poll(async () => (await archiveStates()).filter((x) => x === "saved").length).toBeGreaterThanOrEqual(saved)
+  })
+
+  test("a mascot reference is uploaded, saved to the library and sent as image_urls (reference-to-video)", async () => {
+    await nav("Video Studio").click()
+    await selectModel("Seedance 2.5 · Reference to video")
+    const uploadsBefore = mock.stats.uploads
+    await page.getByTestId("refs-add").click()
+    const tile = page.getByTestId("refs-tile").first()
+    await expect(tile).toHaveAttribute("data-status", "ready")
+    await expect(tile).toHaveAttribute("data-placed", "true")
+    expect(mock.stats.uploads).toBe(uploadsBefore + 1)
+    await tile.getByTestId("refs-name").fill("ZihinLab maskot")
+    await tile.getByTestId("refs-save").click()
+    await expect(tile.getByText("Saved")).toBeVisible()
+    await expect(page.getByTestId("refs-guidance")).toContainText('character "ZihinLab maskot"')
+    await submitPrompt("E2E ZihinLab advert with the mascot")
+    await expect(page.getByTestId("studio-jobs").locator('[data-job-status="completed"]').first()).toBeVisible({ timeout: 60_000 })
+
+    const jobs = (await fetch(`${mock.base}/__jobs`).then((r) => r.json())) as Array<{ path: string; body: Record<string, unknown> }>
+    const job = jobs.find((j) => j.path.endsWith("/reference-to-video") && String(j.body.prompt).includes("ZihinLab advert"))!
+    expect(job).toBeTruthy()
+    const urls = job.body.image_urls as string[]
+    expect(urls).toHaveLength(1)
+    expect(urls[0]!.startsWith("https://cdn.vidra-e2e-fixtures.example.com/")).toBe(true)
+    expect(String(job.body.prompt)).toContain('Reference image 1 shows the character "ZihinLab maskot"')
+    expect(job.body.image_url).toBeUndefined()
+
+    const d = db()
+    const row = d.prepare("SELECT references_json, preserve_identity FROM generation_jobs WHERE prompt LIKE '%ZihinLab advert%'").get() as { references_json: string; preserve_identity: number }
+    const saved = d.prepare("SELECT name, ref_type, local_path, sha256 FROM reference_assets").all() as Array<{ name: string; ref_type: string; local_path: string; sha256: string }>
+    d.close()
+    expect(JSON.parse(row.references_json)[0]).toMatchObject({ paramKey: "reference_images", refType: "character", name: "ZihinLab maskot", savedId: expect.any(String) })
+    expect(row.preserve_identity).toBe(1)
+    expect(saved).toHaveLength(1)
+    expect(saved[0]!.name).toBe("ZihinLab maskot")
+    const root = existsSync(join(secondRoot, "media")) ? secondRoot : archiveRoot
+    expect(existsSync(join(root, saved[0]!.local_path))).toBe(true)
+    expect(sha256(join(root, saved[0]!.local_path))).toBe(saved[0]!.sha256)
+    expect(saved[0]!.sha256).toBe(sha256(fixtures.png))
+  })
+
+  test("a saved mascot is reused from the library, never dropped on an incompatible model, and maps to frames", async () => {
+    await nav("Video Studio").click()
+    await selectModel("Seedance 2.5 · Text to video")
+    // Start from an empty panel (the previous step's tile is still there).
+    while ((await page.getByTestId("refs-remove").count()) > 0) await page.getByTestId("refs-remove").first().click()
+    const uploadsBefore = mock.stats.uploads
+    await page.getByTestId("refs-library").click()
+    await page.getByTestId("refs-library-item").filter({ hasText: "ZihinLab maskot" }).getByTestId("refs-library-use").click()
+    const tile = page.getByTestId("refs-tile").first()
+    await expect(tile).toHaveAttribute("data-status", "ready")
+    // Re-uploaded from the local library (the provider's storage is temporary).
+    expect(mock.stats.uploads).toBe(uploadsBefore + 1)
+    await expect(tile.getByText("Saved")).toBeVisible()
+    // Text-to-video has no reference input: warned and offered a compatible model; the image stays.
+    const warning = page.getByTestId("refs-unsupported")
+    await expect(warning).toContainText("no such input")
+    await warning.getByTestId("refs-switch-higgsfield:bytedance/seedance-2.5/reference-to-video").click()
+    await expect(page.getByTestId("model-picker")).toContainText("Seedance 2.5 · Reference to video")
+    await expect(tile).toHaveAttribute("data-placed", "true")
+    await expect(warning).toBeHidden()
+
+    // As a first frame on an image-to-video model it goes to image_url.
+    await tile.getByTestId("refs-type").click()
+    await page.getByRole("option", { name: "First frame" }).click()
+    await selectModel("Seedance 2.5 · Image to video")
+    await expect(tile).toHaveAttribute("data-placed", "true")
+    await submitPrompt("E2E first-frame mascot scene")
+    await expect(page.getByTestId("studio-jobs").locator('[data-job-status="completed"]').first()).toBeVisible({ timeout: 60_000 })
+    const jobs = (await fetch(`${mock.base}/__jobs`).then((r) => r.json())) as Array<{ path: string; body: Record<string, unknown> }>
+    const job = jobs.find((j) => j.path.endsWith("/image-to-video") && String(j.body.prompt).includes("first-frame mascot"))!
+    expect(typeof job.body.image_url).toBe("string")
+    expect(String(job.body.image_url).startsWith("https://cdn.vidra-e2e-fixtures.example.com/")).toBe(true)
+    expect(job.body.image_urls).toBeUndefined()
+    // Frames are documented inputs: no consistency text is added for them.
+    expect(String(job.body.prompt)).not.toContain("Reference image")
+    const d = db()
+    const used = d.prepare("SELECT use_count FROM reference_assets").get() as { use_count: number }
+    d.close()
+    expect(used.use_count).toBeGreaterThanOrEqual(1)
+  })
+
+  test("text-to-video without references is unchanged", async () => {
+    await generate("E2E plain text-to-video after references", "Seedance 2.0 · Text to video")
+    await expect(page.getByTestId("studio-jobs").locator('[data-job-status="completed"]').first()).toBeVisible({ timeout: 60_000 })
+    const jobs = (await fetch(`${mock.base}/__jobs`).then((r) => r.json())) as Array<{ path: string; body: Record<string, unknown> }>
+    const job = jobs.find((j) => String(j.body.prompt).includes("plain text-to-video"))!
+    expect(job.body.image_urls).toBeUndefined()
+    expect(job.body.image_url).toBeUndefined()
+    expect(job.body.prompt).toBe("E2E plain text-to-video after references")
   })
 
   test("removing credentials deletes them from Windows Credential Manager", async () => {

@@ -39,6 +39,9 @@ async function launch(env: Record<string, string>) {
     env: {
       ...process.env,
       ...env,
+      // Own WebView2 profile: the test app must not share (or fight over) the
+      // profile of a Vidra Studio the user may have open.
+      WEBVIEW2_USER_DATA_FOLDER: join(run, "webview"),
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: [
         `--remote-debugging-port=${CDP_PORT}`,
         "--disable-backgrounding-occluded-windows",

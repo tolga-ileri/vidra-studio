@@ -75,6 +75,11 @@ Node.js, database or command line is needed.
   - Moving the archive copies and verifies every file first. Old copies are
     removed only if you confirm.
   - If a drive is unplugged, downloads pause until you reconnect.
+- **Visual references.** Drop mascot, product, style or scene images into the
+  Video Studio, name and type them, and the app places them into the model's
+  documented inputs (reference images, first/last frames). Save them to a local
+  library and reuse them across scenes. "Keep character consistency" adds
+  visible prompt guidance; it's guidance, not a guarantee.
 - **Prompt Library.** Original templates with `{variables}`, categories,
   tags, favorites, version history, model presets and import/export.
 - **Analytics.** Generations, success rate, output duration, and spending by

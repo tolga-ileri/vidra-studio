@@ -20,7 +20,8 @@ pub mod pricing;
 pub mod prompts;
 pub mod provider_admin;
 pub mod providers;
-pub mod references;
+pub mod reference_library;
+mod references;
 pub mod rules;
 pub mod secrets;
 pub mod settings;
@@ -215,6 +216,11 @@ pub fn run() {
             commands::list_models,
             commands::pick_reference,
             commands::upload_dropped_reference,
+            commands::list_references,
+            commands::save_reference,
+            commands::update_reference,
+            commands::delete_reference,
+            commands::attach_reference,
             commands::estimate_generation,
             commands::submit_generation,
             commands::cancel_generation,

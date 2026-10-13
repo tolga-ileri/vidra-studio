@@ -116,7 +116,7 @@ bundle where required.
 | [zod](https://zod.dev) | 4.6.5 | MIT |
 | [zustand](https://github.com/pmndrs/zustand) | 5.0.15 | MIT |
 
-## Rust crates (337)
+## Rust crates (339)
 
 | Package | Version | License |
 | --- | --- | --- |
@@ -238,6 +238,7 @@ bundle where required.
 | [idna](https://github.com/servo/rust-url/) | 1.1.0 | MIT OR Apache-2.0 |
 | [idna_adapter](https://github.com/hsivonen/idna_adapter) | 1.2.2 | Apache-2.0 OR MIT |
 | [image](https://github.com/image-rs/image) | 0.25.10 | MIT OR Apache-2.0 |
+| [image-webp](https://github.com/image-rs/image-webp) | 0.2.4 | MIT OR Apache-2.0 |
 | [indexmap](https://github.com/indexmap-rs/indexmap) | 2.14.2 | Apache-2.0 OR MIT |
 | [indexmap](https://github.com/bluss/indexmap) | 1.9.3 | Apache-2.0 OR MIT |
 | [infer](https://github.com/bojand/infer) | 0.22.0 | MIT |
@@ -291,6 +292,7 @@ bundle where required.
 | [precomputed-hash](https://github.com/emilio/precomputed-hash) | 0.1.1 | MIT |
 | [proc-macro2](https://github.com/dtolnay/proc-macro2) | 1.0.107 | MIT OR Apache-2.0 |
 | [pxfm](https://github.com/awxkee/pxfm) | 0.1.30 | BSD-3-Clause OR Apache-2.0 |
+| [quick-error](http://github.com/tailhook/quick-error) | 2.0.1 | MIT/Apache-2.0 |
 | [quick-xml](https://github.com/tafia/quick-xml) | 0.42.0 | MIT |
 | [quinn](https://github.com/quinn-rs/quinn) | 0.11.12 | MIT OR Apache-2.0 |
 | [quinn-proto](https://github.com/quinn-rs/quinn) | 0.11.19 | MIT OR Apache-2.0 |

@@ -18,6 +18,23 @@ async function connectReplicate(page: Page) {
   await expect(card.getByTestId("status-replicate")).toHaveText("Verified")
 }
 
+async function connectHiggsfield(page: Page) {
+  await nav(page, "Providers").click()
+  const card = page.locator('[data-provider="higgsfield"]')
+  await card.getByRole("button", { name: "Add credentials" }).click()
+  await page.locator("#cred-higgsfield-key_id").fill("demo-key-id")
+  await page.locator("#cred-higgsfield-key_secret").fill("demo-key-secret")
+  await page.getByRole("button", { name: "Save and verify" }).click()
+  await expect(card.getByTestId("status-higgsfield")).toHaveText("Verified")
+}
+
+async function selectModel(page: Page, search: string, option: string) {
+  await page.getByTestId("model-picker").click()
+  await page.getByPlaceholder("Search models…").fill(search)
+  await page.getByRole("option").filter({ hasText: option }).first().click()
+  await expect(page.getByTestId("model-picker")).toContainText(option)
+}
+
 test("onboarding can be skipped", async ({ page }) => {
   await skipOnboarding(page)
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible()
@@ -106,5 +123,74 @@ test.describe("Turkish system language", () => {
     await expect(wizard.getByRole("button", { name: "Kopyala ve doğrula" })).toBeVisible()
     await wizard.getByRole("button", { name: "Taşımayı iptal et" }).click()
     await expect(page.getByText("Taşıma iptal edildi. Hiçbir şey değiştirilmedi.")).toBeVisible()
+  })
+})
+
+/** 1×1 red PNG, enough for a real file-chooser upload through the mock. */
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+  "base64"
+)
+
+test("reference images: upload, save to the library, reuse and send with the request", async ({ page }) => {
+  await skipOnboarding(page)
+  await connectHiggsfield(page)
+  await nav(page, "Video Studio").click()
+  await selectModel(page, "Seedance 2.5", "Seedance 2.5 · Reference to video")
+
+  const chooser = page.waitForEvent("filechooser")
+  await page.getByTestId("refs-add").click()
+  await (await chooser).setFiles({ name: "mascot.png", mimeType: "image/png", buffer: PNG })
+  const tile = page.getByTestId("refs-tile").first()
+  await expect(tile).toHaveAttribute("data-status", "ready")
+  await expect(tile).toHaveAttribute("data-placed", "true")
+  await tile.getByTestId("refs-name").fill("ZihinLab maskotu")
+  await tile.getByTestId("refs-save").click()
+  await expect(tile.getByText("Saved")).toBeVisible()
+  await expect(page.getByTestId("refs-guidance")).toContainText('character "ZihinLab maskotu"')
+
+  await page.getByTestId("prompt-input").fill("A 28-second cinematic ZihinLab advertisement with the mascot")
+  await page.getByTestId("generate-button").click()
+  const dialog = page.getByTestId("confirm-generate")
+  if (await dialog.getByTestId("cost-ack").isVisible()) await dialog.getByTestId("cost-ack").getByRole("checkbox").check()
+  await dialog.getByTestId("confirm-generate-button").click()
+  await expect(page.getByTestId("studio-jobs").locator('[data-job-status="completed"]').first()).toBeVisible({ timeout: 20_000 })
+
+  // Reuse from the library on a fresh visit to the studio.
+  await nav(page, "Home").click()
+  await nav(page, "Video Studio").click()
+  await expect(page.getByTestId("refs-tile")).toHaveCount(0)
+  await page.getByTestId("refs-library").click()
+  const item = page.getByTestId("refs-library-item").filter({ hasText: "ZihinLab maskotu" })
+  await item.getByTestId("refs-library-use").click()
+  await expect(page.getByTestId("refs-tile").first()).toHaveAttribute("data-placed", "true")
+  await expect(page.getByTestId("refs-tile").first().getByText("Saved")).toBeVisible()
+  await page.getByTestId("refs-library").click()
+  await expect(page.getByTestId("refs-library-item").filter({ hasText: "ZihinLab maskotu" })).toContainText("Used 1 times")
+  await page.keyboard.press("Escape")
+  // On a model without a reference input the image is kept and a switch is offered.
+  await selectModel(page, "Seedance 2.5", "Seedance 2.5 · Text to video")
+  await expect(page.getByTestId("refs-unsupported")).toContainText("no such input")
+  await page.getByTestId("refs-switch-higgsfield:bytedance/seedance-2.5/reference-to-video").click()
+  await expect(page.getByTestId("model-picker")).toContainText("Reference to video")
+  await expect(page.getByTestId("refs-tile").first()).toHaveAttribute("data-placed", "true")
+})
+
+test.describe("phone-width viewport", () => {
+  test.use({ viewport: { width: 375, height: 812 } })
+  test("the video studio and the reference panel fit without horizontal scrolling", async ({ page }) => {
+    await skipOnboarding(page)
+    await page.goto("/#/video")
+    await expect(page.getByTestId("refs-panel")).toBeVisible()
+    await expect(page.getByTestId("generate-button")).toBeVisible()
+    const wide = await page.evaluate(() => {
+      const limit = document.documentElement.clientWidth
+      return [...document.querySelectorAll<HTMLElement>("body *")]
+        .filter((el) => el.getBoundingClientRect().right > limit + 1)
+        .slice(0, 8)
+        .map((el) => `${el.tagName.toLowerCase()}${el.dataset.testid ? `[${el.dataset.testid}]` : ""}.${String(el.className).split(" ").slice(0, 3).join(".")} right=${Math.round(el.getBoundingClientRect().right)}`)
+    })
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow, wide.join(" | ")).toBeLessThanOrEqual(0)
   })
 })

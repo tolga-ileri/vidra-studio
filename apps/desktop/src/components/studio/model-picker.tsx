@@ -59,7 +59,7 @@ export function ModelPicker({
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[420px] p-0" align="start">
+      <PopoverContent className="w-[420px] max-w-[calc(100vw-1rem)] p-0" align="start">
         {workflows.length > 1 && (
           <div className="flex flex-wrap gap-1 border-b p-2" role="group" aria-label={t("models.workflow")}>
             {(["all", ...workflows] as const).map((w) => (

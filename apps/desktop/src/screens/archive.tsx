@@ -170,7 +170,15 @@ export function ArchiveScreen() {
       }),
     regenerate: (e: ArchiveEntry) =>
       openInStudio(
-        { modelId: e.job.modelId, prompt: e.job.prompt, negativePrompt: e.job.negativePrompt, params: e.job.params, promptId: e.job.promptId },
+        {
+          modelId: e.job.modelId,
+          prompt: e.job.prompt,
+          negativePrompt: e.job.negativePrompt,
+          params: e.job.params,
+          promptId: e.job.promptId,
+          references: e.job.references,
+          preserveIdentity: e.job.preserveIdentity,
+        },
         e.job.output
       ),
     copyPrompt: (e: ArchiveEntry) =>

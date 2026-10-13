@@ -1,6 +1,6 @@
 [package]
 name = "vidra-studio"
-version = "0.1.5"
+version = "0.2.0"
 description = "Vidra Studio - local-first desktop studio for AI video and image generation"
 authors = ["Tolga Ileri"]
 license = "MIT"
@@ -32,7 +32,7 @@ thiserror = "1"
 base64 = "0.22"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 fs4 = { version = "0.12", features = ["sync"] }
-image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 url = "2"
 rand = "0.8"
 regex = "1"

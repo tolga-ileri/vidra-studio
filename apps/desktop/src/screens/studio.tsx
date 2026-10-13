@@ -16,7 +16,11 @@ import { toast } from "sonner"
 import {
   carryOver,
   checkRules,
+  compatibleModels,
+  composePrompt,
+  consistencyGuidance,
   defaultValues,
+  planReferences,
   ParamError,
   renderTemplate,
   templateVariables,
@@ -25,9 +29,13 @@ import {
   validatePrompt,
   variableLabel,
   type GenerationJob,
+  type GenerationReference,
   type ModelDefinition,
   type ParamValues,
   type Prompt,
+  type ProviderId,
+  type ReferenceAsset,
+  type ReferencePlan,
 } from "@vidra/core"
 
 import { EmptyState, JobStatusBadge, PageHeader } from "@/components/app/common"
@@ -35,6 +43,7 @@ import { PriceDisplay } from "@/components/app/price"
 import { addReference, CapabilityBar, DynamicForm, formatAccepted, slotFor, type MediaSpec } from "@/components/studio/dynamic-form"
 import { useGenerator } from "@/components/studio/generate"
 import { ModelPicker, providerName } from "@/components/studio/model-picker"
+import { ReferencePanel, type StudioRef } from "@/components/studio/reference-panel"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Input } from "@/components/ui/input"
@@ -46,7 +55,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useDebounced, useLive } from "@/hooks/use-live"
 import { useI18n, type I18n } from "@/i18n"
 import { api, backend } from "@/lib/backend"
-import { attempt, jobErrorText, paramErrorMessage, toastError } from "@/lib/errors"
+import { attempt, describeError, jobErrorText, paramErrorMessage, toastError } from "@/lib/errors"
 import { carryWithChanges, type ParamChange } from "@/lib/model-switch"
 import { formatParamValue } from "@/lib/param-format"
 import type { Estimate, GenerationInput, UploadedReference } from "@/lib/ipc"
@@ -61,6 +70,26 @@ function readLastModel(output: string): string | null {
   } catch {
     return null
   }
+}
+
+const EMPTY_PLAN: ReferencePlan<StudioRef> = { values: {}, imageKeys: [], placed: [], unplaced: [] }
+
+/** References carried from a job (regenerate): re-uploaded before use. */
+function draftRefs(draft: StudioDraft | null, provider: ProviderId): StudioRef[] {
+  return (draft?.references ?? []).map((r: GenerationReference) => ({
+    id: crypto.randomUUID(),
+    name: r.name,
+    refType: r.refType,
+    url: "",
+    provider,
+    sha256: r.sha256,
+    previewDataUrl: null,
+    savedId: r.savedId,
+    width: null,
+    height: null,
+    sizeBytes: 0,
+    status: "uploading",
+  }))
 }
 
 function initialModel(models: ModelDefinition[], configured: Set<string>, output: string, draft: StudioDraft | null) {
@@ -102,6 +131,15 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
   const [projectId, setProjectId] = useState<string | null>(null)
   const [references, setReferences] = useState<Record<string, UploadedReference>>({})
   const [uploadingKey, setUploadingKey] = useState<string | null>(null)
+  /* Visual references (video only). They are placed into the model's image
+     inputs by `planReferences`; the image inputs themselves are hidden from
+     the settings form so there is exactly one place that manages them. */
+  const refsEnabled = output === "video"
+  const [refs, setRefs] = useState<StudioRef[]>(() => {
+    const m = models.find((x) => x.id === modelId)
+    return m && output === "video" ? draftRefs(draft, m.provider) : []
+  })
+  const [preserveIdentity, setPreserveIdentity] = useState<boolean>(draft?.preserveIdentity ?? true)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [notice, setNotice] = useState<{ model: string; changes: ParamChange[] } | null>(null)
 
@@ -195,6 +233,21 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
             toast.error(t("studio.dropUnsupported", { name: file.name }))
             continue
           }
+          if (output === "video" && file.kind === "image") {
+            if (!/\.(png|jpe?g|webp)$/i.test(file.name)) {
+              toast.error(t("refs.badFile", { name: file.name }))
+              continue
+            }
+            const tile = blankRef(m.provider, { name: file.name.replace(/\.[a-z0-9]+$/i, "") })
+            setRefs((rs) => [...rs, tile])
+            try {
+              const up = await api.uploadDroppedReference(m.provider, file.token)
+              fillRef(tile.id, up, m.provider)
+            } catch (e) {
+              failRef(tile.id, e)
+            }
+            continue
+          }
           const spec = slotFor(m, paramsRef.current, file.kind)
           if (!spec) {
             toast.error(t("studio.dropNoSlot", { name: file.name }))
@@ -230,15 +283,164 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
       cancelled = true
       off?.()
     }
-  }, [t])
+  }, [t, output]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Reference placement */
+  const promptMax = model?.prompt.maxLength ?? 0
+  const readyRefs = useMemo(
+    () => (model ? refs.filter((r) => r.status === "ready" && r.provider === model.provider) : []),
+    [refs, model]
+  )
+  const plan = useMemo<ReferencePlan<StudioRef>>(
+    () => (model && refsEnabled ? planReferences(model, readyRefs) : EMPTY_PLAN),
+    [model, readyRefs, refsEnabled]
+  )
+  const effectiveParams = useMemo<ParamValues>(() => {
+    if (!refsEnabled) return params
+    const base: ParamValues = { ...params }
+    for (const k of plan.imageKeys) delete base[k]
+    return { ...base, ...plan.values }
+  }, [params, plan, refsEnabled])
+  const guidance = useMemo(() => (refsEnabled ? consistencyGuidance(plan, preserveIdentity) : ""), [plan, preserveIdentity, refsEnabled])
+  const composed = useMemo(() => composePrompt(prompt, guidance, promptMax || Number.MAX_SAFE_INTEGER), [prompt, guidance, promptMax])
+  const compatible = useMemo(
+    () => (refsEnabled && plan.unplaced.length ? compatibleModels(models, refs.filter((r) => r.status !== "error"), model) : []),
+    [refsEnabled, plan.unplaced.length, models, refs, model]
+  )
+
+  const upsertRef = (id: string, patch: Partial<StudioRef>) => setRefs((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)))
+  const fillRef = (id: string, up: UploadedReference, provider: ProviderId) =>
+    upsertRef(id, {
+      url: up.url,
+      provider,
+      sha256: up.sha256,
+      previewDataUrl: up.previewDataUrl,
+      savedId: up.savedId,
+      width: up.width,
+      height: up.height,
+      sizeBytes: up.sizeBytes,
+      status: "ready",
+      error: undefined,
+    })
+  const failRef = (id: string, e: unknown) => {
+    const d = describeError(e)
+    upsertRef(id, { status: "error", error: d.description || d.title })
+  }
+  const blankRef = (provider: ProviderId, meta: Partial<StudioRef> = {}): StudioRef => ({
+    id: crypto.randomUUID(),
+    name: "",
+    refType: "character",
+    url: "",
+    provider,
+    sha256: "",
+    previewDataUrl: null,
+    savedId: null,
+    width: null,
+    height: null,
+    sizeBytes: 0,
+    status: "uploading",
+    ...meta,
+  })
+
+  /** Native picker → upload → new tile (the tile shows progress meanwhile). */
+  const addImageRef = async () => {
+    if (!model) return
+    const tile = blankRef(model.provider)
+    setRefs((rs) => [...rs, tile])
+    try {
+      const up = await api.pickReference(model.provider, "image")
+      if (!up) {
+        setRefs((rs) => rs.filter((r) => r.id !== tile.id))
+        return
+      }
+      fillRef(tile.id, up, model.provider)
+      upsertRef(tile.id, { name: up.name.replace(/\.[a-z0-9]+$/i, "") })
+    } catch (e) {
+      setRefs((rs) => rs.filter((r) => r.id !== tile.id))
+      toastError(e)
+    }
+  }
+  const replaceRef = async (id: string) => {
+    if (!model) return
+    upsertRef(id, { status: "uploading", error: undefined })
+    try {
+      const up = await api.pickReference(model.provider, "image")
+      if (!up) {
+        setRefs((rs) => rs.map((r) => (r.id === id ? { ...r, status: r.url ? "ready" : "error" } : r)))
+        return
+      }
+      fillRef(id, up, model.provider)
+    } catch (e) {
+      failRef(id, e)
+    }
+  }
+  // Library picks and retries only mark the tile; the effect below does the
+  // single upload (one code path, no duplicate requests).
+  const useSaved = (asset: ReferenceAsset) => {
+    if (!model) return
+    setRefs((rs) => [
+      ...rs,
+      blankRef(model.provider, { name: asset.name, refType: asset.refType, savedId: asset.id, previewDataUrl: asset.previewDataUrl, sha256: asset.sha256 }),
+    ])
+  }
+  const retryRef = (ref: StudioRef) => {
+    if (!ref.savedId && !ref.sha256) return void replaceRef(ref.id)
+    upsertRef(ref.id, { status: "uploading", url: "", error: undefined })
+  }
+  const saveRef = async (ref: StudioRef) => {
+    const name = ref.name.trim()
+    if (!name) return
+    const saved = await attempt(() => api.saveReference(ref.sha256, name, ref.refType), t("refs.savedToast", { name }))
+    if (saved) upsertRef(ref.id, { savedId: saved.id, name: saved.name, refType: saved.refType })
+  }
+  const updateRef = (id: string, patch: Partial<Pick<StudioRef, "name" | "refType">>) => {
+    upsertRef(id, patch)
+    const r = refs.find((x) => x.id === id)
+    if (r?.savedId) void api.updateReference(r.savedId, patch).catch(() => {})
+  }
+  const removeRef = (id: string) => setRefs((rs) => rs.filter((r) => r.id !== id))
+
+  // Re-upload references that belong to another provider (model switch) or
+  // came from a draft without a live URL. Never silently stale: failures are
+  // shown on the tile with a retry.
+  const attaching = useRef(new Set<string>())
+  useEffect(() => {
+    if (!model || !refsEnabled) return
+    for (const r of refs) {
+      const stale = (r.status === "ready" && r.provider !== model.provider) || (r.status === "uploading" && !r.url && (r.savedId || r.sha256))
+      if (!stale || attaching.current.has(r.id)) continue
+      if (!r.savedId && !r.sha256) continue
+      attaching.current.add(r.id)
+      upsertRef(r.id, { status: "uploading", error: undefined })
+      api
+        .attachReference(model.provider, r.savedId ? { savedId: r.savedId } : { sha256: r.sha256 })
+        .then((up) => fillRef(r.id, { ...up, previewDataUrl: up.previewDataUrl ?? r.previewDataUrl }, model.provider))
+        .catch((e) => failRef(r.id, e))
+        .finally(() => attaching.current.delete(r.id))
+    }
+  }, [model, refs, refsEnabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Estimate */
   const input = useMemo<GenerationInput | null>(
     () =>
       model
-        ? { modelId: model.id, prompt, negativePrompt: model.negativePrompt && negativePrompt.trim() ? negativePrompt : null, params }
+        ? {
+            modelId: model.id,
+            prompt: composed.text,
+            negativePrompt: model.negativePrompt && negativePrompt.trim() ? negativePrompt : null,
+            params: effectiveParams,
+            references: plan.placed.map(({ ref, paramKey }) => ({
+              paramKey,
+              url: ref.url,
+              name: ref.name.trim() || ref.refType,
+              refType: ref.refType,
+              sha256: ref.sha256,
+              savedId: ref.savedId,
+            })),
+            preserveIdentity: refsEnabled && preserveIdentity,
+          }
         : null,
-    [model, prompt, negativePrompt, params]
+    [model, composed.text, negativePrompt, effectiveParams, plan, preserveIdentity, refsEnabled]
   )
   const debouncedKey = useDebounced(JSON.stringify(input), 400)
   const [estimate, setEstimate] = useState<{ loading: boolean; value: Estimate | null; failed: boolean }>({
@@ -275,17 +477,28 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
       return spec ? i18n.loc(spec.label) : key
     }
     try {
-      validatePrompt(model, prompt)
+      validatePrompt(model, composed.text)
     } catch (e) {
       if (e instanceof ParamError) next.prompt = paramErrorMessage(e.code, e.details, t("studio.prompt")) ?? e.message
     }
     if (rendered?.missing.length) next.prompt = t("studio.fillVariables", { names: rendered.missing.join(", ") })
     try {
-      validateParams(model, params)
+      validateParams(model, effectiveParams)
     } catch (e) {
       if (e instanceof ParamError) next[e.key] = paramErrorMessage(e.code, e.details, label(e.key)) ?? e.message
     }
-    const violations = checkRules(model, { values: params, prompt, negativePrompt })
+    if (refsEnabled) {
+      if (refs.some((r) => r.status === "uploading")) {
+        toast.error(t("refs.uploading"))
+        return
+      }
+      if (plan.unplaced.length) {
+        toast.error(t("refs.unsupportedTitle", { model: i18n.model(model.displayName) }), { description: t("refs.keptNote") })
+        return
+      }
+      if (!composed.fits) next.prompt = t("refs.promptTooLong", { max: model.prompt.maxLength, count: composed.text.length })
+    }
+    const violations = checkRules(model, { values: effectiveParams, prompt: composed.text, negativePrompt })
     if (violations.length && !Object.keys(next).length) {
       toast.error(t("studio.fixErrors"), { description: i18n.loc(violations[0]!.message) })
       return
@@ -296,7 +509,7 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
       return
     }
     void generate(input, { promptId, projectId, modelName: model.displayName })
-  }, [model, input, prompt, negativePrompt, params, rendered, promptId, projectId, generate, t, i18n])
+  }, [model, input, composed, negativePrompt, effectiveParams, rendered, promptId, projectId, generate, t, i18n, refsEnabled, refs, plan])
 
   const generateRef = useRef(onGenerate)
   generateRef.current = onGenerate
@@ -315,7 +528,7 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
     const m = models.find((x) => x.id === job.modelId)
     if (!m) return toast.error(t("studio.modelUnavailable"))
     void generate(
-      { modelId: job.modelId, prompt: job.prompt, negativePrompt: job.negativePrompt, params: job.params },
+      { modelId: job.modelId, prompt: job.prompt, negativePrompt: job.negativePrompt, params: job.params, references: job.references, preserveIdentity: job.preserveIdentity },
       { promptId: job.promptId, projectId: job.projectId, modelName: m.displayName }
     )
   }
@@ -344,7 +557,7 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
   return (
     <>
       <PageHeader title={title} description={output === "video" ? t("studio.videoIntro") : t("studio.imageIntro")} />
-      <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-6 max-[1100px]:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-6 max-[1100px]:grid-cols-[minmax(0,1fr)_280px] max-[800px]:grid-cols-1">
         <div className="space-y-5">
           <div className="rounded-xl border bg-card p-4">
             <Label className="mb-2 block text-xs font-medium text-muted-foreground">{t("studio.model")}</Label>
@@ -456,6 +669,29 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
             </div>
           )}
 
+          {model && refsEnabled && (
+            <ReferencePanel
+              model={model}
+              refs={refs}
+              plan={plan}
+              compatible={compatible}
+              preserveIdentity={preserveIdentity}
+              guidance={guidance}
+              promptProblem={composed.fits ? null : t("refs.promptTooLong", { max: model.prompt.maxLength, count: composed.text.length })}
+              slotErrors={plan.imageKeys.map((k) => errors[k]).filter((x): x is string => !!x)}
+              disabled={!providerReady || busy}
+              onAdd={() => void addImageRef()}
+              onUseSaved={useSaved}
+              onUpdate={updateRef}
+              onRemove={removeRef}
+              onReplace={(id) => void replaceRef(id)}
+              onRetry={retryRef}
+              onSave={saveRef}
+              onPreserveIdentity={setPreserveIdentity}
+              onSwitchModel={switchModel}
+            />
+          )}
+
           {model && model.params.length > 0 && (
             <div className="rounded-xl border bg-card p-4">
               <h2 className="mb-4 text-xs font-medium text-muted-foreground">{t("studio.settings")}</h2>
@@ -471,6 +707,7 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
                 references={references}
                 onPickReference={pickReference}
                 uploadingKey={uploadingKey}
+                hideImageMedia={refsEnabled}
                 errors={errors}
               />
             </div>
@@ -478,7 +715,7 @@ export function StudioScreen({ output }: { output: "video" | "image" }) {
         </div>
 
         <aside className="space-y-4">
-          <div className="sticky top-0 space-y-4">
+          <div className="sticky top-0 space-y-4 max-[800px]:static">
             <div className="space-y-4 rounded-xl border bg-card p-4">
               <div>
                 <div className="flex items-baseline justify-between">

@@ -192,7 +192,8 @@ fn managed_files(core: &Core) -> AppResult<Vec<(String, Option<String>)>> {
     let c = core.db.conn();
     let mut st = c.prepare(
         "SELECT local_path, sha256 FROM media_assets WHERE local_path IS NOT NULL
-         UNION ALL SELECT thumbnail_path, NULL FROM media_assets WHERE thumbnail_path IS NOT NULL",
+         UNION ALL SELECT thumbnail_path, NULL FROM media_assets WHERE thumbnail_path IS NOT NULL
+         UNION ALL SELECT local_path, sha256 FROM reference_assets",
     )?;
     let rows = st.query_map([], |r| {
         Ok((r.get::<_, String>(0)?, r.get::<_, Option<String>>(1)?))

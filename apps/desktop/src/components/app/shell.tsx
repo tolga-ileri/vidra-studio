@@ -79,23 +79,33 @@ export function AppShell() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
-  const [collapsed, setCollapsed] = useState(() => {
+  const [collapsedPref, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(COLLAPSE_KEY) === "1"
     } catch {
       return false
     }
   })
+  // Narrow windows always get the compact sidebar; the preference is kept.
+  const [narrow, setNarrow] = useState(() => typeof window?.matchMedia === "function" && window.matchMedia("(max-width: 800px)").matches)
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return
+    const mq = window.matchMedia("(max-width: 800px)")
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener("change", on)
+    return () => mq.removeEventListener("change", on)
+  }, [])
+  const collapsed = collapsedPref || narrow
   const [palette, setPalette] = useState(false)
   const [shortcuts, setShortcuts] = useState(false)
 
   useEffect(() => {
     try {
-      localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0")
+      localStorage.setItem(COLLAPSE_KEY, collapsedPref ? "1" : "0")
     } catch {
       /* storage unavailable */
     }
-  }, [collapsed])
+  }, [collapsedPref])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -193,7 +203,7 @@ export function AppShell() {
         </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto" id="main">
-        <div className="mx-auto max-w-[1480px] px-8 py-7">
+        <div className="mx-auto max-w-[1480px] px-8 py-7 max-[800px]:px-4 max-[800px]:py-4">
           <ErrorBoundary resetKey={location.pathname}>
             <Outlet />
           </ErrorBoundary>

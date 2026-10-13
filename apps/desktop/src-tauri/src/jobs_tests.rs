@@ -63,6 +63,8 @@ fn input(model_id: &str) -> GenerationInput {
         prompt: "a red fox".into(),
         negative_prompt: None,
         params: Default::default(),
+        references: Vec::new(),
+        preserve_identity: false,
     }
 }
 

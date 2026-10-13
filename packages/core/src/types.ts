@@ -60,6 +60,38 @@ export const TERMINAL_JOB_STATUSES: readonly JobStatus[] = [
   "blocked",
 ]
 
+/** What a reference image is used for. Frames map to documented start/end
+ *  frame inputs; the others go into a model's reference-image input. */
+export type ReferenceType = "character" | "product" | "style" | "scene" | "start_frame" | "end_frame"
+
+/** An image kept in the local reference library for reuse across generations. */
+export interface ReferenceAsset {
+  id: Id
+  name: string
+  refType: ReferenceType
+  kind: "image"
+  mime: string
+  sizeBytes: number
+  sha256: string
+  width: number | null
+  height: number | null
+  previewDataUrl: string | null
+  useCount: number
+  lastUsedAt: number | null
+  createdAt: number
+}
+
+/** A reference image attached to one generation, as sent to the provider. */
+export interface GenerationReference {
+  /** Model parameter the image was placed in (e.g. `reference_images`). */
+  paramKey: string
+  url: string
+  name: string
+  refType: ReferenceType
+  sha256: string
+  savedId: Id | null
+}
+
 export interface GenerationJob {
   id: Id
   provider: ProviderId
@@ -83,6 +115,10 @@ export interface GenerationJob {
   errorMessage: string | null
   promptId: Id | null
   projectId: Id | null
+  /** Reference images that were part of this request. */
+  references: GenerationReference[]
+  /** "Keep character consistency" was on for this request. */
+  preserveIdentity: boolean
   createdAt: number
   updatedAt: number
   completedAt: number | null
@@ -384,4 +420,5 @@ export type StoreEvent =
   | { type: "settings-changed" }
   | { type: "providers-changed" }
   | { type: "catalog-changed" }
+  | { type: "references-changed" }
   | { type: "archive-move-progress"; token: string; processed: number; total: number }

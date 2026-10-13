@@ -100,17 +100,22 @@ describe("studio capabilities", () => {
     expect(document.querySelector('[data-param-key="num_outputs"]')).not.toBeNull()
   })
 
-  it("fills reference slots up to the maximum, then rejects further files", async () => {
+  it("places reference images up to the model's limit and reports the rest instead of dropping them", async () => {
     const { user, backend } = await renderApp("#/video", { lastModel: { output: "video", id: FIXTURE_IDS.motion } })
     for (let i = 0; i < 4; i++) {
-      await user.click(await screen.findByTestId("add-reference_images"))
-      await waitFor(() => expect(screen.getByTestId("count-reference_images")).toHaveTextContent(`${i + 1}/4`))
+      await user.click(await screen.findByTestId("refs-add"))
+      await waitFor(() => expect(screen.getAllByTestId("refs-tile").filter((el) => el.dataset.placed === "true")).toHaveLength(i + 1))
     }
-    expect(screen.queryByTestId("add-reference_images")).toBeNull()
+    expect(screen.getByTestId("refs-in-request")).toHaveTextContent("4")
+    await user.click(screen.getByTestId("refs-add"))
+    const warning = await screen.findByTestId("refs-unsupported")
+    expect(warning).toHaveTextContent("no room left")
+    expect(screen.getAllByTestId("refs-tile")).toHaveLength(5)
     // A dropped file in an unaccepted format is rejected with the accepted list.
     backend.mock!.control.emitDrop([{ name: "extra.gif", kind: "image" }])
-    expect(await screen.findByText("extra.gif is not an accepted format (JPG, PNG, WEBP).")).toBeInTheDocument()
+    expect(await screen.findByText("extra.gif is not a supported image (PNG, JPG, WebP).")).toBeInTheDocument()
   })
+
 })
 
 describe("catalog", () => {
