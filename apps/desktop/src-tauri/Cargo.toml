@@ -34,7 +34,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 fs4 = { version = "0.12", features = ["sync"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 url = "2"
-rand = "0.8"
+rand = "0.10"
 regex = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 log = "0.4"
