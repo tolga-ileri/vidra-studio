@@ -72,9 +72,10 @@ export function planReferences<R extends ReferenceLike>(model: ModelDefinition, 
   }
   const values: ParamValues = {}
   for (const slot of imageSlots(model)) {
-    const urls = counts.get(slot.key)
-    if (!urls?.length) continue
-    values[slot.key] = slot.shape === "url" && slot.maxItems === 1 ? urls[0]! : urls
+    const urls = counts.get(slot.key) ?? []
+    const first = urls[0]
+    if (first === undefined) continue
+    values[slot.key] = slot.shape === "url" && slot.maxItems === 1 ? first : urls
   }
   return { values, imageKeys: imageSlots(model).map((s) => s.key), placed, unplaced }
 }
