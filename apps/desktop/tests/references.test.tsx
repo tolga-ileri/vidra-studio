@@ -68,6 +68,8 @@ describe("visual references", () => {
     expect(job.params.reference_images).toEqual([job.references[0]!.url])
 
     // Turning consistency off removes the guidance; the images are still sent.
+    // (Wait for the confirm dialog to finish closing: its overlay blocks pointer events.)
+    await waitFor(() => expect(screen.queryByTestId("confirm-generate")).toBeNull())
     await user.click(screen.getByTestId("refs-consistency"))
     await waitFor(() => expect(screen.queryByTestId("refs-guidance")).toBeNull())
   })
