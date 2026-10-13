@@ -74,7 +74,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv11", "ss01";
-    min-width: 960px;
+    min-width: 360px;
   }
   ::selection {
     background: rgb(255 255 255 / 0.2);

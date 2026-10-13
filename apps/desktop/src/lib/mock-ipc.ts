@@ -1,28 +1,21 @@
 import {
-  checkBudget,
-  DEFAULT_BUDGET,
-  deriveArchiveState,
-  estimatePrice,
-  parsePromptExport,
-  requestedDuration,
-  validateGeneration,
-  ParamError,
   type AppSettings,
+  type ArchiveEntry,
+  type ArchiveItem,
   type ArchiveMovePlan,
   type ArchiveMoveResult,
+  type ArchiveQuery,
   type CatalogEntry,
   type CatalogState,
   type CatalogStatus,
   type CatalogSyncResult,
-  type StorageStatus,
-  type ArchiveEntry,
-  type ArchiveItem,
-  type ArchiveQuery,
+  DEFAULT_BUDGET,
   type DownloadTask,
   type GenerationJob,
   type Id,
   type MediaAsset,
   type ModelDefinition,
+  ParamError,
   type Project,
   type Prompt,
   type PromptCategory,
@@ -30,7 +23,15 @@ import {
   type PromptVersion,
   type ProviderId,
   type ProviderStatus,
+  type ReferenceAsset,
+  type StorageStatus,
   type StoreEvent,
+  checkBudget,
+  deriveArchiveState,
+  estimatePrice,
+  parsePromptExport,
+  requestedDuration,
+  validateGeneration,
 } from "@vidra/core"
 
 import { IpcError, type DroppedFile, type Estimate, type GenerationInput, type Ipc, type UploadedReference } from "./ipc"
@@ -493,6 +494,8 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
         projectId: i % 3 === 0 ? project.id : null,
         createdAt: created,
         updatedAt: created,
+        references: [],
+        preserveIdentity: false,
         completedAt: status === "completed" ? created + 120000 : null,
       }
       jobs.set(job.id, job)
@@ -583,13 +586,52 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
     window.addEventListener("dragover", onDragOver)
   }
 
+  /** Deterministic 64-hex "hash" of a name (demo only). */
+  function demoSha(seed: string): string {
+    let h = 2166136261
+    let out = ""
+    for (let i = 0; out.length < 64; i++) {
+      h = Math.imul(h ^ seed.charCodeAt(i % Math.max(1, seed.length)) ^ i, 16777619) >>> 0
+      out += h.toString(16).padStart(8, "0")
+    }
+    return out.slice(0, 64)
+  }
+  /** Staged uploads by hash: what "save to library" and re-uploads read. */
+  const staged = new Map<string, UploadedReference>()
   function makeReference(name: string, kind: UploadedReference["kind"], dataUrl: string | null): UploadedReference {
-    return {
+    const ref: UploadedReference = {
       url: `https://demo.vidra.invalid/uploads/${uuid()}`,
       kind,
       name,
       previewDataUrl: kind === "image" ? (dataUrl ?? demoFrame(name, name.length, 320, 180)) : null,
+      sha256: demoSha(name),
+      mime: kind === "image" ? "image/png" : kind === "video" ? "video/mp4" : "audio/mpeg",
+      sizeBytes: 120000 + name.length * 1000,
+      width: kind === "image" ? 1024 : null,
+      height: kind === "image" ? 1024 : null,
+      savedId: null,
     }
+    if (kind === "image") staged.set(ref.sha256, ref)
+    return ref
+  }
+  const library = new Map<Id, ReferenceAsset>()
+  if (options.seedDemo) {
+    const demoRef: ReferenceAsset = {
+      id: "ref-demo-mascot",
+      name: "Demo maskot",
+      refType: "character",
+      kind: "image",
+      mime: "image/png",
+      sizeBytes: 184320,
+      sha256: demoSha("Demo maskot"),
+      width: 1024,
+      height: 1024,
+      previewDataUrl: demoFrame("Demo maskot", 7, 320, 320),
+      useCount: 2,
+      lastUsedAt: Date.now() - 3600_000,
+      createdAt: Date.now() - 86400_000,
+    }
+    library.set(demoRef.id, demoRef)
   }
 
   /* ── Prompt helpers ────────────────────────────────────────────────── */
@@ -775,6 +817,64 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
       }
       return delay(makeReference(`demo-${kind}.${kind === "image" ? "png" : kind === "video" ? "mp4" : "mp3"}`, kind, null))
     },
+    listReferences: async () => delay([...library.values()].map(clone), 60),
+    saveReference: async (sha256, name, refType) => {
+      const clean = name.trim()
+      if (!clean || clean.length > 120) return fail("invalid_input", "A name of 1–120 characters is required.")
+      const existing = [...library.values()].find((r) => r.sha256 === sha256)
+      if (existing) return clone(existing)
+      const up = staged.get(sha256)
+      if (!up) return fail("not_found", "This image is no longer available to save. Add it again.")
+      const asset: ReferenceAsset = {
+        id: uuid(),
+        name: clean,
+        refType,
+        kind: "image",
+        mime: up.mime,
+        sizeBytes: up.sizeBytes,
+        sha256,
+        width: up.width,
+        height: up.height,
+        previewDataUrl: up.previewDataUrl,
+        useCount: 0,
+        lastUsedAt: null,
+        createdAt: Date.now(),
+      }
+      library.set(asset.id, asset)
+      emit({ type: "references-changed" })
+      return delay(clone(asset), 120)
+    },
+    updateReference: async (id, patch) => {
+      const r = library.get(id)
+      if (!r) return fail("not_found", "Reference not found.")
+      if (patch.name !== undefined) {
+        const clean = patch.name.trim()
+        if (!clean || clean.length > 120) return fail("invalid_input", "A name of 1–120 characters is required.")
+        r.name = clean
+      }
+      if (patch.refType) r.refType = patch.refType
+      emit({ type: "references-changed" })
+      return clone(r)
+    },
+    deleteReference: async (id) => {
+      if (!library.delete(id)) return fail("not_found", "Reference not found.")
+      emit({ type: "references-changed" })
+    },
+    attachReference: async (provider, source) => {
+      if (!providers.get(provider)?.configured) return fail("missing_credentials", "Add credentials for this provider first.")
+      if ("savedId" in source) {
+        const r = library.get(source.savedId)
+        if (!r) return fail("not_found", "Reference not found.")
+        r.useCount += 1
+        r.lastUsedAt = Date.now()
+        emit({ type: "references-changed" })
+        const up = makeReference(r.name, "image", r.previewDataUrl)
+        return delay({ ...up, sha256: r.sha256, savedId: r.id }, 250)
+      }
+      const up = staged.get(source.sha256)
+      if (!up) return fail("not_found", "This image is no longer available. Add it again.")
+      return delay({ ...makeReference(up.name, "image", up.previewDataUrl), sha256: up.sha256 }, 250)
+    },
     uploadDroppedReference: async (provider, dropToken) => {
       const drop = drops.get(dropToken)
       if (!drop) return fail("not_found", "That file is no longer available. Drop it again.")
@@ -846,6 +946,8 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
         errorMessage: null,
         promptId: opts.promptId,
         projectId: opts.projectId,
+        references: input.references ?? [],
+        preserveIdentity: input.preserveIdentity ?? false,
         createdAt: now,
         updatedAt: now,
         completedAt: null,

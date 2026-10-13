@@ -1,5 +1,6 @@
 import { create } from "zustand"
-import type { AppSettings, ModelDefinition, ParamValues, ProviderStatus } from "@vidra/core"
+import type {
+  GenerationReference, AppSettings, ModelDefinition, ParamValues, ProviderStatus } from "@vidra/core"
 
 import { api } from "./backend"
 import { subscribeStore } from "./events"
@@ -60,6 +61,9 @@ export interface StudioDraft {
   promptId: string | null
   /** When set, the studio opens the template variable editor. */
   template?: { body: string; defaults: Record<string, string> }
+  /** Reference images of the job being regenerated (re-uploaded on open). */
+  references?: GenerationReference[]
+  preserveIdentity?: boolean
 }
 
 interface DraftState {

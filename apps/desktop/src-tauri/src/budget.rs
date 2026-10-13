@@ -154,6 +154,8 @@ mod tests {
             error_message: None,
             prompt_id: None,
             project_id: None,
+            references: Vec::new(),
+            preserve_identity: false,
             created_at,
             updated_at: created_at,
             completed_at: None,

@@ -115,6 +115,8 @@ function job(over: Partial<GenerationJob>): GenerationJob {
     errorMessage: null,
     promptId: null,
     projectId: null,
+    references: [],
+    preserveIdentity: false,
     createdAt: now - 3600000,
     updatedAt: now,
     completedAt: now,

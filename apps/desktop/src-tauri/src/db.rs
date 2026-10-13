@@ -74,6 +74,17 @@ UPDATE generation_jobs SET status='failed', error_code='provider_removed',
 DELETE FROM providers WHERE id NOT IN ('higgsfield','replicate','kling');
 "#;
 
+/// Migration 3: the reference-image library and per-job reference records.
+const SCHEMA_V3: &str = r#"
+CREATE TABLE reference_assets (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, ref_type TEXT NOT NULL, kind TEXT NOT NULL, mime TEXT NOT NULL,
+  local_path TEXT NOT NULL, size_bytes INTEGER NOT NULL, sha256 TEXT NOT NULL, width INTEGER, height INTEGER,
+  preview_data_url TEXT, use_count INTEGER NOT NULL DEFAULT 0, last_used_at INTEGER, created_at INTEGER NOT NULL);
+CREATE INDEX reference_assets_sha256 ON reference_assets(sha256);
+ALTER TABLE generation_jobs ADD COLUMN references_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE generation_jobs ADD COLUMN preserve_identity INTEGER NOT NULL DEFAULT 0;
+"#;
+
 pub const BUILTIN_CATEGORIES: &[(&str, &str)] = &[
     ("cinematic-advertising", "Cinematic Advertising"),
     ("product-commercials", "Product Commercials"),
@@ -136,6 +147,13 @@ impl Db {
             let tx = conn.transaction()?;
             tx.execute_batch(SCHEMA_V2)?;
             tx.pragma_update(None, "user_version", 2)?;
+            tx.commit()?;
+        }
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+        if version < 3 {
+            let tx = conn.transaction()?;
+            tx.execute_batch(SCHEMA_V3)?;
+            tx.pragma_update(None, "user_version", 3)?;
             tx.commit()?;
         }
         Ok(())
@@ -213,7 +231,8 @@ fn json_col<T: serde::de::DeserializeOwned + Default>(s: String) -> T {
 
 pub const JOB_COLS: &str = "id, provider, model_id, model_name, workflow, output, provider_request_id, status,
   prompt, negative_prompt, params_json, requested_duration_sec, estimated_cost_usd, estimate_source,
-  confirmed_cost_usd, error_code, error_message, prompt_id, project_id, created_at, updated_at, completed_at";
+  confirmed_cost_usd, error_code, error_message, prompt_id, project_id, created_at, updated_at, completed_at,
+  references_json, preserve_identity";
 
 pub fn job_from_row(r: &Row, o: usize) -> rusqlite::Result<GenerationJob> {
     let provider: String = r.get(o + 1)?;
@@ -239,10 +258,12 @@ pub fn job_from_row(r: &Row, o: usize) -> rusqlite::Result<GenerationJob> {
         project_id: r.get(o + 18)?,
         created_at: r.get(o + 19)?,
         updated_at: r.get(o + 20)?,
+        references: json_col(r.get(o + 22)?),
+        preserve_identity: r.get::<_, i64>(o + 23)? != 0,
         completed_at: r.get(o + 21)?,
     })
 }
-pub const JOB_NCOLS: usize = 22;
+pub const JOB_NCOLS: usize = 24;
 
 pub const ASSET_COLS: &str = "id, job_id, output_index, kind, original_url, local_path, filename, mime_type,
   size_bytes, sha256, duration_sec, width, height, thumbnail_path, download_status, duplicate_of_asset_id, created_at";
@@ -531,7 +552,7 @@ mod tests {
             tx.commit().unwrap();
         }
         let db = Db::open(&path).unwrap();
-        assert_eq!(db.user_version().unwrap(), 2);
+        assert_eq!(db.user_version().unwrap(), 3);
         let c = db.conn();
         let name: String = c
             .query_row("SELECT name FROM projects WHERE id='p1'", [], |r| r.get(0))
@@ -579,7 +600,7 @@ mod tests {
         let path = dir.path().join("v.sqlite3");
         {
             let db = Db::open(&path).unwrap();
-            assert_eq!(db.user_version().unwrap(), 2);
+            assert_eq!(db.user_version().unwrap(), 3);
             let n: i64 = db
                 .conn()
                 .query_row(
@@ -598,7 +619,7 @@ mod tests {
             assert!(p > 0);
         }
         let db = Db::open(&path).unwrap();
-        assert_eq!(db.user_version().unwrap(), 2);
+        assert_eq!(db.user_version().unwrap(), 3);
         let n: i64 = db
             .conn()
             .query_row("SELECT COUNT(*) FROM prompt_categories", [], |r| r.get(0))

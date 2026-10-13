@@ -141,6 +141,10 @@ pub struct GenerationJob {
     pub error_message: Option<String>,
     pub prompt_id: Option<String>,
     pub project_id: Option<String>,
+    #[serde(default)]
+    pub references: Vec<GenerationReference>,
+    #[serde(default)]
+    pub preserve_identity: bool,
     pub created_at: i64,
     pub updated_at: i64,
     pub completed_at: Option<i64>,
@@ -388,6 +392,7 @@ pub enum StoreEvent {
     SettingsChanged,
     ProvidersChanged,
     CatalogChanged,
+    ReferencesChanged,
     #[serde(rename_all = "camelCase")]
     ArchiveMoveProgress {
         token: String,
@@ -403,6 +408,12 @@ pub struct GenerationInput {
     pub prompt: String,
     pub negative_prompt: Option<String>,
     pub params: ParamValues,
+    /// Reference images included in `params`, with what they stand for.
+    #[serde(default)]
+    pub references: Vec<GenerationReference>,
+    /// "Keep character consistency" was on (guidance is part of `prompt`).
+    #[serde(default)]
+    pub preserve_identity: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -458,6 +469,45 @@ pub struct UploadedReference {
     pub kind: String,
     pub name: String,
     pub preview_data_url: Option<String>,
+    /// Content hash; identifies the staged file for saving or re-uploading.
+    pub sha256: String,
+    pub mime: String,
+    pub size_bytes: i64,
+    pub width: Option<i64>,
+    pub height: Option<i64>,
+    /// Set when the upload came from the reference library.
+    pub saved_id: Option<String>,
+}
+
+/// A reference image attached to one generation, as sent to the provider.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GenerationReference {
+    pub param_key: String,
+    pub url: String,
+    pub name: String,
+    pub ref_type: String,
+    pub sha256: String,
+    pub saved_id: Option<String>,
+}
+
+/// An image kept in the local reference library for reuse.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ReferenceAsset {
+    pub id: String,
+    pub name: String,
+    pub ref_type: String,
+    pub kind: String,
+    pub mime: String,
+    pub size_bytes: i64,
+    pub sha256: String,
+    pub width: Option<i64>,
+    pub height: Option<i64>,
+    pub preview_data_url: Option<String>,
+    pub use_count: i64,
+    pub last_used_at: Option<i64>,
+    pub created_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -77,6 +77,12 @@ Node.js, veritabanı veya komut satırı gerekmez.
   - Taşıma işleminde önce tüm dosyalar kopyalanıp doğrulanır. Eski kopyalar
     yalnızca onay verirsen silinir.
   - Sürücü çıkarılırsa indirmeler yeniden bağlanana kadar duraklar.
+- **Referans görseller.** Video Stüdyosu'na maskot, ürün, stil veya mekân
+  görsellerini bırakın, adlandırıp türünü seçin; uygulama bunları modelin
+  belgelenmiş girişlerine (referans görseller, ilk/son kare) yerleştirir.
+  Yerel kütüphaneye kaydedip sahneler arasında yeniden kullanın. "Karakter
+  Tutarlılığını Koru" isteme görünür bir yönerge ekler; bu bir yönlendirmedir,
+  garanti değildir.
 - **İstem Kütüphanesi.** `{değişken}` içeren özgün şablonlar, kategoriler,
   etiketler, favoriler, sürüm geçmişi, model ön ayarları ve içe/dışa
   aktarma.

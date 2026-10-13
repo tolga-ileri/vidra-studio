@@ -23,6 +23,8 @@ export function job(overrides: Partial<GenerationJob> & { status?: JobStatus } =
     errorMessage: null,
     promptId: null,
     projectId: null,
+    references: [],
+    preserveIdentity: false,
     createdAt: new Date(2026, 9, 10, 12).getTime(),
     updatedAt: new Date(2026, 9, 10, 12).getTime(),
     completedAt: null,

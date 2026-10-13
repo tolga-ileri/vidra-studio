@@ -246,6 +246,11 @@ pub async fn submit(
     }
     // 1. validate
     let p = prepare(core, &input)?;
+    crate::reference_library::check_generation_references(
+        &input.references,
+        &p.model.def,
+        &p.values,
+    )?;
     let provider_id = p.model.def.provider;
     if !core.provider_enabled(provider_id)? {
         return Err(AppError::new(
@@ -343,6 +348,8 @@ pub async fn submit(
         error_message: None,
         prompt_id,
         project_id,
+        references: input.references.clone(),
+        preserve_identity: input.preserve_identity,
         created_at: now,
         updated_at: now,
         completed_at: None,
@@ -443,13 +450,15 @@ pub fn insert_job_tx(conn: &rusqlite::Connection, j: &GenerationJob, key: &str) 
     conn.execute(
         "INSERT INTO generation_jobs (id, provider, model_id, model_name, workflow, output, provider_request_id, status,
           prompt, negative_prompt, params_json, requested_duration_sec, estimated_cost_usd, estimate_source,
-          confirmed_cost_usd, error_code, error_message, prompt_id, project_id, idempotency_key, created_at, updated_at, completed_at)
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22,?23)",
+          confirmed_cost_usd, error_code, error_message, prompt_id, project_id, idempotency_key, created_at, updated_at, completed_at,
+          references_json, preserve_identity)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22,?23,?24,?25)",
         params![
             j.id, j.provider.as_str(), j.model_id, j.model_name, j.workflow, j.output, j.provider_request_id,
             j.status.as_str(), j.prompt, j.negative_prompt, serde_json::to_string(&j.params)?,
             j.requested_duration_sec, j.estimated_cost_usd, j.estimate_source, j.confirmed_cost_usd,
-            j.error_code, j.error_message, j.prompt_id, j.project_id, key, j.created_at, j.updated_at, j.completed_at
+            j.error_code, j.error_message, j.prompt_id, j.project_id, key, j.created_at, j.updated_at, j.completed_at,
+            serde_json::to_string(&j.references)?, i64::from(j.preserve_identity)
         ],
     )?;
     Ok(())
@@ -638,6 +647,8 @@ pub async fn recover_submitting(core: &Core) -> AppResult<()> {
                         prompt: job.prompt.clone(),
                         negative_prompt: job.negative_prompt.clone(),
                         params: job.params.clone(),
+                        references: job.references.clone(),
+                        preserve_identity: job.preserve_identity,
                     },
                 );
                 match p {

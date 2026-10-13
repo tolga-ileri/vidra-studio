@@ -42,6 +42,8 @@ export interface DynamicFormProps {
   onPickReference: (spec: MediaSpec) => Promise<void>
   /** Key of the media slot currently uploading. */
   uploadingKey?: string | null
+  /** Image inputs are managed elsewhere (the reference panel); hide them here. */
+  hideImageMedia?: boolean
   errors?: Record<string, string>
   disabled?: boolean
 }
@@ -51,11 +53,11 @@ const SEGMENTED_MAX = 5
 
 /** Renders inputs strictly from `model.params` and `model.rules`. */
 export function DynamicForm(props: DynamicFormProps) {
-  const { model, values, prompt, negativePrompt } = props
+  const { model, values, prompt, negativePrompt, hideImageMedia } = props
   const i18n = useI18n()
   const { t, loc } = i18n
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const media = model.params.filter((p) => p.type === "media")
+  const media = model.params.filter((p) => p.type === "media" && !(hideImageMedia && p.mediaKind === "image"))
   const basic = model.params.filter((p) => p.type !== "media" && !p.advanced)
   const advanced = model.params.filter((p) => p.type !== "media" && p.advanced)
 

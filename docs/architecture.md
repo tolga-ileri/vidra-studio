@@ -196,3 +196,23 @@ remapped and duplicate hashes are skipped.
 
 
 > fal.ai is excluded from v0.1 pending provider authorization (PROVIDER_TERMS_REVIEW.md).
+
+## Visual references
+
+- `packages/core/src/references.ts` places reference images into a model's
+  documented image inputs (`planReferences`): first/last frames go to the
+  `start_frame`/`end_frame` inputs, character/product/style/scene images to
+  the `reference` input, in order. Anything that does not fit is reported
+  (`unplaced`) and `compatibleModels` ranks models that take all of them.
+  `consistencyGuidance` builds the prompt text for "Keep character
+  consistency"; prompts are documented inputs, so no provider parameter is
+  invented.
+- `apps/desktop/src-tauri/src/reference_library.rs` keeps picked files staged
+  under the data directory by SHA-256 (cleaned after a day), stores saved
+  references under `<archive>/references/` with a row in `reference_assets`,
+  and re-uploads them to the provider on `attach_reference`. Archive moves and
+  verification include these files (`managed_files`).
+- `GenerationInput.references` lists the images in the request (parameter,
+  name, type, hash, library id); `check_generation_references` rejects any
+  reference that is not actually present in the request parameters. Jobs store
+  them in `references_json` with `preserve_identity`.

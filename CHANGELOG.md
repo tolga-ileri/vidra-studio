@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-10-13
+
+### Added
+
+- **Visual references** in the Video Studio ("Referans Görseller"): drag-and-drop or pick PNG/JPG/WebP images, name them, and mark each as character/mascot, product, style, scene, first frame or last frame. Images are placed into the model's documented inputs (reference-image arrays, start/end frames); nothing is sent through undocumented parameters.
+- A local **reference library**: save an image once (stored under the archive folder, moved with it) and reuse it across generations. Saved images are re-uploaded to the provider each time, because provider upload storage is temporary.
+- **Keep character consistency**: appends explicit, visible guidance to the prompt asking the model to keep the referenced character's identity, and sends the same images with every scene. Labelled as guidance; no provider guarantees exact preservation.
+- Models that cannot take the chosen references show a warning with the exact reason and offer compatible models. References are never discarded silently; generating is blocked until they fit or are removed.
+- Each generation records its references (parameter, name, type, hash, library id) and the consistency setting; regenerate re-uploads them.
+- Native checks: every declared reference must actually be present in the request parameters; staged uploads are cleaned up after a day.
+
+### Changed
+
+- Image inputs of video models are managed by the reference panel instead of the generic settings form (the form keeps video and audio inputs).
+- The Video Studio layout stacks on narrow (phone-width) viewports.
+
 ## [0.1.5] - 2026-10-12
 
 ### Fixed
