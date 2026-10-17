@@ -22,6 +22,10 @@ All notable changes to this project are documented here. The format follows
 
 - Browser e2e tests used whatever server was already on port 1420; they now start their own on a dedicated port.
 
+### Security
+
+- Dependency advisories published since 0.2.0 are fixed: rustls 0.23.46 (RUSTSEC-2026-0346/0347/0348/0349) and zip 9 for backups (RUSTSEC-2026-0367/0368/0369). The updater's optional zip support is disabled; Windows updates are signed `.exe` installers, so the zip extraction path (and zip 4.6.1) is no longer compiled in.
+
 ## [0.2.0] - 2026-10-13
 
 ### Added
