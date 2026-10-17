@@ -75,6 +75,11 @@ Node.js, database or command line is needed.
   - Moving the archive copies and verifies every file first. Old copies are
     removed only if you confirm.
   - If a drive is unplugged, downloads pause until you reconnect.
+- **Video Editor.** A general-purpose editor for any video: import clips,
+  music, voice-overs and logos, arrange them on a multitrack timeline, trim,
+  split, set levels and fades, pick 16:9 / 9:16 / 1:1 / 4:5, preview and export
+  an H.264 MP4. Projects save and autosave locally; originals are never
+  modified. Requires FFmpeg on the computer (not bundled).
 - **Visual references.** Drop mascot, product, style or scene images into the
   Video Studio, name and type them, and the app places them into the model's
   documented inputs (reference images, first/last frames). Save them to a local

@@ -194,3 +194,30 @@ test.describe("phone-width viewport", () => {
     expect(overflow, wide.join(" | ")).toBeLessThanOrEqual(0)
   })
 })
+
+test("video editor: create a project, import, arrange, export (browser preview backend)", async ({ page }) => {
+  await skipOnboarding(page)
+  await nav(page, "Video Editor").click()
+  await page.getByTestId("editor-new-name").fill("Browser edit")
+  await page.getByTestId("new-aspect-9:16").click()
+  await page.getByTestId("editor-create").click()
+  await expect(page.getByTestId("editor-workspace")).toBeVisible()
+  await page.getByTestId("editor-import").click()
+  await expect(page.getByTestId("editor-media-item")).toHaveCount(5)
+  for (const name of ["Demo clip 1.mp4", "Demo clip 2.mp4", "Demo music.mp3"]) {
+    const item = page.locator(`[data-testid="editor-media-item"][title="${name}"]`)
+    await item.hover()
+    await item.getByTestId("editor-media-add").click()
+  }
+  await expect(page.getByTestId("tl-clip")).toHaveCount(3)
+  await expect(page.getByTestId("preview-frame")).toHaveAttribute("data-height", "1920")
+  // Undo / redo
+  await page.keyboard.press("Control+z")
+  await expect(page.getByTestId("tl-clip")).toHaveCount(2)
+  await page.keyboard.press("Control+y")
+  await expect(page.getByTestId("tl-clip")).toHaveCount(3)
+  await page.getByTestId("editor-export").click()
+  await expect(page.getByTestId("export-summary")).toContainText("1080×1920")
+  await page.getByTestId("export-start").click()
+  await expect(page.getByTestId("export-done")).toBeVisible()
+})

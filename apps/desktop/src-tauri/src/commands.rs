@@ -329,6 +329,368 @@ pub async fn attach_reference(
     crate::reference_library::attach(&core, provider, source).await
 }
 
+/* ── Video Editor ──────────────────────────────────────────────────────── */
+
+fn allow_media<R: Runtime>(app: &AppHandle<R>, paths: &[PathBuf]) {
+    for p in paths {
+        if let Err(e) = app.asset_protocol_scope().allow_file(p) {
+            log::warn!("asset scope update failed: {e}");
+        }
+    }
+}
+
+fn allow_imported<R: Runtime>(app: &AppHandle<R>, r: &crate::editor::ImportResult) {
+    let paths: Vec<PathBuf> = r.media.iter().map(|m| PathBuf::from(&m.path)).collect();
+    allow_media(app, &paths);
+}
+
+#[tauri::command]
+pub async fn editor_tools_status(
+    core: S<'_>,
+    refresh: bool,
+) -> AppResult<crate::editor::ToolStatus> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor::status(&core, refresh)).await
+}
+
+#[tauri::command]
+pub async fn editor_choose_ffmpeg_dir<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+) -> AppResult<Option<crate::editor::ToolStatus>> {
+    let Some(dir) = pick_folder(
+        &app,
+        "Choose the folder that contains ffmpeg.exe and ffprobe.exe",
+    ) else {
+        return Ok(None);
+    };
+    let core = core.inner().clone();
+    blocking(move || crate::editor::set_tools_dir(&core, &dir))
+        .await?
+        .map(Some)
+}
+
+#[tauri::command]
+pub fn editor_begin_project(core: S<'_>, project_id: String) -> AppResult<()> {
+    crate::editor::begin(&core, &project_id)
+}
+
+#[tauri::command]
+pub async fn editor_import_media<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+) -> AppResult<Option<crate::editor::ImportResult>> {
+    use crate::editor::{AUDIO_EXTS, IMAGE_EXTS, VIDEO_EXTS};
+    let picked = crate::e2e::open_many_override().or_else(|| {
+        let all: Vec<&str> = VIDEO_EXTS
+            .iter()
+            .chain(AUDIO_EXTS)
+            .chain(IMAGE_EXTS)
+            .copied()
+            .collect();
+        app.dialog()
+            .file()
+            .set_title("Import media")
+            .add_filter("Media", &all)
+            .add_filter("Video", VIDEO_EXTS)
+            .add_filter("Audio", AUDIO_EXTS)
+            .add_filter("Images", IMAGE_EXTS)
+            .blocking_pick_files()
+            .map(|v| v.into_iter().filter_map(|p| p.into_path().ok()).collect())
+    });
+    let Some(paths) = picked.filter(|p| !p.is_empty()) else {
+        return Ok(None);
+    };
+    let core = core.inner().clone();
+    let r = blocking(move || crate::editor::import_paths(&core, &project_id, &paths)).await??;
+    allow_imported(&app, &r);
+    Ok(Some(r))
+}
+
+#[tauri::command]
+pub async fn editor_import_dropped<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+    drop_tokens: Vec<String>,
+) -> AppResult<crate::editor::ImportResult> {
+    let paths = drop_tokens
+        .iter()
+        .take(200)
+        .map(|t| references::take_drop(&core, t))
+        .collect::<AppResult<Vec<_>>>()?;
+    let core = core.inner().clone();
+    let r = blocking(move || crate::editor::import_paths(&core, &project_id, &paths)).await??;
+    allow_imported(&app, &r);
+    Ok(r)
+}
+
+#[tauri::command]
+pub async fn editor_import_archive_asset<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+    asset_id: String,
+) -> AppResult<crate::editor::ImportResult> {
+    let core = core.inner().clone();
+    let r = blocking(move || crate::editor::import_archive_asset(&core, &project_id, &asset_id))
+        .await??;
+    allow_imported(&app, &r);
+    Ok(r)
+}
+
+#[tauri::command]
+pub async fn editor_relink_media<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+    media_id: String,
+) -> AppResult<Option<crate::editor::MediaInfo>> {
+    let picked = crate::e2e::dialog_override(crate::e2e::DialogKind::Open, None).or_else(|| {
+        app.dialog()
+            .file()
+            .set_title("Find the missing file")
+            .blocking_pick_file()
+            .and_then(|p| p.into_path().ok())
+    });
+    let Some(path) = picked else { return Ok(None) };
+    let core = core.inner().clone();
+    let m = blocking(move || crate::editor::relink(&core, &project_id, &media_id, &path)).await??;
+    allow_media(&app, &[PathBuf::from(&m.path)]);
+    Ok(Some(m))
+}
+
+#[tauri::command]
+pub async fn editor_thumbnails(
+    core: S<'_>,
+    project_id: String,
+    media_id: String,
+    count: usize,
+) -> AppResult<Vec<String>> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor::thumbnails(&core, &project_id, &media_id, count)).await?
+}
+
+#[tauri::command]
+pub async fn editor_waveform(
+    core: S<'_>,
+    project_id: String,
+    media_id: String,
+) -> AppResult<crate::editor::Waveform> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor::waveform(&core, &project_id, &media_id)).await?
+}
+
+/// Saves the project. Without a known file (or with `save_as`) a save dialog
+/// asks where; the dialog starts in Documents\Vidra Studio Projects.
+#[tauri::command]
+pub async fn editor_save_project<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    doc: Value,
+    save_as: bool,
+) -> AppResult<Option<crate::editor::SavedProject>> {
+    let id = doc
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    crate::editor::check_id(&id)?;
+    let name: String = doc
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or("Project")
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == ' ' || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .take(80)
+        .collect();
+    let target = match crate::editor::current_file(&core, &id) {
+        Some(f) if !save_as => Some(f),
+        _ => {
+            let file_name = format!("{}.{}", name.trim(), crate::editor::PROJECT_EXT);
+            crate::e2e::dialog_override(crate::e2e::DialogKind::Save, Some(&file_name)).or_else(
+                || {
+                    let mut d = app
+                        .dialog()
+                        .file()
+                        .set_file_name(&file_name)
+                        .add_filter("Vidra Studio project", &[crate::editor::PROJECT_EXT]);
+                    if let Some(dir) = crate::editor::projects_dir() {
+                        let _ = std::fs::create_dir_all(&dir);
+                        d = d.set_directory(dir);
+                    }
+                    d.blocking_save_file().and_then(|p| p.into_path().ok())
+                },
+            )
+        }
+    };
+    let Some(path) = target else { return Ok(None) };
+    let core = core.inner().clone();
+    blocking(move || crate::editor::save_to(&core, doc, &path))
+        .await?
+        .map(Some)
+}
+
+#[tauri::command]
+pub async fn editor_open_project<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+) -> AppResult<Option<crate::editor::SavedProject>> {
+    let picked = crate::e2e::dialog_override(crate::e2e::DialogKind::Open, None).or_else(|| {
+        let mut d = app
+            .dialog()
+            .file()
+            .set_title("Open project")
+            .add_filter("Vidra Studio project", &[crate::editor::PROJECT_EXT]);
+        if let Some(dir) = crate::editor::projects_dir().filter(|d| d.is_dir()) {
+            d = d.set_directory(dir);
+        }
+        d.blocking_pick_file().and_then(|p| p.into_path().ok())
+    });
+    let Some(path) = picked else { return Ok(None) };
+    let core = core.inner().clone();
+    let (p, files) = blocking(move || crate::editor::open_file(&core, &path)).await??;
+    allow_media(&app, &files);
+    Ok(Some(p))
+}
+
+#[tauri::command]
+pub async fn editor_open_recent<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    recent_id: String,
+) -> AppResult<crate::editor::SavedProject> {
+    let core = core.inner().clone();
+    let (p, files) = blocking(move || {
+        let path = crate::editor::recent_path(&core, &recent_id)?;
+        crate::editor::open_file(&core, &path)
+    })
+    .await??;
+    allow_media(&app, &files);
+    Ok(p)
+}
+
+#[tauri::command]
+pub fn editor_list_recent(core: S<'_>) -> Vec<crate::editor::RecentProject> {
+    crate::editor::recent(&core)
+}
+
+#[tauri::command]
+pub async fn editor_autosave(core: S<'_>, doc: Value) -> AppResult<()> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor::autosave(&core, doc)).await?
+}
+
+#[tauri::command]
+pub fn editor_list_recoveries(core: S<'_>) -> Vec<crate::editor::Recovery> {
+    crate::editor::recoveries(&core)
+}
+
+#[tauri::command]
+pub async fn editor_recover<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+) -> AppResult<crate::editor::SavedProject> {
+    let core = core.inner().clone();
+    let (p, files) = blocking(move || crate::editor::recover(&core, &project_id)).await??;
+    allow_media(&app, &files);
+    Ok(p)
+}
+
+#[tauri::command]
+pub fn editor_discard_recovery(core: S<'_>, project_id: String) -> AppResult<()> {
+    crate::editor::discard_recovery(&core, &project_id)
+}
+
+/// Asks where to save the video, then queues the export (progress arrives
+/// as `editor-export` store events). Returns None when the dialog was closed.
+#[tauri::command]
+pub async fn editor_start_export<R: Runtime>(
+    app: AppHandle<R>,
+    core: S<'_>,
+    project_id: String,
+    plan: crate::editor_render::RenderPlan,
+    options: crate::editor_render::ExportOptions,
+    file_name: String,
+) -> AppResult<Option<String>> {
+    crate::editor_render::validate(&plan)?;
+    let base: String = file_name
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == ' ' || c == '-' || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
+        .take(80)
+        .collect();
+    let name = format!(
+        "{}.mp4",
+        if base.trim().is_empty() {
+            "Vidra export"
+        } else {
+            base.trim()
+        }
+    );
+    let Some(path) = save_dialog(&app, &core, &name, ("MP4 video", &["mp4"])) else {
+        return Ok(None);
+    };
+    let path = if path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .as_deref()
+        == Some("mp4")
+    {
+        path
+    } else {
+        path.with_extension("mp4")
+    };
+    let id = crate::editor_render::start(
+        core.inner().clone(),
+        &project_id,
+        plan,
+        options,
+        path.clone(),
+    )?;
+    core.editor
+        .done
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .insert(id.clone(), path);
+    Ok(Some(id))
+}
+
+#[tauri::command]
+pub fn editor_cancel_export(core: S<'_>, export_id: String) -> AppResult<()> {
+    crate::editor_render::cancel(&core, &export_id)
+}
+
+/// Shows an exported video in Explorer (by export id; no paths from the UI).
+#[tauri::command]
+pub fn editor_reveal_export(core: S<'_>, export_id: String) -> AppResult<()> {
+    let path = core
+        .editor
+        .done
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .get(&export_id)
+        .cloned()
+        .filter(|p| p.is_file())
+        .ok_or_else(|| AppError::not_found("The exported file was not found."))?;
+    tauri_plugin_opener::reveal_item_in_dir(path)
+        .map_err(|_| AppError::io("Could not open the file location."))
+}
+
 /* ── Generation ────────────────────────────────────────────────────────── */
 
 #[tauri::command]
@@ -817,6 +1179,26 @@ pub const COMMANDS: &[&str] = &[
     "update_reference",
     "delete_reference",
     "attach_reference",
+    "editor_tools_status",
+    "editor_choose_ffmpeg_dir",
+    "editor_begin_project",
+    "editor_import_media",
+    "editor_import_dropped",
+    "editor_import_archive_asset",
+    "editor_relink_media",
+    "editor_thumbnails",
+    "editor_waveform",
+    "editor_save_project",
+    "editor_open_project",
+    "editor_open_recent",
+    "editor_list_recent",
+    "editor_autosave",
+    "editor_list_recoveries",
+    "editor_recover",
+    "editor_discard_recovery",
+    "editor_start_export",
+    "editor_cancel_export",
+    "editor_reveal_export",
     "estimate_generation",
     "submit_generation",
     "cancel_generation",

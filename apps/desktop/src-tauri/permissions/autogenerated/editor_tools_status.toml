@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-tools-status"
+description = "Enables the editor_tools_status command without any pre-configured scope."
+commands.allow = ["editor_tools_status"]
+
+[[permission]]
+identifier = "deny-editor-tools-status"
+description = "Denies the editor_tools_status command without any pre-configured scope."
+commands.deny = ["editor_tools_status"]

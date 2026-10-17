@@ -11,6 +11,8 @@ import {
   type CatalogSyncResult,
   DEFAULT_BUDGET,
   type DownloadTask,
+  type EditorMedia,
+  type EditorProject,
   type GenerationJob,
   type Id,
   type MediaAsset,
@@ -596,6 +598,33 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
     }
     return out.slice(0, 64)
   }
+  /* ── Video Editor (demo) ───────────────────────────────────────────── */
+  const editorMedia = new Map<string, EditorMedia>()
+  const editorSaved = new Map<string, EditorProject>()
+  const editorTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  function demoEditorItem(name: string): EditorMedia {
+    const ext = name.split(".").pop()?.toLowerCase() ?? ""
+    const kind: EditorMedia["kind"] = ["mp3", "wav", "aac", "flac", "m4a"].includes(ext) ? "audio" : ["png", "jpg", "jpeg", "webp"].includes(ext) ? "image" : "video"
+    const m: EditorMedia = {
+      id: `med_${uuid().replace(/-/g, "").slice(0, 16)}`,
+      kind,
+      name,
+      path: `C:\\Users\\Demo\\Videos\\${name}`,
+      durationSec: kind === "image" ? null : kind === "audio" ? 30 : 6 + (name.length % 5),
+      width: kind === "audio" ? null : 1920,
+      height: kind === "audio" ? null : 1080,
+      fps: kind === "video" ? 30 : null,
+      hasAudio: kind !== "image",
+      hasVideo: kind !== "audio",
+      sizeBytes: 2_000_000,
+      available: true,
+    }
+    editorMedia.set(m.id, m)
+    return m
+  }
+  function demoEditorMedia(_projectId: string): EditorMedia[] {
+    return ["Demo clip 1.mp4", "Demo clip 2.mp4", "Demo clip 3.mp4", "Demo music.mp3", "Demo logo.png"].map(demoEditorItem)
+  }
   /** Staged uploads by hash: what "save to library" and re-uploads read. */
   const staged = new Map<string, UploadedReference>()
   function makeReference(name: string, kind: UploadedReference["kind"], dataUrl: string | null): UploadedReference {
@@ -817,6 +846,73 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
       }
       return delay(makeReference(`demo-${kind}.${kind === "image" ? "png" : kind === "video" ? "mp4" : "mp3"}`, kind, null))
     },
+    /* Video Editor (browser preview: simulated media and export) */
+    editorToolsStatus: async () =>
+      delay({ available: true, version: "ffmpeg (demo)", source: "path", ffmpegPath: null, h264Encoders: ["libx264"], hasAac: true }, 40),
+    editorChooseFfmpegDir: async () => null,
+    editorBeginProject: async () => undefined,
+    editorImportMedia: async (projectId) => delay({ media: demoEditorMedia(projectId), failed: [] }, 150),
+    editorImportDropped: async (projectId, dropTokens) => {
+      const files = dropTokens.map((t) => drops.get(t)).filter((d): d is NonNullable<typeof d> => !!d)
+      dropTokens.forEach((t) => drops.delete(t))
+      return delay({ media: files.map((f) => demoEditorItem(f.name)), failed: [] }, 120)
+    },
+    editorImportArchiveAsset: async (_projectId, assetId) => {
+      const a = assets.get(assetId)
+      if (!a) return fail("not_found", "This item has no saved file.")
+      return delay({ media: [demoEditorItem(a.filename || "archive.mp4")], failed: [] }, 120)
+    },
+    editorRelinkMedia: async () => null,
+    editorThumbnails: async (_p, mediaId, count) => {
+      const m = editorMedia.get(mediaId)
+      if (!m || m.kind === "audio") return []
+      return Array.from({ length: m.kind === "image" ? 1 : Math.min(count, 4) }, (_, i) => demoFrame(m.name, i + m.name.length, 160, 90))
+    },
+    editorWaveform: async (_p, mediaId) => {
+      const m = editorMedia.get(mediaId)
+      if (!m?.hasAudio) return { perSec: 0, peaks: [] }
+      const n = Math.round((m.durationSec ?? 1) * 20)
+      return { perSec: 20, peaks: Array.from({ length: n }, (_, i) => Math.round(90 + 80 * Math.abs(Math.sin(i / 3)))) }
+    },
+    editorSaveProject: async (doc) => {
+      editorSaved.set(doc.id, clone(doc))
+      return delay({ path: `C:\\Users\\Demo\\Documents\\Vidra Studio Projects\\${doc.name}.vidraproj`, doc: clone(doc) }, 80)
+    },
+    editorOpenProject: async () => {
+      const last = [...editorSaved.values()].at(-1)
+      return last ? { path: `C:\\Users\\Demo\\Documents\\Vidra Studio Projects\\${last.name}.vidraproj`, doc: clone(last) } : null
+    },
+    editorOpenRecent: async (recentId) => {
+      const doc = editorSaved.get(recentId)
+      if (!doc) return fail("not_found", "This project is no longer in the recent list.")
+      return { path: `${doc.name}.vidraproj`, doc: clone(doc) }
+    },
+    editorListRecent: async () =>
+      [...editorSaved.values()].reverse().map((d) => ({ id: d.id, name: d.name, path: `${d.name}.vidraproj`, openedAt: d.updatedAt, exists: true })),
+    editorAutosave: async () => undefined,
+    editorListRecoveries: async () => [],
+    editorRecover: async () => fail("not_found", "No recovery copy for this project."),
+    editorDiscardRecovery: async () => undefined,
+    editorStartExport: async (_projectId, plan) => {
+      const id = `exp_${uuid().slice(0, 8)}`
+      let p = 0
+      const tick = () => {
+        p = Math.min(1, p + 0.25)
+        emit({ type: "editor-export", exportId: id, status: p < 1 ? "rendering" : "completed", progress: p, message: null, outputPath: p < 1 ? null : "C:\\Users\\Demo\\Videos\\export.mp4" })
+        if (p < 1) editorTimers.set(id, setTimeout(tick, 120))
+        else editorTimers.delete(id)
+      }
+      if (plan.duration <= 0) return fail("invalid_input", "Invalid export plan: the timeline is empty or too long.")
+      editorTimers.set(id, setTimeout(tick, 80))
+      return id
+    },
+    editorCancelExport: async (exportId) => {
+      const t = editorTimers.get(exportId)
+      if (t) clearTimeout(t)
+      editorTimers.delete(exportId)
+      emit({ type: "editor-export", exportId, status: "canceled", progress: 0, message: null, outputPath: null })
+    },
+    editorRevealExport: async () => undefined,
     listReferences: async () => delay([...library.values()].map(clone), 60),
     saveReference: async (sha256, name, refType) => {
       const clean = name.trim()

@@ -23,7 +23,10 @@ const SECRET_MARKERS = [MOCK_KEY_SECRET, `${MOCK_KEY_ID}:${MOCK_KEY_SECRET}`]
  */
 
 const EXE = resolve("src-tauri/target/debug/vidra-studio.exe")
-const CDP_PORT = 9333
+/** A fresh DevTools port per launch: after a hard kill the old WebView2 can
+ *  hold the previous port for a while. */
+let launches = 0
+const cdpPort = () => 9333 + (launches % 40) * 2
 const run = join(tmpdir(), `vidra-native-${Date.now()}`)
 const dataDir = join(run, "data")
 const dialogDir = join(run, "dialogs")
@@ -93,6 +96,7 @@ function credentialTargets(): string {
 }
 
 async function launch() {
+  launches += 1
   app = spawn(EXE, [], {
     env: {
       ...process.env,
@@ -109,7 +113,7 @@ async function launch() {
       // shares the user's screen). Without them requestAnimationFrame stalls
       // and menu animations never "settle" for the driver.
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: [
-        `--remote-debugging-port=${CDP_PORT}`,
+        `--remote-debugging-port=${cdpPort()}`,
         "--disable-backgrounding-occluded-windows",
         "--disable-renderer-backgrounding",
         "--disable-background-timer-throttling",
@@ -119,7 +123,7 @@ async function launch() {
   })
   for (let i = 0; i < 60; i++) {
     try {
-      browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`)
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort()}`)
       break
     } catch {
       await new Promise((r) => setTimeout(r, 500))
@@ -192,6 +196,12 @@ async function submitPrompt(prompt: string) {
   await dialog.getByTestId("confirm-generate-button").click()
   await expect(dialog).toBeHidden()
   await expect(page.getByTestId("studio-jobs").getByRole("listitem").filter({ hasText: prompt.slice(0, 40) }).first()).toBeVisible()
+}
+
+/** Click that falls back to a DOM click when a re-rendering element never
+ *  settles for Playwright's stability check (e.g. a button with a spinner). */
+async function robustClick(l: import("@playwright/test").Locator) {
+  await l.click({ timeout: 10_000 }).catch(() => l.dispatchEvent("click"))
 }
 
 async function archiveCard(search: string) {
@@ -635,10 +645,10 @@ test.describe.serial("native desktop journey (mock provider, no paid calls)", ()
     await expect(page.getByTestId("storage-banner")).toBeVisible()
     await expect(page.getByTestId("storage-banner")).toContainText(secondRoot)
     // Still unreachable: reconnect reports it and the banner stays.
-    await page.getByTestId("storage-reconnect").click()
+    await robustClick(page.getByTestId("storage-reconnect"))
     await expect(page.getByTestId("storage-banner")).toBeVisible()
     renameSync(offline, secondRoot)
-    await page.getByTestId("storage-reconnect").click()
+    await robustClick(page.getByTestId("storage-reconnect"))
     await expect(page.getByTestId("storage-banner")).toBeHidden()
     // Nothing saved is lost (in-flight items may finish meanwhile).
     const saved = states.filter((x) => x === "saved").length

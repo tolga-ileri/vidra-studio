@@ -394,6 +394,15 @@ pub enum StoreEvent {
     CatalogChanged,
     ReferencesChanged,
     #[serde(rename_all = "camelCase")]
+    EditorExport {
+        export_id: String,
+        /// queued | rendering | validating | completed | failed | canceled
+        status: String,
+        progress: f64,
+        message: Option<String>,
+        output_path: Option<String>,
+    },
+    #[serde(rename_all = "camelCase")]
     ArchiveMoveProgress {
         token: String,
         processed: usize,

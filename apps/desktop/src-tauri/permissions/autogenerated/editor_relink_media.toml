@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-relink-media"
+description = "Enables the editor_relink_media command without any pre-configured scope."
+commands.allow = ["editor_relink_media"]
+
+[[permission]]
+identifier = "deny-editor-relink-media"
+description = "Denies the editor_relink_media command without any pre-configured scope."
+commands.deny = ["editor_relink_media"]

@@ -1,6 +1,6 @@
 [package]
 name = "vidra-studio"
-version = "0.2.0"
+version = "0.3.0"
 description = "Vidra Studio - local-first desktop studio for AI video and image generation"
 authors = ["Tolga Ileri"]
 license = "MIT"

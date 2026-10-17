@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-18
+
+### Added
+
+- **Video Editor** (Phase 1), a general-purpose nonlinear editor that works without any provider:
+  - Import video, audio and images (MP4, MOV, M4V, WebM, MKV, AVI, MP3, WAV, AAC, M4A, FLAC, OGG, Opus, PNG, JPEG, WebP) from a file dialog, by dropping files on the window, or with "Open in Video Editor" from the archive. Damaged files are reported per file.
+  - Multitrack timeline: layered video tracks and audio tracks, drag to move (also between tracks), trim, split at the playhead, ripple delete, duplicate, copy/paste, multi-select, snapping, zoom, frame stepping, undo/redo, thumbnails and waveforms.
+  - Per clip: volume (0–200%), mute, fade in/out, speed (0.25–4×), opacity, scaling (fit, fill, blurred background), size and position (picture-in-picture, logos). Per track: mute, hide, lock.
+  - Project formats 16:9, 9:16, 1:1, 4:5 and custom; changing the format keeps every edit. Safe-area guides for Reels, TikTok, Shorts and TV.
+  - Live preview driven by the same render plan as the export.
+  - Export to H.264 MP4 with AAC audio at 720p, 1080p, 1440p or 4K, software or hardware encoding, with progress, cancellation and FFprobe validation before the file is written.
+  - Projects (`.vidraproj`, versioned JSON): new, open, save, save as, recent projects, autosave with crash recovery, and relinking of moved media. Source files are never modified.
+- Uses FFmpeg/FFprobe installed on the computer (chosen folder, next to the app, or PATH). FFmpeg is not bundled; see docs/editor/ARCHITECTURE.md for the licensing decision.
+
+### Fixed
+
+- Browser e2e tests used whatever server was already on port 1420; they now start their own on a dedicated port.
+
 ## [0.2.0] - 2026-10-13
 
 ### Added

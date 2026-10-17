@@ -421,4 +421,12 @@ export type StoreEvent =
   | { type: "providers-changed" }
   | { type: "catalog-changed" }
   | { type: "references-changed" }
+  | {
+      type: "editor-export"
+      exportId: string
+      status: "queued" | "rendering" | "validating" | "completed" | "failed" | "canceled"
+      progress: number
+      message: string | null
+      outputPath: string | null
+    }
   | { type: "archive-move-progress"; token: string; processed: number; total: number }

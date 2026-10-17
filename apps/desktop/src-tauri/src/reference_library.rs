@@ -184,16 +184,6 @@ pub fn get(core: &Core, id: &str) -> AppResult<ReferenceAsset> {
     get_with_path(core, id).map(|(a, _)| a)
 }
 
-/// Files the archive move and verification must carry along.
-pub fn managed_files(core: &Core) -> AppResult<Vec<(String, Option<String>)>> {
-    let c = core.db.conn();
-    let mut st = c.prepare("SELECT local_path, sha256 FROM reference_assets")?;
-    let rows = st.query_map([], |r| {
-        Ok((r.get::<_, String>(0)?, Some(r.get::<_, String>(1)?)))
-    })?;
-    Ok(rows.collect::<Result<_, _>>()?)
-}
-
 /// Copies a staged upload into the library. The same image (by hash) is
 /// never stored twice: saving it again returns the existing entry.
 pub fn save(core: &Core, sha256: &str, name: &str, ref_type: &str) -> AppResult<ReferenceAsset> {
@@ -443,10 +433,6 @@ mod tests {
         // Same image again: no duplicate entry.
         assert_eq!(save(&e.core, &sha, "again", "product").unwrap().id, a.id);
         assert_eq!(list(&e.core).unwrap().len(), 1);
-        assert_eq!(
-            managed_files(&e.core).unwrap(),
-            vec![(format!("references/{}.png", a.id), Some(sha.clone()))]
-        );
         let b = update(&e.core, &a.id, Some("Mascot v2"), Some("product")).unwrap();
         assert_eq!(
             (b.name.as_str(), b.ref_type.as_str()),

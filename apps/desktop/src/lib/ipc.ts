@@ -11,6 +11,8 @@ import type {
   CatalogStatus,
   CatalogSyncResult,
   DownloadTask,
+  EditorMedia,
+  EditorProject,
   GenerationJob,
   GenerationReference,
   Id,
@@ -28,6 +30,7 @@ import type {
   ProviderStatus,
   ReferenceAsset,
   ReferenceType,
+  RenderPlan,
   StorageStats,
   StorageStatus,
   StoreEvent,
@@ -154,6 +157,53 @@ export interface UpdateInfo {
   newer: boolean
 }
 
+/* ── Video Editor ──────────────────────────────────────────────────────── */
+
+export interface EditorToolStatus {
+  available: boolean
+  version: string | null
+  source: "configured" | "bundled" | "path" | null
+  ffmpegPath: string | null
+  h264Encoders: string[]
+  hasAac: boolean
+}
+
+export interface EditorImportResult {
+  media: EditorMedia[]
+  failed: Array<{ name: string; message: string }>
+}
+
+export interface EditorWaveform {
+  perSec: number
+  peaks: number[]
+}
+
+export interface SavedEditorProject {
+  path: string
+  doc: unknown
+}
+
+export interface EditorRecent {
+  id: string
+  name: string
+  path: string
+  openedAt: number
+  exists: boolean
+}
+
+export interface EditorRecovery {
+  projectId: string
+  name: string
+  savedAt: number
+  file: string | null
+}
+
+export interface EditorExportOptions {
+  encoder: "auto" | "software" | "hardware"
+  videoKbps: number
+  audioKbps: number
+}
+
 export const ipc = {
   /* App */
   appInfo: () => call<AppInfo>("app_info"),
@@ -220,6 +270,33 @@ export const ipc = {
       savedId: "savedId" in source ? source.savedId : null,
       sha256: "sha256" in source ? source.sha256 : null,
     }),
+
+  /* Video Editor */
+  editorToolsStatus: (refresh: boolean) => call<EditorToolStatus>("editor_tools_status", { refresh }),
+  editorChooseFfmpegDir: () => call<EditorToolStatus | null>("editor_choose_ffmpeg_dir"),
+  editorBeginProject: (projectId: string) => call<void>("editor_begin_project", { projectId }),
+  editorImportMedia: (projectId: string) => call<EditorImportResult | null>("editor_import_media", { projectId }),
+  editorImportDropped: (projectId: string, dropTokens: string[]) =>
+    call<EditorImportResult>("editor_import_dropped", { projectId, dropTokens }),
+  editorImportArchiveAsset: (projectId: string, assetId: Id) =>
+    call<EditorImportResult>("editor_import_archive_asset", { projectId, assetId }),
+  editorRelinkMedia: (projectId: string, mediaId: string) => call<EditorMedia | null>("editor_relink_media", { projectId, mediaId }),
+  editorThumbnails: (projectId: string, mediaId: string, count: number) =>
+    call<string[]>("editor_thumbnails", { projectId, mediaId, count }),
+  editorWaveform: (projectId: string, mediaId: string) => call<EditorWaveform>("editor_waveform", { projectId, mediaId }),
+  editorSaveProject: (doc: EditorProject, saveAs: boolean) => call<SavedEditorProject | null>("editor_save_project", { doc, saveAs }),
+  editorOpenProject: () => call<SavedEditorProject | null>("editor_open_project"),
+  editorOpenRecent: (recentId: string) => call<SavedEditorProject>("editor_open_recent", { recentId }),
+  editorListRecent: () => call<EditorRecent[]>("editor_list_recent"),
+  editorAutosave: (doc: EditorProject) => call<void>("editor_autosave", { doc }),
+  editorListRecoveries: () => call<EditorRecovery[]>("editor_list_recoveries"),
+  editorRecover: (projectId: string) => call<SavedEditorProject>("editor_recover", { projectId }),
+  editorDiscardRecovery: (projectId: string) => call<void>("editor_discard_recovery", { projectId }),
+  /** Asks where to save, then queues the export; progress arrives as `editor-export` events. */
+  editorStartExport: (projectId: string, plan: RenderPlan, options: EditorExportOptions, fileName: string) =>
+    call<string | null>("editor_start_export", { projectId, plan, options, fileName }),
+  editorCancelExport: (exportId: string) => call<void>("editor_cancel_export", { exportId }),
+  editorRevealExport: (exportId: string) => call<void>("editor_reveal_export", { exportId }),
 
   /* Generation */
   estimateGeneration: (input: GenerationInput) => call<Estimate>("estimate_generation", { input }),
