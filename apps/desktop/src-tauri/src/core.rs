@@ -75,6 +75,8 @@ pub struct Core {
     pub moves: Mutex<HashMap<String, crate::storage::MoveState>>,
     /// True while an archive move copies files (downloads wait).
     pub moving: std::sync::atomic::AtomicBool,
+    /// Video Editor: project media registries, FFmpeg, export queue.
+    pub editor: crate::editor::EditorState,
 }
 
 pub struct CoreBuilder {
@@ -103,6 +105,7 @@ impl CoreBuilder {
             catalog_sync: tokio::sync::Mutex::new(()),
             moves: Mutex::new(HashMap::new()),
             moving: std::sync::atomic::AtomicBool::new(false),
+            editor: crate::editor::EditorState::default(),
             db: self.db,
             secrets: self.secrets,
             net: self.net,

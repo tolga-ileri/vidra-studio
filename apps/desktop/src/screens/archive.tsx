@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import {
   ArrowDownWideNarrow,
@@ -23,6 +24,7 @@ import {
   Trash2,
   Undo2,
   X,
+  Film,
 } from "lucide-react"
 import { toast } from "sonner"
 import type { ArchiveEntry, ArchiveQuery, Id, ProviderId } from "@vidra/core"
@@ -76,6 +78,7 @@ export function ArchiveScreen() {
   const providers = useApp((s) => s.providers)
   const models = useApp((s) => s.models)
   const openInStudio = useOpenInStudio()
+  const navigate = useNavigate()
 
   const [view, setView] = useState<View>({ kind: "all" })
   const [search, setSearch] = useState("")
@@ -181,6 +184,7 @@ export function ArchiveScreen() {
         },
         e.job.output
       ),
+    openInEditor: (e: ArchiveEntry) => e.asset && void navigate(`/editor?asset=${encodeURIComponent(e.asset.id)}`),
     copyPrompt: (e: ArchiveEntry) =>
       void navigator.clipboard?.writeText(e.job.prompt).then(() => toast.success(t("common.copied")), () => undefined),
     reveal: (e: ArchiveEntry) => e.asset && attempt(() => api.openFileLocation(e.asset!.id)),
@@ -237,6 +241,12 @@ export function ArchiveScreen() {
           <RefreshCw />
           {t("archive.regenerate")}
         </DropdownMenuItem>
+        {e.state === "saved" && e.job.output === "video" && (
+          <DropdownMenuItem onSelect={() => actions.openInEditor(e)} data-testid="archive-open-editor">
+            <Film />
+            {t("archive.openInEditor")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onSelect={() => actions.copyPrompt(e)}>
           <Copy />
           {t("archive.copyPrompt")}

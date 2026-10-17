@@ -77,6 +77,12 @@ Node.js, veritabanı veya komut satırı gerekmez.
   - Taşıma işleminde önce tüm dosyalar kopyalanıp doğrulanır. Eski kopyalar
     yalnızca onay verirsen silinir.
   - Sürücü çıkarılırsa indirmeler yeniden bağlanana kadar duraklar.
+- **Video Editörü.** Her türlü video için genel amaçlı editör: klip, müzik,
+  seslendirme ve logoları içe aktarın, çok izli zaman çizelgesinde düzenleyin,
+  kırpın, bölün, ses düzeyi ve geçişleri ayarlayın, 16:9 / 9:16 / 1:1 / 4:5
+  seçin, önizleyin ve H.264 MP4 olarak dışa aktarın. Projeler yerelde
+  kaydedilir ve otomatik yedeklenir; orijinal dosyalar asla değişmez.
+  Bilgisayarda FFmpeg gerekir (uygulamayla gelmez).
 - **Referans görseller.** Video Stüdyosu'na maskot, ürün, stil veya mekân
   görsellerini bırakın, adlandırıp türünü seçin; uygulama bunları modelin
   belgelenmiş girişlerine (referans görseller, ilk/son kare) yerleştirir.

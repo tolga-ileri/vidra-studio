@@ -19,6 +19,8 @@ telemetry, no analytics and no crash reporting**. There is no Vidra server.
   - your credential, sent as the provider requires.
 
   Each provider's own privacy policy and terms apply to that data.
+- **Video Editor:** nothing. Media is read and rendered locally with FFmpeg on
+  this computer; projects, thumbnails, waveforms and autosaves stay on disk.
 - **To the provider's upload endpoint:** reference images you attach to a
   generation, through the provider's documented upload flow, only when you
   attach them. Saved library copies stay in your archive folder.

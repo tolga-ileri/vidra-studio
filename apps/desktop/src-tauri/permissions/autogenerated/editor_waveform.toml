@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-waveform"
+description = "Enables the editor_waveform command without any pre-configured scope."
+commands.allow = ["editor_waveform"]
+
+[[permission]]
+identifier = "deny-editor-waveform"
+description = "Denies the editor_waveform command without any pre-configured scope."
+commands.deny = ["editor_waveform"]

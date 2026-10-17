@@ -22,6 +22,7 @@ import { Onboarding } from "@/screens/onboarding"
 import { PromptsScreen } from "@/screens/prompts"
 import { ProvidersScreen } from "@/screens/providers"
 import { SettingsScreen } from "@/screens/settings"
+import { EditorScreen } from "@/screens/editor"
 import { StudioScreen } from "@/screens/studio"
 
 export default function App() {
@@ -80,6 +81,7 @@ export default function App() {
             <Route index element={<HomeScreen />} />
             <Route path="video" element={<StudioScreen output="video" key="video" />} />
             <Route path="image" element={<StudioScreen output="image" key="image" />} />
+            <Route path="editor" element={<EditorScreen />} />
             <Route path="models" element={<ModelsScreen />} />
             <Route path="archive" element={<ArchiveScreen />} />
             <Route path="generations" element={<GenerationsScreen />} />

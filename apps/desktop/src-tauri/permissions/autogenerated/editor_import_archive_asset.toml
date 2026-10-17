@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-import-archive-asset"
+description = "Enables the editor_import_archive_asset command without any pre-configured scope."
+commands.allow = ["editor_import_archive_asset"]
+
+[[permission]]
+identifier = "deny-editor-import-archive-asset"
+description = "Denies the editor_import_archive_asset command without any pre-configured scope."
+commands.deny = ["editor_import_archive_asset"]

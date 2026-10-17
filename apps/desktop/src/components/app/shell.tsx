@@ -15,10 +15,12 @@ import {
   PanelLeftOpen,
   PlugZap,
   Settings,
+  Film,
 } from "lucide-react"
 
 import { ErrorBoundary, Mark } from "@/components/app/common"
 import { StorageIndicator } from "@/components/app/storage"
+import { useEditor } from "@/screens/editor/store"
 import { Button } from "@/components/ui/button"
 import {
   CommandDialog,
@@ -45,6 +47,7 @@ export const NAV: NavItem[] = [
   { to: "/", label: "nav.home", icon: Home },
   { to: "/video", label: "nav.video", icon: Clapperboard },
   { to: "/image", label: "nav.image", icon: ImageIcon },
+  { to: "/editor", label: "nav.editor", icon: Film },
   { to: "/models", label: "nav.models", icon: Layers },
   { to: "/archive", label: "nav.archive", icon: FolderArchive },
   { to: "/generations", label: "nav.generations", icon: ListChecks },
@@ -96,7 +99,10 @@ export function AppShell() {
     return () => mq.removeEventListener("change", on)
   }, [])
   const collapsed = collapsedPref || narrow
+  const editorOpen = useEditor((st) => st.history !== null)
   const [palette, setPalette] = useState(false)
+  // The Video Editor workspace uses the whole area (it has its own panels).
+  const fullBleed = location.pathname.startsWith("/editor") && editorOpen
   const [shortcuts, setShortcuts] = useState(false)
 
   useEffect(() => {
@@ -202,8 +208,8 @@ export function AppShell() {
           )}
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-y-auto" id="main">
-        <div className="mx-auto max-w-[1480px] px-8 py-7 max-[800px]:px-4 max-[800px]:py-4">
+      <main className={cn("min-w-0 flex-1", fullBleed ? "overflow-hidden" : "overflow-y-auto")} id="main">
+        <div className={fullBleed ? "h-full" : "mx-auto max-w-[1480px] px-8 py-7 max-[800px]:px-4 max-[800px]:py-4"}>
           <ErrorBoundary resetKey={location.pathname}>
             <Outlet />
           </ErrorBoundary>

@@ -10,6 +10,8 @@ pub mod core;
 pub mod db;
 pub mod downloads;
 pub mod e2e;
+pub mod editor;
+mod editor_render;
 pub mod error;
 pub mod jobs;
 #[cfg(test)]
@@ -20,7 +22,7 @@ pub mod pricing;
 pub mod prompts;
 pub mod provider_admin;
 pub mod providers;
-pub mod reference_library;
+mod reference_library;
 mod references;
 pub mod rules;
 pub mod secrets;
@@ -169,6 +171,12 @@ pub fn run() {
             .build();
             let root = core.archive_root();
             commands::allow_root(&handle, &root);
+            {
+                // Editor thumbnails are served from the app's own cache folder.
+                let cache = crate::editor::cache_dir(&core);
+                let _ = std::fs::create_dir_all(&cache);
+                let _ = handle.asset_protocol_scope().allow_directory(&cache, true);
+            }
             if let Ok(c) = std::fs::canonicalize(&root) {
                 commands::allow_root(&handle, &c);
             }
@@ -221,6 +229,26 @@ pub fn run() {
             commands::update_reference,
             commands::delete_reference,
             commands::attach_reference,
+            commands::editor_tools_status,
+            commands::editor_choose_ffmpeg_dir,
+            commands::editor_begin_project,
+            commands::editor_import_media,
+            commands::editor_import_dropped,
+            commands::editor_import_archive_asset,
+            commands::editor_relink_media,
+            commands::editor_thumbnails,
+            commands::editor_waveform,
+            commands::editor_save_project,
+            commands::editor_open_project,
+            commands::editor_open_recent,
+            commands::editor_list_recent,
+            commands::editor_autosave,
+            commands::editor_list_recoveries,
+            commands::editor_recover,
+            commands::editor_discard_recovery,
+            commands::editor_start_export,
+            commands::editor_cancel_export,
+            commands::editor_reveal_export,
             commands::estimate_generation,
             commands::submit_generation,
             commands::cancel_generation,

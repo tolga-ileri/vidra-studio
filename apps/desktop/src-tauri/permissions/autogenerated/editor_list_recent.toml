@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-list-recent"
+description = "Enables the editor_list_recent command without any pre-configured scope."
+commands.allow = ["editor_list_recent"]
+
+[[permission]]
+identifier = "deny-editor-list-recent"
+description = "Denies the editor_list_recent command without any pre-configured scope."
+commands.deny = ["editor_list_recent"]

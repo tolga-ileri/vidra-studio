@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-editor-import-dropped"
+description = "Enables the editor_import_dropped command without any pre-configured scope."
+commands.allow = ["editor_import_dropped"]
+
+[[permission]]
+identifier = "deny-editor-import-dropped"
+description = "Denies the editor_import_dropped command without any pre-configured scope."
+commands.deny = ["editor_import_dropped"]

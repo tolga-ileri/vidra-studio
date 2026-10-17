@@ -242,7 +242,10 @@ pub fn preview(core: &Core, path: &Path) -> AppResult<ImportPreview> {
     let mut names = HashSet::new();
     for i in 0..zip.len() {
         let e = zip.by_index_raw(i).map_err(|_| bad("corrupted archive"))?;
-        let name = e.name().to_string();
+        let name = e
+            .name()
+            .map_err(|_| bad("unexpected file name"))?
+            .to_string();
         if e.is_dir() {
             if name == "media/" || name == "thumbs/" {
                 continue;
