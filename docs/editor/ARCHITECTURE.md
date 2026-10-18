@@ -95,3 +95,15 @@ recovery / relink.
 Later phases (not in this release): text and subtitles, transitions and
 effects, keyframes, color, advanced audio (ducking, normalization, EQ,
 recording), screen and browser recording, Auto Edit.
+
+## Phase 2 — Milestone A (motion, keyframes, transitions)
+
+- **Project format 2.** Clips gain `rotation`, `crop`, `keyframes`, `transIn` and `transOut`; projects gain `markers`. Format 1 files validate with defaults for every new field and are written back as format 2. The native side (`check_doc`) accepts both.
+- **Keyframes live at source time** (`s`), so trimming or splitting a clip never moves an animation off its frame. `clipAnim()` converts them to timeline time for the plan.
+- **Easing** is a cubic curve (`ease()` in `packages/core`). The same formulas are emitted as FFmpeg expressions in `editor_render.rs` (`ease_expr`/`anim_expr`), so preview and export match.
+- **Motion presets** are only a way of writing keyframes (`applyMotion`). The focal point stays fixed while scaling. Keyframes outside the interval are kept, which makes chained zooms possible.
+- **Transitions** are stored on clip edges. A transition between two adjacent clips belongs to the later clip's `transIn`; `transOut` is only used at a clip end with no clip following.
+  - `renderPlan()` turns them into overlaps: items are extended, and `holdStart`/`holdEnd` clone frames when the source has no spare footage.
+  - It also adds alpha fades, wipe masks, blur copies, slide offsets and zoom factors, and inserts colour items for dips.
+- **Export graph.** Static items keep the Phase 1 filters byte for byte. Animated items use `scale=…:eval=frame` and `overlay=…:eval=frame` with expressions of `t`. Rotation pre-scales to the largest size, then applies `rotate`. Opacity animation and wipes use `geq` on alpha, linear fades use `fade=…:alpha=1`, and blur uses `boxblur`.
+- **Verification** happens in exported frames, not only in the UI. A real-FFmpeg Rust test measures a zoom and a dip. Native tests A/T/B/G check cutting (a 15 s result, with frames matched to the source), a dip to black, zoom in/out box widths, and opening plus exporting a format-1 project.

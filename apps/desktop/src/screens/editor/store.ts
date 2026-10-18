@@ -26,6 +26,12 @@ interface EditorState {
   /** Timeline zoom in pixels per second. */
   zoom: number
   clipboard: Clip[]
+  /** Timeline tool: select/move, or blade (click a clip to cut it). */
+  tool: "select" | "blade"
+  /** In/out range for "remove range" (timeline seconds). */
+  range: { a: number | null; b: number | null }
+  /** Clip whose animation was copied. */
+  kfClipboard: Clip | null
   thumbs: Record<string, string[]>
   waves: Record<string, { perSec: number; peaks: number[] }>
 
@@ -44,6 +50,9 @@ interface EditorState {
   setPlaying: (v: boolean) => void
   setZoom: (z: number) => void
   setClipboard: (clips: Clip[]) => void
+  setTool: (tool: "select" | "blade") => void
+  setRange: (range: { a: number | null; b: number | null }) => void
+  setKfClipboard: (clip: Clip | null) => void
   markSaved: (file: string) => void
   loadAssets: (media: EditorMedia) => void
 }
@@ -60,11 +69,26 @@ export const useEditor = create<EditorState>((set, get) => ({
   playing: false,
   zoom: 60,
   clipboard: [],
+  tool: "select",
+  range: { a: null, b: null },
+  kfClipboard: null,
   thumbs: {},
   waves: {},
 
   open: (project, file, dirty = false) =>
-    set({ history: initHistory(project), file, dirty, selection: [], playhead: 0, playing: false, thumbs: {}, waves: {} }),
+    set({
+      history: initHistory(project),
+      file,
+      dirty,
+      selection: [],
+      playhead: 0,
+      playing: false,
+      tool: "select",
+      range: { a: null, b: null },
+      kfClipboard: null,
+      thumbs: {},
+      waves: {},
+    }),
   close: () => set({ history: null, file: null, dirty: false, selection: [], playhead: 0, playing: false }),
   apply: (edit) => {
     const h = get().history
@@ -96,6 +120,9 @@ export const useEditor = create<EditorState>((set, get) => ({
   setPlaying: (v) => set({ playing: v }),
   setZoom: (z) => set({ zoom: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)) }),
   setClipboard: (clips) => set({ clipboard: clips }),
+  setTool: (tool) => set({ tool }),
+  setRange: (range) => set({ range }),
+  setKfClipboard: (clip) => set({ kfClipboard: clip }),
   markSaved: (file) => set({ file, dirty: false }),
   loadAssets: (media) => {
     const h = get().history
