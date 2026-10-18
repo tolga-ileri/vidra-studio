@@ -778,7 +778,10 @@ fn check_doc(doc: &Value) -> AppResult<String> {
             "This is not a Vidra Studio editor project.",
         ));
     }
-    if doc.get("formatVersion").and_then(Value::as_i64) != Some(1) {
+    if !matches!(
+        doc.get("formatVersion").and_then(Value::as_i64),
+        Some(1 | 2)
+    ) {
         return Err(
             AppError::invalid("This project was made by a newer version of Vidra Studio.")
                 .with_reason("project_version"),
