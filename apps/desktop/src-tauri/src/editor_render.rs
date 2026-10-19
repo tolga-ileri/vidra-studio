@@ -27,26 +27,103 @@ fn reason(e: &AppError) -> Option<&str> {
 }
 pub const MAX_DURATION: f64 = 6.0 * 3600.0;
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+/// A keyframe on the timeline (absolute seconds), with the easing of the
+/// segment that starts at it. Same curves as `ease()` in packages/core.
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Anim {
+    pub t: f64,
+    pub v: f64,
+    pub ease: String,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Fade {
+    pub t0: f64,
+    pub t1: f64,
+    pub from: f64,
+    pub to: f64,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Crop {
+    pub l: f64,
+    pub t: f64,
+    pub r: f64,
+    pub b: f64,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VideoAnim {
+    #[serde(default)]
+    pub scale: Option<Vec<Anim>>,
+    #[serde(default)]
+    pub x: Option<Vec<Anim>>,
+    #[serde(default)]
+    pub y: Option<Vec<Anim>>,
+    #[serde(default)]
+    pub rotation: Option<Vec<Anim>>,
+    #[serde(default)]
+    pub opacity: Option<Vec<Anim>>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Wipe {
+    pub t0: f64,
+    pub t1: f64,
+    pub mode: String,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlanVideo {
+    #[serde(default)]
+    pub id: String,
     pub clip_id: String,
     pub media_id: String,
     pub kind: String,
-    pub layer: i64,
+    #[serde(default)]
+    pub color: String,
+    pub layer: f64,
+    #[serde(default)]
+    pub z: f64,
     pub start: f64,
     pub end: f64,
     pub src_in: f64,
     pub src_out: f64,
     pub speed: f64,
+    #[serde(default)]
+    pub hold_start: f64,
+    #[serde(default)]
+    pub hold_end: f64,
     pub opacity: f64,
     pub fit: String,
     pub x: f64,
     pub y: f64,
     pub scale: f64,
+    #[serde(default)]
+    pub rotation: f64,
+    #[serde(default)]
+    pub crop: Crop,
+    #[serde(default)]
+    pub anim: VideoAnim,
+    #[serde(default)]
+    pub t_scale: Vec<Anim>,
+    #[serde(default)]
+    pub t_x: Vec<Anim>,
+    #[serde(default)]
+    pub fades: Vec<Fade>,
+    #[serde(default)]
+    pub blur: f64,
+    #[serde(default)]
+    pub wipe: Option<Wipe>,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlanAudio {
     pub clip_id: String,
@@ -57,6 +134,8 @@ pub struct PlanAudio {
     pub src_out: f64,
     pub speed: f64,
     pub gain: f64,
+    #[serde(default)]
+    pub gain_anim: Vec<Anim>,
     pub fade_in: f64,
     pub fade_out: f64,
 }
@@ -99,6 +178,17 @@ fn fin(v: f64, lo: f64, hi: f64) -> bool {
 /// Rejects anything outside the ranges the editor can produce.
 pub fn validate(plan: &RenderPlan) -> AppResult<()> {
     let bad = |m: &str| Err(AppError::invalid(format!("Invalid export plan: {m}.")));
+    let hex = |c: &str| {
+        c.len() == 7 && c.starts_with('#') && c[1..].chars().all(|x| x.is_ascii_hexdigit())
+    };
+    let anims_ok = |list: &[Anim], lo: f64, hi: f64| {
+        list.len() <= 1000
+            && list.iter().all(|a| {
+                fin(a.t, -10.0, MAX_DURATION + 10.0)
+                    && fin(a.v, lo, hi)
+                    && matches!(a.ease.as_str(), "linear" | "in" | "out" | "inOut" | "hold")
+            })
+    };
     if !(16..=7680).contains(&plan.width)
         || !(16..=7680).contains(&plan.height)
         || plan.width % 2 != 0
@@ -112,27 +202,56 @@ pub fn validate(plan: &RenderPlan) -> AppResult<()> {
     if !fin(plan.duration, 0.05, MAX_DURATION) {
         return bad("the timeline is empty or too long");
     }
-    if plan.background.len() != 7
-        || !plan.background.starts_with('#')
-        || !plan.background[1..].chars().all(|c| c.is_ascii_hexdigit())
-    {
+    if !hex(&plan.background) {
         return bad("background color");
     }
     if plan.video.len() + plan.audio.len() > MAX_ITEMS {
         return bad("too many clips");
     }
     for v in &plan.video {
+        let a = &v.anim;
         if !(fin(v.start, 0.0, MAX_DURATION) && fin(v.end, v.start + 0.01, MAX_DURATION + 1.0))
             || !fin(v.src_in, 0.0, MAX_DURATION)
             || !fin(v.src_out, v.src_in + 0.001, MAX_DURATION + 1.0)
             || !fin(v.speed, 0.25, 4.0)
+            || !fin(v.hold_start, 0.0, 10.0)
+            || !fin(v.hold_end, 0.0, 10.0)
             || !fin(v.opacity, 0.0, 1.0)
             || !fin(v.scale, 0.05, 10.0)
             || !fin(v.x, -2.0, 2.0)
             || !fin(v.y, -2.0, 2.0)
-            || !(0..=64).contains(&v.layer)
-            || !matches!(v.kind.as_str(), "video" | "image")
+            || !fin(v.rotation, -3600.0, 3600.0)
+            || !fin(v.layer, 0.0, 64.0)
+            || !fin(v.z, -10.0, 10.0)
+            || !fin(v.blur, 0.0, 0.2)
+            || !(fin(v.crop.l, 0.0, 0.9)
+                && fin(v.crop.t, 0.0, 0.9)
+                && fin(v.crop.r, 0.0, 0.9)
+                && fin(v.crop.b, 0.0, 0.9))
+            || v.crop.l + v.crop.r >= 0.95
+            || v.crop.t + v.crop.b >= 0.95
+            || !matches!(v.kind.as_str(), "video" | "image" | "color")
+            || (v.kind == "color" && !hex(&v.color))
             || !matches!(v.fit.as_str(), "fit" | "fill" | "blur")
+            || !anims_ok(a.scale.as_deref().unwrap_or(&[]), 0.05, 10.0)
+            || !anims_ok(a.x.as_deref().unwrap_or(&[]), -2.0, 2.0)
+            || !anims_ok(a.y.as_deref().unwrap_or(&[]), -2.0, 2.0)
+            || !anims_ok(a.rotation.as_deref().unwrap_or(&[]), -3600.0, 3600.0)
+            || !anims_ok(a.opacity.as_deref().unwrap_or(&[]), 0.0, 1.0)
+            || !anims_ok(&v.t_scale, 0.05, 10.0)
+            || !anims_ok(&v.t_x, -2.0, 2.0)
+            || v.fades.len() > 8
+            || !v.fades.iter().all(|f| {
+                fin(f.t0, 0.0, MAX_DURATION + 1.0)
+                    && fin(f.t1, f.t0 + 0.001, MAX_DURATION + 1.0)
+                    && fin(f.from, 0.0, 1.0)
+                    && fin(f.to, 0.0, 1.0)
+            })
+            || v.wipe.as_ref().is_some_and(|w| {
+                !(fin(w.t0, 0.0, MAX_DURATION + 1.0)
+                    && fin(w.t1, w.t0 + 0.001, MAX_DURATION + 1.0)
+                    && matches!(w.mode.as_str(), "in" | "out"))
+            })
         {
             return bad("video clip values");
         }
@@ -145,11 +264,56 @@ pub fn validate(plan: &RenderPlan) -> AppResult<()> {
             || !fin(a.gain, 0.0, 16.0)
             || !fin(a.fade_in, 0.0, 60.0)
             || !fin(a.fade_out, 0.0, 60.0)
+            || !anims_ok(&a.gain_anim, 0.0, 4.0)
         {
             return bad("audio clip values");
         }
     }
     Ok(())
+}
+
+/// FFmpeg expression of a cubic easing curve of `u` (0..1). Mirrors `ease()` in packages/core.
+fn ease_expr(kind: &str, u: &str) -> String {
+    match kind {
+        "in" => format!("pow({u},3)"),
+        "out" => format!("1-pow(1-{u},3)"),
+        "inOut" => format!("if(lt({u},0.5),4*pow({u},3),1-pow(-2*{u}+2,3)/2)"),
+        "hold" => format!("if(lt({u},1),0,1)"),
+        _ => u.to_string(),
+    }
+}
+
+/// FFmpeg expression for an animation at time variable `tv` with `shift`
+/// subtracted from the keyframe times (item-relative filters), or `base`
+/// when there is none. Mirrors `animAt()` in packages/core.
+fn anim_expr(list: &[Anim], tv: &str, shift: f64, base: f64) -> String {
+    let Some(first) = list.first() else {
+        return format!("{base:.6}");
+    };
+    let last = list.last().unwrap_or(first);
+    let mut e = format!("{:.6}", last.v);
+    for w in list.windows(2).rev() {
+        let (a, b) = (&w[0], &w[1]);
+        let (ta, tb) = (a.t - shift, b.t - shift);
+        let span = (tb - ta).max(1e-6);
+        let u = format!("clip(({tv}-{ta:.6})/{span:.6},0,1)");
+        let seg = format!("{:.6}+({:.6})*({})", a.v, b.v - a.v, ease_expr(&a.ease, &u));
+        e = format!("if(lt({tv},{tb:.6}),{seg},{e})");
+    }
+    format!("if(lt({tv},{:.6}),{:.6},{e})", first.t - shift, first.v)
+}
+
+/// A quoted filter option value with its commas escaped.
+fn q(expr: &str) -> String {
+    format!("'{}'", expr.replace(',', "\\,"))
+}
+
+fn max_of(list: &[Anim], base: f64) -> f64 {
+    if list.is_empty() {
+        base
+    } else {
+        list.iter().fold(f64::MIN, |m, a| m.max(a.v))
+    }
 }
 
 fn even(v: f64) -> i64 {
@@ -229,8 +393,79 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
         .with_reason("media_missing")
     };
     for (k, v) in plan.video.iter().enumerate() {
-        let src = source(&v.media_id).ok_or_else(missing)?;
         let len = v.end - v.start;
+        let shift = format!("setpts=PTS+{:.6}/TB", v.start);
+        let enable = format!("enable='between(t,{:.6},{:.6})'", v.start, v.end);
+        // Alpha: static opacity, linear ramps (transitions), keyframed opacity and wipes.
+        let mut alpha = String::new();
+        let a = &v.anim;
+        let opacity_anim = a.opacity.as_deref().unwrap_or(&[]);
+        if opacity_anim.is_empty() && v.opacity < 0.999 {
+            let _ = write!(alpha, ",colorchannelmixer=aa={:.4}", v.opacity);
+        }
+        for fd in &v.fades {
+            let (t0, d) = ((fd.t0 - v.start).max(0.0), (fd.t1 - fd.t0).max(0.001));
+            if fd.from < fd.to {
+                let _ = write!(alpha, ",fade=t=in:st={t0:.6}:d={d:.6}:alpha=1");
+            } else if fd.from > fd.to {
+                let _ = write!(alpha, ",fade=t=out:st={t0:.6}:d={d:.6}:alpha=1");
+            }
+        }
+        if !opacity_anim.is_empty() || v.wipe.is_some() {
+            let mut factor = "1".to_string();
+            if !opacity_anim.is_empty() {
+                factor = format!(
+                    "clip({},0,1)",
+                    anim_expr(opacity_anim, "T", v.start, v.opacity)
+                );
+            }
+            let mut geq_enable = String::new();
+            if let Some(wp) = &v.wipe {
+                let span = (wp.t1 - wp.t0).max(0.001);
+                let u = format!("clip((T-{:.6})/{span:.6},0,1)", wp.t0 - v.start);
+                let mask = if wp.mode == "in" {
+                    format!("lte(X,W*{u})")
+                } else {
+                    format!("gte(X,W*{u})")
+                };
+                factor = format!("{factor}*{mask}");
+                if opacity_anim.is_empty() {
+                    // Before/after the wipe the mask is all or nothing; only evaluate during it.
+                    if wp.mode == "in" {
+                        geq_enable = format!(":enable='lte(t,{:.6})'", wp.t1 - v.start);
+                    } else {
+                        geq_enable = format!(":enable='gte(t,{:.6})'", wp.t0 - v.start);
+                    }
+                }
+            }
+            let _ = write!(
+                alpha,
+                ",geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a={}{geq_enable}",
+                q(&format!("alpha(X,Y)*{factor}"))
+            );
+        }
+        if v.blur > 0.0 {
+            let r = ((v.blur * h).round() as i64).clamp(1, 64);
+            let _ = write!(alpha, ",boxblur=luma_radius={r}:luma_power=2:chroma_radius={r}:chroma_power=2:alpha_radius=0");
+        }
+
+        if v.kind == "color" {
+            let c = &v.color[1..];
+            let _ = write!(
+                f,
+                "color=c=0x{c}:s={}x{}:r={fps}:d={len:.6},format=yuva420p{alpha},{shift}[l{k}];",
+                plan.width, plan.height
+            );
+            let next = format!("b{k}_0");
+            let _ = write!(
+                f,
+                "[{base}][l{k}]overlay=x=0:y=0:eof_action=pass:{enable}[{next}];"
+            );
+            base = next;
+            continue;
+        }
+
+        let src = source(&v.media_id).ok_or_else(missing)?;
         if v.kind == "image" {
             inputs.extend([
                 "-loop".into(),
@@ -252,37 +487,114 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
         let idx = n;
         n += 1;
         let speed = if v.kind == "image" { 1.0 } else { v.speed };
-        let timing = format!("setpts=(PTS-STARTPTS)/{speed:.6},fps={fps},trim=duration={len:.6}");
-        let alpha = if v.opacity < 0.999 {
-            format!(",colorchannelmixer=aa={:.4}", v.opacity)
+        let body = if v.kind == "image" {
+            len
         } else {
-            String::new()
+            (v.src_out - v.src_in) / speed
         };
-        let shift = format!("setpts=PTS+{:.6}/TB", v.start);
-        let mut layers: Vec<(String, i64, i64)> = Vec::new();
-        if v.fit == "blur" {
-            let (bw, bh, bl, bt) = placement("fill", src.width, src.height, w, h, 1.0, 0.0, 0.0);
-            let (fw, fh, fl, ft) = placement("fit", src.width, src.height, w, h, v.scale, v.x, v.y);
+        let mut timing =
+            format!("setpts=(PTS-STARTPTS)/{speed:.6},fps={fps},trim=duration={body:.6}");
+        if v.hold_start > 0.0 || v.hold_end > 0.0 {
             let _ = write!(
-                f,
-                "[{idx}:v]{timing},split=2[s{k}a][s{k}b];[s{k}a]scale={bw}:{bh},boxblur=24:2,format=yuva420p{alpha},{shift}[l{k}a];[s{k}b]scale={fw}:{fh},format=yuva420p{alpha},{shift}[l{k}b];"
+                timing,
+                ",tpad=start_mode=clone:start_duration={:.6}:stop_mode=clone:stop_duration={:.6}",
+                v.hold_start, v.hold_end
             );
-            layers.push((format!("l{k}a"), bl, bt));
-            layers.push((format!("l{k}b"), fl, ft));
-        } else {
-            let (dw, dh, l, t) = placement(&v.fit, src.width, src.height, w, h, v.scale, v.x, v.y);
-            let _ = write!(
-                f,
-                "[{idx}:v]{timing},scale={dw}:{dh},format=yuva420p{alpha},{shift}[l{k}];"
-            );
-            layers.push((format!("l{k}"), l, t));
         }
-        for (i, (label, l, t)) in layers.into_iter().enumerate() {
-            let next = format!("b{k}_{i}");
+        let c = &v.crop;
+        let (sw, sh) = (
+            src.width * (1.0 - c.l - c.r),
+            src.height * (1.0 - c.t - c.b),
+        );
+        if c.l + c.r + c.t + c.b > 1e-6 {
+            let _ = write!(
+                timing,
+                ",crop=w=trunc(iw*{:.6}/2)*2:h=trunc(ih*{:.6}/2)*2:x=trunc(iw*{:.6}):y=trunc(ih*{:.6})",
+                1.0 - c.l - c.r,
+                1.0 - c.t - c.b,
+                c.l,
+                c.t
+            );
+        }
+        let scale_anim = a.scale.as_deref().unwrap_or(&[]);
+        let x_anim = a.x.as_deref().unwrap_or(&[]);
+        let y_anim = a.y.as_deref().unwrap_or(&[]);
+        let rot_anim = a.rotation.as_deref().unwrap_or(&[]);
+        let animated = !scale_anim.is_empty()
+            || !x_anim.is_empty()
+            || !y_anim.is_empty()
+            || !rot_anim.is_empty()
+            || !v.t_scale.is_empty()
+            || !v.t_x.is_empty()
+            || v.rotation.abs() > 1e-6;
+
+        let mut layers: Vec<(String, String, String, bool)> = Vec::new();
+        let mut fg_source = format!("[{idx}:v]{timing},");
+        if v.fit == "blur" {
+            let (bw, bh, bl, bt) = placement("fill", sw, sh, w, h, 1.0, 0.0, 0.0);
             let _ = write!(
                 f,
-                "[{base}][{label}]overlay=x={l}:y={t}:eof_action=pass:enable='between(t,{:.6},{:.6})'[{next}];",
-                v.start, v.end
+                "{fg_source}split=2[s{k}a][s{k}b];[s{k}a]scale={bw}:{bh},boxblur=24:2,format=yuva420p{alpha},{shift}[l{k}a];"
+            );
+            layers.push((format!("l{k}a"), bl.to_string(), bt.to_string(), false));
+            fg_source = format!("[s{k}b]");
+        }
+        let fit = if v.fit == "fill" { "fill" } else { "fit" };
+        if !animated {
+            let (dw, dh, l, t) = placement(fit, sw, sh, w, h, v.scale, v.x, v.y);
+            let _ = write!(
+                f,
+                "{fg_source}scale={dw}:{dh},format=yuva420p{alpha},{shift}[l{k}];"
+            );
+            layers.push((format!("l{k}"), l.to_string(), t.to_string(), false));
+        } else {
+            // Size at scale 1, then a per-frame scale factor S(t) (and rotation R(t)).
+            let (bw, bh, _, _) = placement(fit, sw, sh, w, h, 1.0, 0.0, 0.0);
+            let s_expr = format!(
+                "({})*({})",
+                anim_expr(scale_anim, "t", v.start, v.scale),
+                anim_expr(&v.t_scale, "t", v.start, 1.0)
+            );
+            let rotated = !rot_anim.is_empty() || v.rotation.abs() > 1e-6;
+            let chain = if rotated {
+                // Render at the largest size first so zooming never upsamples twice.
+                let smax =
+                    (max_of(scale_anim, v.scale) * max_of(&v.t_scale, 1.0)).clamp(0.05, 10.0);
+                let (pw, ph) = (even(bw as f64 * smax), even(bh as f64 * smax));
+                let r_expr = anim_expr(rot_anim, "t", v.start, v.rotation);
+                format!(
+                    "scale={pw}:{ph},format=yuva420p,rotate=a={}:ow='hypot(iw,ih)':oh=ow:c=none,scale=w={}:h={}:eval=frame",
+                    q(&format!("({r_expr})*PI/180")),
+                    q(&format!("max(2,trunc(iw*({s_expr})/{smax:.6}/2)*2)")),
+                    q(&format!("max(2,trunc(ih*({s_expr})/{smax:.6}/2)*2)"))
+                )
+            } else {
+                format!(
+                    "scale=w={}:h={}:eval=frame,format=yuva420p",
+                    q(&format!("max(2,trunc({bw}*({s_expr})/2)*2)")),
+                    q(&format!("max(2,trunc({bh}*({s_expr})/2)*2)"))
+                )
+            };
+            let _ = write!(f, "{fg_source}{chain}{alpha},{shift}[l{k}];");
+            let x_expr = format!(
+                "({})+({})",
+                anim_expr(x_anim, "t", 0.0, v.x),
+                anim_expr(&v.t_x, "t", 0.0, 0.0)
+            );
+            let y_expr = anim_expr(y_anim, "t", 0.0, v.y);
+            layers.push((
+                format!("l{k}"),
+                q(&format!("(W-w)/2+({x_expr})*W")),
+                q(&format!("(H-h)/2+({y_expr})*H")),
+                true,
+            ));
+        }
+        for (i, (label, l, t, dynamic)) in layers.into_iter().enumerate() {
+            let next = format!("b{k}_{i}");
+            let eval = if dynamic { ":eval=frame" } else { "" };
+            let _ = write!(
+                f,
+                "[{base}][{label}]overlay=x={l}:y={t}:eof_action=pass{eval}:{enable}[{next}];"
             );
             base = next;
         }
@@ -314,7 +626,15 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
         chain.push("aresample=48000".into());
         chain.push("aformat=sample_fmts=fltp:channel_layouts=stereo".into());
         chain.push(format!("atrim=duration={len:.6}"));
-        chain.push(format!("volume={:.6}", a.gain));
+        if a.gain_anim.is_empty() {
+            chain.push(format!("volume={:.6}", a.gain));
+        } else {
+            let g = anim_expr(&a.gain_anim, "t", a.start, 1.0);
+            chain.push(format!(
+                "volume={}:eval=frame",
+                q(&format!("{:.6}*max(0,{g})", a.gain))
+            ));
+        }
         if a.fade_in > 0.0 {
             chain.push(format!("afade=t=in:st=0:d={:.6}", a.fade_in));
         }
@@ -818,7 +1138,7 @@ mod tests {
                     clip_id: "c1".into(),
                     media_id: "a".into(),
                     kind: "video".into(),
-                    layer: 0,
+                    layer: 0.0,
                     start: 0.0,
                     end: 4.0,
                     src_in: 1.0,
@@ -829,12 +1149,13 @@ mod tests {
                     x: 0.0,
                     y: 0.0,
                     scale: 1.0,
+                    ..Default::default()
                 },
                 PlanVideo {
                     clip_id: "c2".into(),
                     media_id: "logo".into(),
                     kind: "image".into(),
-                    layer: 1,
+                    layer: 1.0,
                     start: 0.0,
                     end: 8.0,
                     src_in: 0.0,
@@ -845,6 +1166,7 @@ mod tests {
                     x: 0.3,
                     y: -0.4,
                     scale: 0.2,
+                    ..Default::default()
                 },
             ],
             audio: vec![
@@ -859,6 +1181,7 @@ mod tests {
                     gain: 1.0,
                     fade_in: 0.0,
                     fade_out: 0.0,
+                    ..Default::default()
                 },
                 PlanAudio {
                     clip_id: "m".into(),
@@ -871,6 +1194,7 @@ mod tests {
                     gain: 0.3,
                     fade_in: 1.0,
                     fade_out: 2.0,
+                    ..Default::default()
                 },
             ],
         }
@@ -973,6 +1297,166 @@ mod tests {
 
     /// End-to-end with the real FFmpeg on PATH (skipped when absent): renders
     /// a 9:16 timeline from generated clips and validates the MP4.
+    #[test]
+    fn animates_zoom_and_dips_in_a_real_render() {
+        let Some(ffmpeg) = std::env::var_os("PATH").and_then(|p| {
+            std::env::split_paths(&p)
+                .map(|d| {
+                    d.join(if cfg!(windows) {
+                        "ffmpeg.exe"
+                    } else {
+                        "ffmpeg"
+                    })
+                })
+                .find(|f| f.is_file())
+        }) else {
+            eprintln!("ffmpeg not on PATH; skipping");
+            return;
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let white = dir.path().join("white.png");
+        let run = |a: Vec<String>| {
+            let (ok, _, err) = run_tool(&ffmpeg, &a, Duration::from_secs(120)).unwrap();
+            assert!(ok, "{err}");
+        };
+        let sv = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        run(sv(&[
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=c=white:s=320x180:d=1",
+            "-frames:v",
+            "1",
+            white.to_str().unwrap(),
+        ]));
+        let k = |t: f64, v: f64| Anim {
+            t,
+            v,
+            ease: "linear".into(),
+        };
+        let p = RenderPlan {
+            width: 640,
+            height: 360,
+            fps: 30,
+            duration: 4.0,
+            background: "#000000".into(),
+            video: vec![
+                PlanVideo {
+                    clip_id: "c1".into(),
+                    media_id: "w".into(),
+                    kind: "image".into(),
+                    start: 0.0,
+                    end: 4.0,
+                    src_out: 4.0,
+                    speed: 1.0,
+                    opacity: 1.0,
+                    fit: "fit".into(),
+                    scale: 1.0,
+                    anim: VideoAnim {
+                        scale: Some(vec![k(0.0, 0.5), k(2.0, 1.0)]),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                PlanVideo {
+                    clip_id: "dip".into(),
+                    media_id: String::new(),
+                    kind: "color".into(),
+                    color: "#000000".into(),
+                    layer: 0.5,
+                    start: 3.0,
+                    end: 4.0,
+                    src_out: 1.0,
+                    speed: 1.0,
+                    opacity: 1.0,
+                    fit: "fit".into(),
+                    scale: 1.0,
+                    fades: vec![
+                        Fade {
+                            t0: 3.0,
+                            t1: 3.5,
+                            from: 0.0,
+                            to: 1.0,
+                        },
+                        Fade {
+                            t0: 3.5,
+                            t1: 4.0,
+                            from: 1.0,
+                            to: 0.0,
+                        },
+                    ],
+                    ..Default::default()
+                },
+            ],
+            audio: vec![],
+        };
+        validate(&p).unwrap();
+        let src = |id: &str| {
+            (id == "w").then(|| Source {
+                path: white.clone(),
+                width: 320.0,
+                height: 180.0,
+                has_audio: false,
+            })
+        };
+        let g = build_graph(&p, &src).unwrap();
+        let out = dir.path().join("out.mp4");
+        let mut args = sv(&["-hide_banner", "-nostdin", "-y", "-loglevel", "error"]);
+        args.extend(g.inputs.clone());
+        args.extend([
+            "-filter_complex".into(),
+            g.filter.clone(),
+            "-map".into(),
+            "[vout]".into(),
+        ]);
+        if g.filter.contains("[aout]") {
+            args.extend(["-map".into(), "[aout]".into()]);
+        }
+        args.extend(sv(&[
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30", "-t", "4",
+        ]));
+        args.push(out.to_string_lossy().into_owned());
+        run(args);
+        // Grab a grey frame and count white pixels on the middle row.
+        let frame = |t: f64| {
+            let f = dir.path().join(format!("f{}.gray", (t * 10.0) as i64));
+            run(vec![
+                "-y".into(),
+                "-loglevel".into(),
+                "error".into(),
+                "-ss".into(),
+                format!("{t}"),
+                "-i".into(),
+                out.to_string_lossy().into_owned(),
+                "-frames:v".into(),
+                "1".into(),
+                "-f".into(),
+                "rawvideo".into(),
+                "-pix_fmt".into(),
+                "gray".into(),
+                f.to_string_lossy().into_owned(),
+            ]);
+            std::fs::read(f).unwrap()
+        };
+        let row_white = |t: f64| {
+            frame(t)[180 * 640..181 * 640]
+                .iter()
+                .filter(|&&b| b > 128)
+                .count() as f64
+        };
+        let mean = |t: f64| {
+            let b = frame(t);
+            b.iter().map(|&x| x as f64).sum::<f64>() / b.len() as f64
+        };
+        let (w0, w1, w2) = (row_white(0.0), row_white(1.0), row_white(2.5));
+        assert!((w0 - 320.0).abs() < 12.0, "t=0 width {w0}");
+        assert!((w1 - 480.0).abs() < 12.0, "t=1 width {w1}");
+        assert!((w2 - 640.0).abs() < 12.0, "t=2.5 width {w2}");
+        let (m25, m35) = (mean(2.5), mean(3.5));
+        assert!(m25 > 200.0 && m35 < 40.0, "dip {m25} -> {m35}");
+    }
+
     #[test]
     fn renders_a_real_mp4_when_ffmpeg_is_available() {
         let Some(ffmpeg) = std::env::var_os("PATH").and_then(|p| {

@@ -1,13 +1,35 @@
 import { useEffect, useState } from "react"
-import { AlertTriangle, Film, ImageIcon, Link2, Music, Plus, Upload } from "lucide-react"
+import { AlertTriangle, ClipboardCopy, ClipboardPaste, Diamond, Film, ImageIcon, Link2, Music, Plus, RotateCcw, Trash2, Upload, Wand2 } from "lucide-react"
 import { toast } from "sonner"
 import {
+  applyMotion,
   ASPECTS,
+  clearKeyframes,
   clipDuration,
+  clipEnd,
+  clipValueAt,
+  EASES,
   formatTimecode,
+  kfTimeline,
+  motionDefaults,
+  MOTION_PRESETS,
+  nextAdjacent,
+  pasteKeyframes,
   placeMedia,
+  previousAdjacent,
+  removeKeyframe,
   setFormat,
+  setKeyframe,
+  setKeyframeEase,
+  setTransition,
+  TRANSITIONS,
   updateClip,
+  type Ease,
+  type KfProp,
+  type MotionParams,
+  type MotionPreset,
+  type Transition,
+  type TransitionKind,
   type Aspect,
   type Clip,
   type EditorMedia,
@@ -27,7 +49,7 @@ import { api, fileSrc } from "@/lib/backend"
 import { toastError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 import { useEditor } from "./store"
-import { editorError, MEDIA_DRAG_TYPE } from "./timeline"
+import { editorError, MEDIA_DRAG_TYPE, TRANSITION_DRAG_TYPE } from "./timeline"
 
 /* ── Media library ─────────────────────────────────────────────────────── */
 
@@ -132,6 +154,7 @@ export function MediaPanel({ project, onImport, importing }: { project: EditorPr
           </ul>
         )}
         <p className="mt-3 px-1 text-[11px] leading-relaxed text-muted-foreground">{t("editor.media.hint")}</p>
+        <TransitionLibrary />
       </div>
     </div>
   )
@@ -376,6 +399,26 @@ function ClipInspector({ project, clip }: { project: EditorProject; clip: Clip }
               <Num id="clip-y" value={Math.round(clip.y * 100)} min={-200} max={200} step={1} suffix="%" onCommit={(v) => set({ y: v / 100 })} />
             </Row>
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Row label={t("editor.insp.rotation")} htmlFor="clip-rot">
+              <Num id="clip-rot" value={clip.rotation} min={-3600} max={3600} step={1} suffix="°" onCommit={(v) => set({ rotation: v })} />
+            </Row>
+          </div>
+          <Row label={t("editor.insp.crop")}>
+            <div className="grid grid-cols-4 gap-1">
+              {(["l", "t", "r", "b"] as const).map((k) => (
+                <Num
+                  key={k}
+                  id={`clip-crop-${k}`}
+                  value={Math.round(clip.crop[k] * 100)}
+                  min={0}
+                  max={45}
+                  step={1}
+                  onCommit={(v) => set({ crop: { ...clip.crop, [k]: v / 100 } })}
+                />
+              ))}
+            </div>
+          </Row>
           <div className="grid grid-cols-3 gap-1">
             {(
               [
@@ -393,6 +436,9 @@ function ClipInspector({ project, clip }: { project: EditorProject; clip: Clip }
           </div>
         </fieldset>
       )}
+      {visual && media && <MotionSection project={project} clip={clip} media={media} />}
+      <KeyframeSection project={project} clip={clip} props={[...(visual ? (["scale", "x", "y", "rotation", "opacity"] as const) : []), ...(hasAudio ? (["gain"] as const) : [])]} />
+      {visual && <TransitionSection project={project} clip={clip} />}
       {media && !media.available && (
         <p className="flex items-center gap-1.5 text-xs text-destructive">
           <AlertTriangle className="size-3.5" />
@@ -425,4 +471,331 @@ function setSpeed(project: EditorProject, clip: Clip, speed: number, message: st
     return
   }
   useEditor.getState().apply((p) => updateClip(p, clip.id, { speed }))
+}
+
+/* ── Transitions ───────────────────────────────────────────────────────── */
+
+function TransitionLibrary() {
+  const { t } = useI18n()
+  const addToSelected = (kind: TransitionKind) => {
+    const st = useEditor.getState()
+    const id = st.selection[0]
+    if (st.selection.length !== 1 || !id) return toast.info(t("editor.tr.selectFirst"))
+    st.apply((p) => setTransition(p, id, "out", { kind, duration: 1, color: "#000000" }))
+  }
+  return (
+    <section className="mt-4 space-y-2 border-t pt-3" data-testid="editor-transitions">
+      <h3 className="px-1 text-xs font-medium text-muted-foreground">{t("editor.tr.title")}</h3>
+      <ul className="grid grid-cols-2 gap-1.5">
+        {TRANSITIONS.map((k) => (
+          <li key={k}>
+            <button
+              type="button"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData(TRANSITION_DRAG_TYPE, k)
+                e.dataTransfer.effectAllowed = "copy"
+              }}
+              onClick={() => addToSelected(k)}
+              className="w-full cursor-grab truncate rounded-md border bg-black/30 px-2 py-1.5 text-left text-[11px] hover:border-white/25"
+              data-testid={`transition-${k}`}
+            >
+              {t(`editor.tr.k.${k}`)}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">{t("editor.tr.dragHint")}</p>
+    </section>
+  )
+}
+
+/** Source footage available beyond a clip's edge, in timeline seconds (Infinity for stills). */
+function handle(project: EditorProject, c: Clip, edge: "before" | "after"): number {
+  const m = project.media.find((x) => x.id === c.mediaId)
+  if (!m || m.kind === "image" || m.durationSec == null) return Infinity
+  return (edge === "before" ? c.in : m.durationSec - c.out) / c.speed
+}
+
+function TransitionSection({ project, clip }: { project: EditorProject; clip: Clip }) {
+  const { t } = useI18n()
+  const { apply } = useEditor.getState()
+  const prev = previousAdjacent(project, clip)
+  const next = nextAdjacent(project, clip)
+  // A transition between two clips is stored on the later clip.
+  const edges: { edge: "in" | "out"; value: Transition | null; holds: boolean }[] = [
+    {
+      edge: "in",
+      value: clip.transIn,
+      holds: !!clip.transIn && !!prev && Math.min(handle(project, prev, "after"), handle(project, clip, "before")) < clip.transIn.duration / 2 - 1e-3,
+    },
+    {
+      edge: "out",
+      value: next ? next.transIn : clip.transOut,
+      holds: !!next?.transIn && Math.min(handle(project, clip, "after"), handle(project, next, "before")) < next.transIn.duration / 2 - 1e-3,
+    },
+  ]
+  const put = (edge: "in" | "out", v: Transition | null) =>
+    apply((p) => (edge === "out" && next && !v ? setTransition(p, next.id, "in", null) : setTransition(p, clip.id, edge, v)))
+  return (
+    <fieldset className="space-y-3" data-testid="clip-transitions">
+      <legend className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.tr.title")}</legend>
+      {edges.map(({ edge, value, holds }) => (
+        <div key={edge} className="space-y-1.5">
+          <Row label={t(edge === "in" ? "editor.tr.in" : "editor.tr.out")}>
+            <Select
+              value={value?.kind ?? "none"}
+              onValueChange={(k) => put(edge, k === "none" ? null : { kind: k as TransitionKind, duration: value?.duration ?? 1, color: value?.color ?? "#000000" })}
+            >
+              <SelectTrigger size="sm" className="w-full" data-testid={`clip-trans-${edge}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t("editor.tr.none")}</SelectItem>
+                {TRANSITIONS.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {t(`editor.tr.k.${k}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Row>
+          {value && (
+            <div className="grid grid-cols-2 gap-2">
+              <Row label={t("editor.tr.duration")} htmlFor={`trans-${edge}-d`}>
+                <Num id={`trans-${edge}-d`} value={value.duration} min={0.1} max={5} step={0.1} suffix="s" onCommit={(d) => put(edge, { ...value, duration: d })} />
+              </Row>
+              {value.kind === "dipColor" && (
+                <Row label={t("editor.tr.color")} htmlFor={`trans-${edge}-c`}>
+                  <input
+                    id={`trans-${edge}-c`}
+                    type="color"
+                    value={value.color}
+                    onChange={(e) => put(edge, { ...value, color: e.target.value })}
+                    className="h-7 w-14 cursor-pointer rounded border bg-transparent"
+                  />
+                </Row>
+              )}
+            </div>
+          )}
+          {holds && <p className="text-[11px] leading-relaxed text-warning" data-testid="trans-holds">{t("editor.tr.holds")}</p>}
+        </div>
+      ))}
+    </fieldset>
+  )
+}
+
+/* ── Motion presets ────────────────────────────────────────────────────── */
+
+function MotionSection({ project, clip, media }: { project: EditorProject; clip: Clip; media: EditorMedia }) {
+  const { t } = useI18n()
+  const { apply } = useEditor.getState()
+  const [preset, setPreset] = useState<MotionPreset>("zoomIn")
+  const [m, setM] = useState<MotionParams>(() => motionDefaults(clip, "zoomIn"))
+  // New defaults when another clip is selected.
+  useEffect(() => {
+    setM(motionDefaults(clip, preset))
+  }, [clip.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const len = clipEnd(clip) - clip.start
+  const patch = (x: Partial<MotionParams>) => {
+    setPreset("custom")
+    setM((cur) => ({ ...cur, ...x }))
+  }
+  const pick = (v: MotionPreset) => {
+    setPreset(v)
+    setM(motionDefaults(clip, v))
+  }
+  const go = () => {
+    const sw = (media.width ?? project.settings.width) * (1 - clip.crop.l - clip.crop.r)
+    const sh = (media.height ?? project.settings.height) * (1 - clip.crop.t - clip.crop.b)
+    apply((p) => applyMotion(p, clip.id, m, { W: project.settings.width, H: project.settings.height, sw, sh }))
+  }
+  return (
+    <fieldset className="space-y-3" data-testid="clip-motion">
+      <legend className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.motion.title")}</legend>
+      <Row label={t("editor.motion.preset")}>
+        <Select value={preset} onValueChange={(v) => pick(v as MotionPreset)}>
+          <SelectTrigger size="sm" className="w-full" data-testid="motion-preset">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MOTION_PRESETS.map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`editor.motion.p.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Row>
+      <div className="grid grid-cols-2 gap-2">
+        <Row label={t("editor.motion.from")} htmlFor="mo-from">
+          <Num id="mo-from" value={round(m.from - clip.start)} min={0} max={len} step={0.1} onCommit={(v) => patch({ from: clip.start + v })} />
+        </Row>
+        <Row label={t("editor.motion.to")} htmlFor="mo-to">
+          <Num id="mo-to" value={round(m.to - clip.start)} min={0} max={len} step={0.1} onCommit={(v) => patch({ to: clip.start + v })} />
+        </Row>
+        <Row label={t("editor.motion.startScale")} htmlFor="mo-s0">
+          <Num id="mo-s0" value={Math.round(m.startScale * 100)} min={5} max={1000} step={1} onCommit={(v) => patch({ startScale: v / 100 })} />
+        </Row>
+        <Row label={t("editor.motion.endScale")} htmlFor="mo-s1">
+          <Num id="mo-s1" value={Math.round(m.endScale * 100)} min={5} max={1000} step={1} onCommit={(v) => patch({ endScale: v / 100 })} />
+        </Row>
+      </div>
+      <Row label={t("editor.motion.center")}>
+        <div className="grid grid-cols-2 gap-2">
+          <Num id="mo-cx" value={Math.round(m.cx * 100)} min={0} max={100} step={1} onCommit={(v) => patch({ cx: v / 100 })} />
+          <Num id="mo-cy" value={Math.round(m.cy * 100)} min={0} max={100} step={1} onCommit={(v) => patch({ cy: v / 100 })} />
+        </div>
+      </Row>
+      <Row label={t("editor.motion.pan")}>
+        <div className="grid grid-cols-2 gap-2">
+          <Num id="mo-px" value={Math.round(m.panX * 100)} min={-100} max={100} step={1} onCommit={(v) => patch({ panX: v / 100 })} />
+          <Num id="mo-py" value={Math.round(m.panY * 100)} min={-100} max={100} step={1} onCommit={(v) => patch({ panY: v / 100 })} />
+        </div>
+      </Row>
+      <Row label={t("editor.motion.ease")}>
+        <EaseSelect value={m.ease} onChange={(e) => patch({ ease: e })} testId="motion-ease" />
+      </Row>
+      <div className="flex gap-2">
+        <Button size="sm" className="flex-1" onClick={go} data-testid="motion-apply">
+          <Wand2 />
+          {t("editor.motion.apply")}
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => apply((p) => clearKeyframes(p, clip.id, ["scale", "x", "y"]))} data-testid="motion-reset">
+          <RotateCcw />
+          {t("editor.motion.reset")}
+        </Button>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.motion.hint")}</p>
+    </fieldset>
+  )
+}
+
+const round = (n: number) => Math.round(n * 1000) / 1000
+
+function EaseSelect({ value, onChange, testId }: { value: Ease; onChange: (e: Ease) => void; testId?: string }) {
+  const { t } = useI18n()
+  return (
+    <Select value={value} onValueChange={(v) => onChange(v as Ease)}>
+      <SelectTrigger size="sm" className="w-full" data-testid={testId}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {EASES.map((e) => (
+          <SelectItem key={e} value={e}>
+            {t(`editor.ease.${e}`)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+/** Display factor of each property (stored as fractions, shown as % or degrees). */
+const KF_UNIT: Record<KfProp, { k: number; min: number; max: number }> = {
+  scale: { k: 100, min: 5, max: 1000 },
+  x: { k: 100, min: -200, max: 200 },
+  y: { k: 100, min: -200, max: 200 },
+  rotation: { k: 1, min: -3600, max: 3600 },
+  opacity: { k: 100, min: 0, max: 100 },
+  gain: { k: 100, min: 0, max: 400 },
+}
+
+function KeyframeSection({ project, clip, props }: { project: EditorProject; clip: Clip; props: KfProp[] }) {
+  const { t } = useI18n()
+  const { apply, setKfClipboard } = useEditor.getState()
+  const playhead = useEditor((s) => s.playhead)
+  const copied = useEditor((s) => s.kfClipboard)
+  const fps = project.settings.fps
+  const inside = playhead >= clip.start - 1e-6 && playhead <= clipEnd(clip) + 1e-6
+  const hasAny = props.some((k) => clip.keyframes[k]?.length)
+  if (!props.length) return null
+  return (
+    <fieldset className="space-y-3" data-testid="clip-keyframes">
+      <legend className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.kf.title")}</legend>
+      {!inside && <p className="text-[11px] text-muted-foreground">{t("editor.kf.outside")}</p>}
+      {props.map((prop) => {
+        const u = KF_UNIT[prop]
+        const list = clip.keyframes[prop] ?? []
+        const at = list.findIndex((k) => Math.abs(kfTimeline(clip, k.s) - playhead) < 0.5 / fps)
+        const value = clipValueAt(clip, prop, Math.min(Math.max(playhead, clip.start), clipEnd(clip)))
+        const commit = (v: number) => {
+          const real = v / u.k
+          // Animated properties (and volume, which has no static value here) get a keyframe.
+          if (list.length || prop === "gain") {
+            if (inside) apply((p) => setKeyframe(p, clip.id, prop, playhead, real))
+          } else if (prop === "opacity") apply((p) => updateClip(p, clip.id, { opacity: real }))
+          else apply((p) => updateClip(p, clip.id, { [prop]: real }))
+        }
+        return (
+          <div key={prop} className="space-y-1" data-testid={`kf-${prop}`}>
+            <div className="flex items-end gap-1.5">
+              <div className="flex-1">
+                <Row label={t(`editor.kf.prop.${prop}`)} htmlFor={`kf-${prop}-v`}>
+                  <Num id={`kf-${prop}-v`} value={round(value * u.k)} min={u.min} max={u.max} step={1} onCommit={commit} />
+                </Row>
+              </div>
+              <Button
+                size="icon-sm"
+                variant={at >= 0 ? "secondary" : "ghost"}
+                aria-label={t("editor.kf.toggle")}
+                title={t("editor.kf.toggle")}
+                aria-pressed={at >= 0}
+                disabled={!inside}
+                onClick={() => apply((p) => (at >= 0 ? removeKeyframe(p, clip.id, prop, at) : setKeyframe(p, clip.id, prop, playhead, value)))}
+                data-testid={`kf-${prop}-toggle`}
+              >
+                <Diamond className={cn(at >= 0 && "fill-amber-300 text-amber-300")} />
+              </Button>
+            </div>
+            {list.length > 0 && (
+              <ul className="space-y-1 rounded-md border bg-black/20 p-1.5">
+                {list.map((k, i) => (
+                  <li key={`${k.s}-${i}`} className="flex items-center gap-1.5 text-[11px] tabular-nums">
+                    <button
+                      type="button"
+                      className="w-20 text-left font-mono hover:underline"
+                      onClick={() => useEditor.getState().setPlayhead(kfTimeline(clip, k.s))}
+                    >
+                      {formatTimecode(kfTimeline(clip, k.s), fps)}
+                    </button>
+                    <span className="w-12 text-right">{round(k.v * u.k)}</span>
+                    <div className="min-w-0 flex-1">
+                      <EaseSelect value={k.ease} onChange={(e) => apply((p) => setKeyframeEase(p, clip.id, prop, i, e))} />
+                    </div>
+                    <Button size="icon-xs" variant="ghost" aria-label={t("editor.kf.delete")} onClick={() => apply((p) => removeKeyframe(p, clip.id, prop, i))}>
+                      <Trash2 />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )
+      })}
+      <div className="flex flex-wrap gap-1.5">
+        <Button size="xs" variant="outline" disabled={!hasAny} onClick={() => setKfClipboard(clip)} data-testid="kf-copy">
+          <ClipboardCopy />
+          {t("editor.kf.copy")}
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          disabled={!copied || copied.id === clip.id}
+          onClick={() => copied && apply((p) => pasteKeyframes(p, copied, useEditor.getState().selection))}
+          data-testid="kf-paste"
+        >
+          <ClipboardPaste />
+          {t("editor.kf.paste")}
+        </Button>
+        <Button size="xs" variant="ghost" disabled={!hasAny} onClick={() => apply((p) => clearKeyframes(p, clip.id, props))} data-testid="kf-clear">
+          <Trash2 />
+          {t("editor.kf.clear")}
+        </Button>
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.kf.hint")}</p>
+    </fieldset>
+  )
 }

@@ -35,6 +35,10 @@ export function ExportDialog({ project, open, onOpenChange, tools }: { project: 
   const running = job && ["queued", "rendering", "validating"].includes(job.status)
 
   useEffect(() => setName(project.name), [project.name])
+  // Reopening after a finished export starts fresh (the edit may have changed since).
+  useEffect(() => {
+    if (open) setJob((j) => (j && ["queued", "rendering", "validating"].includes(j.status) ? j : null))
+  }, [open])
   useEffect(
     () =>
       subscribeStore((e) => {

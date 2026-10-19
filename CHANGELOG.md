@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Video Editor Phase 2 — Milestone A** (editing, motion and transitions):
+  - Cutting: blade tool (B; V returns to selection), split at the playhead (S or Ctrl+B), trim start/end to the playhead (Q/W), in/out range (I/O, X clears) removed with the gap closed, join pieces that continue each other (Ctrl+J), markers (M; click to jump, double-click to delete; clips snap to them), frame-accurate playhead, normal and ripple delete, and undo/redo for every edit.
+  - Motion presets saved as ordinary keyframes: smooth zoom in/out, slow push in, pull back, quick punch zoom, pan left/right, pan + zoom, Ken Burns and custom. Each has start/end time, start/end scale, focus point, pan, easing and a reset. Zooms can be chained.
+  - Keyframes for scale, position X/Y, rotation, opacity and volume: add/remove at the playhead, move by dragging the diamonds on the clip, delete, copy/paste to other clips, and easing (linear, ease in, ease out, ease in-out, hold). Keyframes stay on their source frame when clips are trimmed or split.
+  - Clip rotation and crop.
+  - Transitions: cross dissolve, fade in/out, fade to black/white, dip to color, zoom, blur, slide left/right and wipe. Drag one onto a clip edge or click it to add it to the selected clip. The duration is adjustable. When a cut has too little extra footage, the first/last frame is held, and the inspector says so.
+  - The preview uses the same per-frame math as the export (scale, position, rotation, opacity, fades, wipes, crop).
+- Projects are saved as format version 2. Version 1 projects (0.3.0) open and are upgraded on load.
+
+### Fixed
+
+- Reopening the export dialog after a finished export showed the old result instead of a fresh export form.
+
+### Known limitations
+
+- Motion blur for zoom/pan is not implemented yet.
+- The crop is static; it cannot be keyframed yet. Reframing animation arrives with Smart Reframe (Milestone B).
+
 ## [0.3.0] - 2026-10-18
 
 ### Added

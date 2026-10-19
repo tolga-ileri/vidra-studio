@@ -17,14 +17,19 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import {
+  addMarker,
   addMedia,
   clipEnd,
   deleteClips,
   duplicateClips,
+  frameRound,
+  joinClips,
   newProject,
   pasteClips,
   placeMedia,
+  removeRange,
   splitAt,
+  trimToPlayhead,
   type Aspect,
   type EditorProject,
 } from "@vidra/core"
@@ -370,9 +375,29 @@ function Workspace({ project, tools }: { project: EditorProject; tools: EditorTo
       if (ctrl && k === "v") return handled(), st.apply((q) => pasteClips(q, st.clipboard, st.playhead).project)
       if (ctrl && k === "d") return handled(), st.apply((q) => duplicateClips(q, st.selection).project)
       if (ctrl && k === "a") return handled(), st.select(p.clips.map((c) => c.id))
-      if (k === "s" || (ctrl && k === "b")) return handled(), st.apply((q) => splitAt(q, st.playhead, st.selection.length ? st.selection : undefined).project)
+      const at = frameRound(st.playhead, fps)
+      const sel = st.selection.length ? st.selection : undefined
+      if (k === "s" || (ctrl && k === "b")) return handled(), st.apply((q) => splitAt(q, at, sel).project)
+      if (ctrl && k === "j") return handled(), st.apply((q) => joinClips(q, st.selection))
+      if (ctrl || e.altKey) return
+      if (k === "b") return handled(), st.setTool(st.tool === "blade" ? "select" : "blade")
+      if (k === "v") return handled(), st.setTool("select")
+      if (k === "q") return handled(), st.apply((q) => trimToPlayhead(q, at, "start", sel))
+      if (k === "w") return handled(), st.apply((q) => trimToPlayhead(q, at, "end", sel))
+      if (k === "m") return handled(), st.apply((q) => addMarker(q, at))
+      if (k === "i") return handled(), st.setRange({ a: at, b: st.range.b !== null && st.range.b > at ? st.range.b : null })
+      if (k === "o") return handled(), st.setRange({ a: st.range.a !== null && st.range.a < at ? st.range.a : null, b: at })
+      if (k === "x") return handled(), st.setRange({ a: null, b: null })
       if (k === "delete" || k === "backspace") {
         handled()
+        const { a, b } = st.range
+        if (!st.selection.length && a !== null && b !== null && b > a) {
+          // Nothing selected: remove the in/out range and close the gap.
+          st.apply((q) => removeRange(q, a, b))
+          st.setRange({ a: null, b: null })
+          st.setPlayhead(a)
+          return
+        }
         st.apply((q) => deleteClips(q, st.selection, e.shiftKey))
         st.select([])
         return

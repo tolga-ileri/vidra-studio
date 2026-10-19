@@ -3,6 +3,7 @@ import { Maximize2, Pause, Play, SkipBack, SkipForward, StepBack, StepForward } 
 import {
   formatTimecode,
   gainAt,
+  itemState,
   placement,
   renderPlan,
   sourceTime,
@@ -78,18 +79,19 @@ export function Preview({ project, safeArea }: { project: EditorProject; safeAre
   const audible = plan.audio.filter((a) => playhead >= a.start && playhead < a.end)
   useEffect(() => {
     const active = new Set<string>()
-    const sync = (key: string, item: { start: number; srcIn: number; speed: number }, vol: number | null) => {
+    const sync = (key: string, item: { start: number; srcIn: number; srcOut: number; speed: number }, vol: number | null) => {
       const el = els.current.get(key)
       if (!el) return
       active.add(key)
-      const want = sourceTime(item, playhead)
+      // Clamped: transition hold frames freeze the first/last frame.
+      const want = Math.min(item.srcOut - 0.01, Math.max(item.srcIn, sourceTime(item, playhead)))
       if (Math.abs(el.currentTime - want) > (playing ? DRIFT : 0.04)) el.currentTime = want
       el.playbackRate = item.speed
       if (vol !== null) el.volume = Math.min(1, Math.max(0, vol))
       if (playing && el.paused) void el.play().catch(() => undefined)
       if (!playing && !el.paused) el.pause()
     }
-    for (const v of visible) if (v.kind === "video") sync(`v:${v.clipId}`, v, null)
+    for (const v of visible) if (v.kind === "video") sync(`v:${v.id}`, v, null)
     for (const a of audible) sync(`a:${a.clipId}`, a, gainAt(a, playhead))
     for (const [key, el] of els.current) if (!active.has(key) && !el.paused) el.pause()
   })
@@ -115,8 +117,18 @@ export function Preview({ project, safeArea }: { project: EditorProject; safeAre
           data-height={H}
         >
           <div style={{ width: W, height: H, transform: `scale(${scale})`, transformOrigin: "0 0", position: "absolute", inset: 0 }}>
-            {plan.video.map((v) => (
-              <Layer key={v.clipId} item={v} media={media.get(v.mediaId)} W={W} H={H} visible={visible.includes(v)} register={register} />
+            {plan.video.map((v, i) => (
+              <Layer
+                key={v.id}
+                item={v}
+                order={i}
+                t={playhead}
+                media={media.get(v.mediaId)}
+                W={W}
+                H={H}
+                visible={visible.includes(v)}
+                register={register}
+              />
             ))}
           </div>
           {safeArea !== "none" && <SafeArea kind={safeArea} />}
@@ -182,6 +194,8 @@ function IconBtn({ label, onClick, children }: { label: string; onClick: () => v
 
 function Layer({
   item,
+  order,
+  t,
   media,
   W,
   H,
@@ -189,49 +203,77 @@ function Layer({
   register,
 }: {
   item: PlanVideo
+  order: number
+  t: number
   media: EditorMedia | undefined
   W: number
   H: number
   visible: boolean
   register: (key: string) => (el: HTMLMediaElement | null) => void
 }) {
+  // Same per-frame math as the export (scale/position/rotation keyframes, fades, wipes).
+  const st = itemState(item, t)
+  const base: React.CSSProperties = {
+    position: "absolute",
+    zIndex: order + 1,
+    display: visible ? "block" : "none",
+    opacity: st.opacity,
+    clipPath: st.revealFrom > 0 || st.revealTo < 1 ? `inset(0 ${(1 - st.revealTo) * 100}% 0 ${st.revealFrom * 100}%)` : undefined,
+    filter: item.blur > 0 ? `blur(${item.blur * H}px)` : undefined,
+  }
+  if (item.kind === "color") return <div style={{ ...base, inset: 0, background: item.color }} data-clip={item.clipId} />
   if (!media) return null
-  const sw = media.width ?? W
-  const sh = media.height ?? H
-  const p = placement(item.fit === "fill" ? "fill" : "fit", sw, sh, W, H, item.scale, item.x, item.y)
+  const c = item.crop
+  const cw = 1 - c.l - c.r
+  const ch = 1 - c.t - c.b
+  const sw = (media.width ?? W) * cw
+  const sh = (media.height ?? H) * ch
+  const p = placement(item.fit === "fill" ? "fill" : "fit", sw, sh, W, H, st.scale, st.x, st.y)
   const bg = item.fit === "blur" ? placement("fill", sw, sh, W, H) : null
   const src = fileSrc(media.path)
-  const style = (q: { w: number; h: number; left: number; top: number }, extra: React.CSSProperties = {}): React.CSSProperties => ({
-    position: "absolute",
+  // A box of the placed size that shows only the crop region of the source.
+  const box = (q: { w: number; h: number; left: number; top: number }, extra: React.CSSProperties = {}): React.CSSProperties => ({
+    ...base,
     left: q.left,
     top: q.top,
     width: q.w,
     height: q.h,
-    opacity: item.opacity,
-    objectFit: "fill",
-    zIndex: item.layer * 2 + (extra.filter ? 0 : 1),
-    display: visible ? "block" : "none",
+    overflow: "hidden",
+    transform: st.rotation ? `rotate(${st.rotation}deg)` : undefined,
     ...extra,
+  })
+  const inner = (q: { w: number; h: number }): React.CSSProperties => ({
+    position: "absolute",
+    width: q.w / cw,
+    height: q.h / ch,
+    left: (-c.l * q.w) / cw,
+    top: (-c.t * q.h) / ch,
+    objectFit: "fill",
+    maxWidth: "none",
   })
   if (item.kind === "image")
     return (
       <>
-        {bg && <img src={src} alt="" style={style(bg, { filter: "blur(24px)" })} />}
-        <img src={src} alt="" style={style(p)} data-clip={item.clipId} />
+        {bg && (
+          <div style={box(bg, { filter: "blur(24px)", transform: undefined, zIndex: order + 0.5 })}>
+            <img src={src} alt="" style={inner(bg)} />
+          </div>
+        )}
+        <div style={box(p)}>
+          <img src={src} alt="" style={inner(p)} data-clip={item.clipId} />
+        </div>
       </>
     )
   return (
     <>
-      {bg && <BlurMirror src={src} item={item} style={style(bg, { filter: "blur(24px)" })} register={register} />}
-      <video
-        ref={register(`v:${item.clipId}`)}
-        src={src}
-        muted
-        playsInline
-        preload="auto"
-        style={style(p)}
-        data-clip={item.clipId}
-      />
+      {bg && (
+        <div style={box(bg, { filter: "blur(24px)", transform: undefined })}>
+          <BlurMirror src={src} item={item} style={inner(bg)} register={register} />
+        </div>
+      )}
+      <div style={box(p)}>
+        <video ref={register(`v:${item.id}`)} src={src} muted playsInline preload="auto" style={inner(p)} data-clip={item.clipId} />
+      </div>
     </>
   )
 }
