@@ -41,6 +41,7 @@ log = "0.4"
 async-trait = "0.1"
 ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
 tauri-plugin-updater = { version = "2.14", default-features = false, features = ["rustls-tls", "system-proxy"] }
+rustface = "0.1.7"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }
@@ -62,3 +63,10 @@ strip = true
 # server (env-configured base URL, loopback http, isolated data dir, dialog
 # overrides). Never enabled for releases; see src/e2e.rs.
 e2e-mock = []
+
+# Face detection is far too slow unoptimized; keep it fast in dev / e2e builds.
+[profile.dev.package.rustface]
+opt-level = 3
+
+[profile.dev.package.image]
+opt-level = 3

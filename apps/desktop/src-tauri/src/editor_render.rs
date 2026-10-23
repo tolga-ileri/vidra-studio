@@ -72,6 +72,49 @@ pub struct VideoAnim {
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AnimVec {
+    pub t: f64,
+    pub v: Vec<f64>,
+    pub ease: String,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Mask {
+    pub shape: String,
+    pub feather: f64,
+    pub radius: f64,
+}
+
+impl Default for Mask {
+    fn default() -> Self {
+        Mask {
+            shape: "none".into(),
+            feather: 0.0,
+            radius: 0.1,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlanRegion {
+    pub id: String,
+    pub kind: String,
+    pub shape: String,
+    pub x: f64,
+    pub y: f64,
+    pub w: f64,
+    pub h: f64,
+    pub color: String,
+    pub blur: f64,
+    pub feather: f64,
+    #[serde(default)]
+    pub anim: Vec<AnimVec>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Wipe {
     pub t0: f64,
     pub t1: f64,
@@ -121,6 +164,16 @@ pub struct PlanVideo {
     pub blur: f64,
     #[serde(default)]
     pub wipe: Option<Wipe>,
+    #[serde(default)]
+    pub corners: Option<Vec<f64>>,
+    #[serde(default)]
+    pub corners_anim: Vec<AnimVec>,
+    #[serde(default)]
+    pub mask: Mask,
+    #[serde(default)]
+    pub motion_blur: bool,
+    #[serde(default)]
+    pub regions: Vec<PlanRegion>,
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Default)]
@@ -252,6 +305,37 @@ pub fn validate(plan: &RenderPlan) -> AppResult<()> {
                     && fin(w.t1, w.t0 + 0.001, MAX_DURATION + 1.0)
                     && matches!(w.mode.as_str(), "in" | "out"))
             })
+            || v.corners
+                .as_ref()
+                .is_some_and(|c| c.len() != 8 || !c.iter().all(|x| fin(*x, -3.0, 4.0)))
+            || v.corners_anim.len() > 500
+            || !v.corners_anim.iter().all(|a| {
+                fin(a.t, -10.0, MAX_DURATION + 10.0)
+                    && a.v.len() == 8
+                    && a.v.iter().all(|x| fin(*x, -3.0, 4.0))
+                    && matches!(a.ease.as_str(), "linear" | "in" | "out" | "inOut" | "hold")
+            })
+            || !matches!(v.mask.shape.as_str(), "none" | "ellipse" | "roundRect")
+            || !fin(v.mask.feather, 0.0, 0.5)
+            || !fin(v.mask.radius, 0.0, 0.5)
+            || v.regions.len() > 50
+            || !v.regions.iter().all(|r| {
+                matches!(r.kind.as_str(), "blur" | "color")
+                    && matches!(r.shape.as_str(), "rect" | "ellipse")
+                    && fin(r.x, -1.0, 2.0)
+                    && fin(r.y, -1.0, 2.0)
+                    && fin(r.w, 0.005, 2.0)
+                    && fin(r.h, 0.005, 2.0)
+                    && hex(&r.color)
+                    && fin(r.blur, 0.002, 0.1)
+                    && fin(r.feather, 0.0, 0.5)
+                    && r.anim.len() <= 500
+                    && r.anim.iter().all(|a| {
+                        fin(a.t, -10.0, MAX_DURATION + 10.0)
+                            && a.v.len() == 2
+                            && a.v.iter().all(|x| fin(*x, -1.0, 2.0))
+                    })
+            })
         {
             return bad("video clip values");
         }
@@ -306,6 +390,47 @@ fn anim_expr(list: &[Anim], tv: &str, shift: f64, base: f64) -> String {
 /// A quoted filter option value with its commas escaped.
 fn q(expr: &str) -> String {
     format!("'{}'", expr.replace(',', "\\,"))
+}
+
+/// One component of a vector animation as a scalar one.
+fn component(list: &[AnimVec], i: usize) -> Vec<Anim> {
+    list.iter()
+        .map(|a| Anim {
+            t: a.t,
+            v: a.v.get(i).copied().unwrap_or(0.0),
+            ease: a.ease.clone(),
+        })
+        .collect()
+}
+
+/// Alpha factor (0..1) of a soft ellipse / rounded rectangle inside the
+/// current frame (geq variables W, H, X, Y), as a fraction of its size.
+fn shape_factor(shape: &str, feather: f64, radius: f64) -> Option<String> {
+    let f = feather.max(0.002);
+    match shape {
+        "ellipse" => Some(format!(
+            "clip((1-sqrt(pow((X+0.5-W/2)/(W/2),2)+pow((Y+0.5-H/2)/(H/2),2)))/{f:.4},0,1)"
+        )),
+        "roundRect" => {
+            // Signed distance to a rounded rectangle, negative inside.
+            let r = format!("{radius:.4}*min(W,H)");
+            Some(format!(
+                "clip(-(hypot(max(abs(X+0.5-W/2)-(W/2-{r}),0),max(abs(Y+0.5-H/2)-(H/2-{r}),0))-{r})/({f:.4}*min(W,H)),0,1)"
+            ))
+        }
+        "rect" if feather > 0.0 => Some(format!(
+            "clip(min(min(X,W-1-X),min(Y,H-1-Y))/({f:.4}*min(W,H)),0,1)"
+        )),
+        _ => None,
+    }
+}
+
+/// geq that multiplies the alpha plane by `factor` (lum/chroma untouched).
+fn alpha_geq(factor: &str) -> String {
+    format!(
+        ",geq=lum='lum(X,Y)':cb='cb(X,Y)':cr='cr(X,Y)':a={}",
+        q(&format!("alpha(X,Y)*{factor}"))
+    )
 }
 
 fn max_of(list: &[Anim], base: f64) -> f64 {
@@ -368,6 +493,73 @@ pub struct Graph {
 }
 
 /// Builds the inputs and the filter graph. Pure (unit-tested).
+/// After an item is composited: frame-blend motion blur while it animates,
+/// then its blur / cover regions. Returns the new base label.
+#[allow(clippy::too_many_arguments)]
+fn post_item(
+    f: &mut String,
+    mut base: String,
+    v: &PlanVideo,
+    k: usize,
+    w: i64,
+    h: i64,
+    fps: i64,
+    duration: f64,
+) -> String {
+    if v.motion_blur {
+        let a = &v.anim;
+        let times: Vec<f64> = [
+            a.scale.as_deref(),
+            a.x.as_deref(),
+            a.y.as_deref(),
+            a.rotation.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
+        .flat_map(|l| l.iter().map(|k| k.t))
+        .collect();
+        if let (Some(t0), Some(t1)) = (
+            times.iter().cloned().reduce(f64::min),
+            times.iter().cloned().reduce(f64::max),
+        ) {
+            if t1 > t0 {
+                let next = format!("mb{k}");
+                let _ = write!(f, "[{base}]tmix=frames=3:weights='1 2 1':enable='between(t,{t0:.6},{t1:.6})'[{next}];");
+                base = next;
+            }
+        }
+    }
+    for (j, r) in v.regions.iter().enumerate() {
+        let rw = even(r.w * w as f64).clamp(2, w);
+        let rh = even(r.h * h as f64).clamp(2, h);
+        let xe = anim_expr(&component(&r.anim, 0), "t", 0.0, r.x);
+        let ye = anim_expr(&component(&r.anim, 1), "t", 0.0, r.y);
+        let xpx = q(&format!("clip(({xe})*{w},0,{})", w - rw));
+        let ypx = q(&format!("clip(({ye})*{h},0,{})", h - rh));
+        let shape = shape_factor(&r.shape, r.feather, 0.0)
+            .map(|fac| format!(",format=yuva420p{}", alpha_geq(&fac)))
+            .unwrap_or_default();
+        let enable = format!("enable='between(t,{:.6},{:.6})'", v.start, v.end);
+        let src = format!("rg{k}_{j}");
+        if r.kind == "blur" {
+            let br = ((r.blur * h as f64).round() as i64).clamp(1, (rw.min(rh) / 2 - 1).max(1));
+            let _ = write!(
+                f,
+                "[{base}]split[{src}a][{src}b];[{src}b]crop=w={rw}:h={rh}:x={xpx}:y={ypx},boxblur=luma_radius={br}:luma_power=2:chroma_radius={br}:chroma_power=2{shape}[{src}c];[{src}a][{src}c]overlay=x={xpx}:y={ypx}:eval=frame:eof_action=pass:{enable}[{src}];"
+            );
+        } else {
+            let c = r.color.trim_start_matches('#');
+            let _ = write!(
+                f,
+                "color=c=0x{c}:s={rw}x{rh}:r={fps}:d={:.6},format=yuva420p{shape}[{src}c];[{base}][{src}c]overlay=x={xpx}:y={ypx}:eval=frame:eof_action=pass:{enable}[{src}];",
+                duration + 1.0
+            );
+        }
+        base = src;
+    }
+    base
+}
+
 pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -> AppResult<Graph> {
     let (w, h, fps, dur) = (
         plan.width as f64,
@@ -530,6 +722,67 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
 
         let mut layers: Vec<(String, String, String, bool)> = Vec::new();
         let mut fg_source = format!("[{idx}:v]{timing},");
+        // Shape masks are applied before scaling (relative coordinates survive any zoom).
+        let mask = shape_factor(&v.mask.shape, v.mask.feather, v.mask.radius)
+            .map(|f| format!("format=yuva420p{},", alpha_geq(&f)))
+            .unwrap_or_default();
+        if let Some(c) = &v.corners {
+            // Corner pin: the picture is stretched to the frame, then mapped onto the quad
+            // (sense=destination). Outside the quad the warp edge-extends, so a polygon
+            // mask of the same quad supplies the alpha.
+            let fps_f = fps as f64;
+            let tv_p = format!("(in/{fps_f:.6})");
+            let px = |i: usize, tv: &str| -> String {
+                let dim = if i % 2 == 0 { w } else { h };
+                let e = anim_expr(&component(&v.corners_anim, i), tv, v.start, c[i]);
+                format!("({e})*{dim:.6}")
+            };
+            let mut persp = String::from("perspective=");
+            for (i, name) in ["x0", "y0", "x1", "y1", "x2", "y2", "x3", "y3"]
+                .iter()
+                .enumerate()
+            {
+                let _ = write!(persp, "{name}={}:", q(&px(i, &tv_p)));
+            }
+            persp.push_str("sense=destination:eval=frame");
+            // Polygon TL → TR → BR → BL in geq (X, Y, T).
+            let pt = |i: usize| (px(2 * i, "T"), px(2 * i + 1, "T"));
+            let order = [0usize, 1, 3, 2];
+            let mut cross = Vec::new();
+            for e in 0..4 {
+                let (ax, ay) = pt(order[e]);
+                let (bx, by) = pt(order[(e + 1) % 4]);
+                cross.push(format!(
+                    "(({bx})-({ax}))*(Y-({ay}))-(({by})-({ay}))*(X-({ax}))"
+                ));
+            }
+            let all = |cmp: &str| {
+                cross
+                    .iter()
+                    .map(|c| format!("{cmp}({c},0)"))
+                    .collect::<Vec<_>>()
+                    .join("*")
+            };
+            let poly = format!("255*max({},{})", all("gte"), all("lte"));
+            let _ = write!(
+                f,
+                "{fg_source}{mask}scale={w}:{h}:flags=bicubic,format=yuv444p,{persp}[w{k}];color=c=black:s={w}x{h}:r={fps}:d={:.6},format=gray,geq=lum={},boxblur=luma_radius=1:luma_power=1[m{k}];[w{k}][m{k}]alphamerge,format=yuva420p{alpha},{shift}[l{k}];",
+                len + v.hold_start + v.hold_end + 1.0,
+                q(&poly)
+            );
+            layers.push((format!("l{k}"), "0".into(), "0".into(), false));
+            for (i, (label, l, t, dynamic)) in layers.into_iter().enumerate() {
+                let next = format!("b{k}_{i}");
+                let eval = if dynamic { ":eval=frame" } else { "" };
+                let _ = write!(
+                    f,
+                    "[{base}][{label}]overlay=x={l}:y={t}:eof_action=pass{eval}:{enable}[{next}];"
+                );
+                base = next;
+            }
+            base = post_item(&mut f, base, v, k, w as i64, h as i64, fps, plan.duration);
+            continue;
+        }
         if v.fit == "blur" {
             let (bw, bh, bl, bt) = placement("fill", sw, sh, w, h, 1.0, 0.0, 0.0);
             let _ = write!(
@@ -544,7 +797,7 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
             let (dw, dh, l, t) = placement(fit, sw, sh, w, h, v.scale, v.x, v.y);
             let _ = write!(
                 f,
-                "{fg_source}scale={dw}:{dh},format=yuva420p{alpha},{shift}[l{k}];"
+                "{fg_source}{mask}scale={dw}:{dh},format=yuva420p{alpha},{shift}[l{k}];"
             );
             layers.push((format!("l{k}"), l.to_string(), t.to_string(), false));
         } else {
@@ -575,7 +828,7 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
                     q(&format!("max(2,trunc({bh}*({s_expr})/2)*2)"))
                 )
             };
-            let _ = write!(f, "{fg_source}{chain}{alpha},{shift}[l{k}];");
+            let _ = write!(f, "{fg_source}{mask}{chain}{alpha},{shift}[l{k}];");
             let x_expr = format!(
                 "({})+({})",
                 anim_expr(x_anim, "t", 0.0, v.x),
@@ -598,6 +851,7 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
             );
             base = next;
         }
+        base = post_item(&mut f, base, v, k, w as i64, h as i64, fps, plan.duration);
     }
     let _ = write!(f, "[{base}]format=yuv420p[vout];");
 
@@ -666,7 +920,11 @@ pub fn build_graph(plan: &RenderPlan, source: &dyn Fn(&str) -> Option<Source>) -
     Ok(Graph { inputs, filter: f })
 }
 
-fn encoder_args(tools: &Tools, opts: &ExportOptions, fps: i64) -> AppResult<Vec<String>> {
+pub(crate) fn encoder_args(
+    tools: &Tools,
+    opts: &ExportOptions,
+    fps: i64,
+) -> AppResult<Vec<String>> {
     let has = |e: &str| tools.encoders.iter().any(|x| x == e);
     let kbps = opts.video_kbps.clamp(500, 200_000);
     let rate = |extra: &[&str]| {
@@ -1297,6 +1555,353 @@ mod tests {
 
     /// End-to-end with the real FFmpeg on PATH (skipped when absent): renders
     /// a 9:16 timeline from generated clips and validates the MP4.
+    /// Renders a plan to `out` with libx264 (test helper); returns false when ffmpeg is missing.
+    fn render_plan(
+        p: &RenderPlan,
+        src: &dyn Fn(&str) -> Option<Source>,
+        out: &Path,
+        secs: f64,
+    ) -> bool {
+        let Some(ffmpeg) = std::env::var_os("PATH").and_then(|p| {
+            std::env::split_paths(&p)
+                .map(|d| {
+                    d.join(if cfg!(windows) {
+                        "ffmpeg.exe"
+                    } else {
+                        "ffmpeg"
+                    })
+                })
+                .find(|f| f.is_file())
+        }) else {
+            eprintln!("ffmpeg not on PATH; skipping");
+            return false;
+        };
+        validate(p).unwrap();
+        let g = build_graph(p, src).unwrap();
+        let mut args: Vec<String> = ["-hide_banner", "-nostdin", "-y", "-loglevel", "error"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        args.extend(g.inputs.clone());
+        args.extend([
+            "-filter_complex".into(),
+            g.filter.clone(),
+            "-map".into(),
+            "[vout]".into(),
+        ]);
+        if g.filter.contains("[aout]") {
+            args.extend(["-map".into(), "[aout]".into()]);
+        }
+        args.extend(
+            [
+                "-c:v",
+                "libx264",
+                "-preset",
+                "ultrafast",
+                "-pix_fmt",
+                "yuv420p",
+                "-r",
+                &p.fps.to_string(),
+                "-t",
+                &format!("{secs}"),
+            ]
+            .iter()
+            .map(|s| s.to_string()),
+        );
+        args.push(out.to_string_lossy().into_owned());
+        let (ok, _, err) = run_tool(&ffmpeg, &args, Duration::from_secs(300)).unwrap();
+        assert!(ok, "{err}\n{}", g.filter);
+        true
+    }
+
+    fn gray_frame(file: &Path, t: f64) -> Vec<u8> {
+        let ffmpeg = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+            .map(|d| {
+                d.join(if cfg!(windows) {
+                    "ffmpeg.exe"
+                } else {
+                    "ffmpeg"
+                })
+            })
+            .find(|f| f.is_file())
+            .unwrap();
+        let out = file.with_extension(format!("{}.gray", (t * 1000.0) as i64));
+        let args: Vec<String> = [
+            "-y",
+            "-loglevel",
+            "error",
+            "-ss",
+            &format!("{t}"),
+            "-i",
+            file.to_str().unwrap(),
+            "-frames:v",
+            "1",
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "gray",
+            out.to_str().unwrap(),
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        assert!(run_tool(&ffmpeg, &args, Duration::from_secs(60)).unwrap().0);
+        std::fs::read(out).unwrap()
+    }
+
+    fn white_png(dir: &Path, w: u32, h: u32) -> PathBuf {
+        let ffmpeg = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+            .map(|d| {
+                d.join(if cfg!(windows) {
+                    "ffmpeg.exe"
+                } else {
+                    "ffmpeg"
+                })
+            })
+            .find(|f| f.is_file())
+            .unwrap();
+        let file = dir.join(format!("white{w}x{h}.png"));
+        let args: Vec<String> = [
+            "-y",
+            "-loglevel",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            &format!("color=c=white:s={w}x{h}:d=1"),
+            "-frames:v",
+            "1",
+            file.to_str().unwrap(),
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        assert!(run_tool(&ffmpeg, &args, Duration::from_secs(60)).unwrap().0);
+        file
+    }
+
+    fn image_item(media: &str, start: f64, end: f64) -> PlanVideo {
+        PlanVideo {
+            clip_id: media.into(),
+            media_id: media.into(),
+            kind: "image".into(),
+            start,
+            end,
+            src_out: end - start,
+            speed: 1.0,
+            opacity: 1.0,
+            fit: "fit".into(),
+            scale: 1.0,
+            ..Default::default()
+        }
+    }
+
+    fn one_image_plan(w: i64, h: i64, item: PlanVideo) -> RenderPlan {
+        RenderPlan {
+            width: w,
+            height: h,
+            fps: 30,
+            duration: item.end,
+            background: "#000000".into(),
+            video: vec![item],
+            audio: vec![],
+        }
+    }
+
+    #[test]
+    fn corner_pins_an_image_exactly_in_a_real_render() {
+        let dir = tempfile::tempdir().unwrap();
+        let png = white_png(dir.path(), 200, 100);
+        let (w, h) = (640i64, 360i64);
+        let mut it = image_item("w", 0.0, 2.0);
+        // Quad in frame fractions: TL, TR, BL, BR — a screen seen at an angle.
+        let quad = [0.15, 0.14, 0.78, 0.22, 0.19, 0.83, 0.75, 0.69];
+        it.corners = Some(quad.to_vec());
+        // It slides right by 0.1 over the second second.
+        let moved: Vec<f64> = quad
+            .iter()
+            .enumerate()
+            .map(|(i, v)| if i % 2 == 0 { v + 0.1 } else { *v })
+            .collect();
+        it.corners_anim = vec![
+            AnimVec {
+                t: 1.0,
+                v: quad.to_vec(),
+                ease: "linear".into(),
+            },
+            AnimVec {
+                t: 2.0,
+                v: moved.clone(),
+                ease: "linear".into(),
+            },
+        ];
+        let p = one_image_plan(w, h, it);
+        let src = |id: &str| {
+            (id == "w").then(|| Source {
+                path: png.clone(),
+                width: 200.0,
+                height: 100.0,
+                has_audio: false,
+            })
+        };
+        let out = dir.path().join("pin.mp4");
+        if !render_plan(&p, &src, &out, 2.0) {
+            return;
+        }
+        let px = |frame: &[u8], x: f64, y: f64| {
+            frame[((y * h as f64) as usize).min(h as usize - 1) * w as usize
+                + ((x * w as f64) as usize).min(w as usize - 1)]
+        };
+        let f0 = gray_frame(&out, 0.5);
+        // Inside near each corner (3 % inwards along the diagonal) is white, outside is black.
+        let cx = (quad[0] + quad[2] + quad[4] + quad[6]) / 4.0;
+        let cy = (quad[1] + quad[3] + quad[5] + quad[7]) / 4.0;
+        for i in 0..4 {
+            let (x, y) = (quad[2 * i], quad[2 * i + 1]);
+            let (ix, iy) = (x + (cx - x) * 0.06, y + (cy - y) * 0.06);
+            let (ox, oy) = (x - (cx - x) * 0.06, y - (cy - y) * 0.06);
+            assert!(
+                px(&f0, ix, iy) > 200,
+                "corner {i} inside {}",
+                px(&f0, ix, iy)
+            );
+            assert!(
+                px(&f0, ox, oy) < 40,
+                "corner {i} outside {}",
+                px(&f0, ox, oy)
+            );
+        }
+        assert!(px(&f0, cx, cy) > 200);
+        // At 1.5 s the quad has moved half way (+0.05): the old left edge is now black, the new one white.
+        let f1 = gray_frame(&out, 1.5);
+        assert!(
+            px(&f1, quad[0] + 0.02, cy) < 40,
+            "old left edge {}",
+            px(&f1, quad[0] + 0.02, cy)
+        );
+        assert!(
+            px(&f1, quad[0] + 0.05 + 0.03, cy) > 200,
+            "new left edge {}",
+            px(&f1, quad[0] + 0.08, cy)
+        );
+        assert!(
+            px(&f1, quad[2] + 0.05 + 0.03, 0.4) < 40 || px(&f1, quad[2] + 0.05 - 0.03, 0.4) > 200
+        );
+    }
+
+    #[test]
+    fn masks_and_regions_render_as_expected() {
+        let dir = tempfile::tempdir().unwrap();
+        let png = white_png(dir.path(), 320, 180);
+        let (w, h) = (640i64, 360i64);
+        let mut it = image_item("w", 0.0, 1.0);
+        it.mask = Mask {
+            shape: "ellipse".into(),
+            feather: 0.0,
+            radius: 0.1,
+        };
+        it.regions = vec![
+            PlanRegion {
+                id: "r1".into(),
+                kind: "color".into(),
+                shape: "rect".into(),
+                x: 0.4,
+                y: 0.4,
+                w: 0.2,
+                h: 0.2,
+                color: "#000000".into(),
+                blur: 0.03,
+                feather: 0.0,
+                anim: vec![],
+            },
+            PlanRegion {
+                id: "r2".into(),
+                kind: "blur".into(),
+                shape: "rect".into(),
+                x: 0.0,
+                y: 0.0,
+                w: 0.3,
+                h: 0.3,
+                color: "#000000".into(),
+                blur: 0.04,
+                feather: 0.0,
+                anim: vec![],
+            },
+        ];
+        let p = one_image_plan(w, h, it);
+        let src = |id: &str| {
+            (id == "w").then(|| Source {
+                path: png.clone(),
+                width: 320.0,
+                height: 180.0,
+                has_audio: false,
+            })
+        };
+        let out = dir.path().join("mask.mp4");
+        if !render_plan(&p, &src, &out, 1.0) {
+            return;
+        }
+        let f = gray_frame(&out, 0.5);
+        let px = |x: usize, y: usize| f[y * w as usize + x];
+        // Ellipse: the frame corners of the (full-frame) picture are transparent → black; the middle ring is white.
+        assert!(px(4, 4) < 40, "corner {}", px(4, 4));
+        assert!(px(320, 60) > 200, "top middle {}", px(320, 60));
+        // Cover box at the centre is black.
+        assert!(px(320, 180) < 20, "cover {}", px(320, 180));
+        // Blur region in the top-left: the ellipse edge inside it is now soft (a mid grey exists).
+        let soft = (0..108).any(|y| (0..192).any(|x| (60..200).contains(&px(x, y))));
+        assert!(soft, "no soft pixel in the blurred region");
+    }
+
+    #[test]
+    fn renders_4k_in_both_orientations() {
+        let dir = tempfile::tempdir().unwrap();
+        let png = white_png(dir.path(), 640, 360);
+        for (w, h) in [(3840i64, 2160i64), (2160i64, 3840i64)] {
+            let mut it = image_item("w", 0.0, 0.5);
+            it.fit = "fill".into();
+            let p = one_image_plan(w, h, it);
+            let src = |id: &str| {
+                (id == "w").then(|| Source {
+                    path: png.clone(),
+                    width: 640.0,
+                    height: 360.0,
+                    has_audio: false,
+                })
+            };
+            let out = dir.path().join(format!("uhd-{w}x{h}.mp4"));
+            if !render_plan(&p, &src, &out, 0.5) {
+                return;
+            }
+            let ffprobe = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+                .map(|d| {
+                    d.join(if cfg!(windows) {
+                        "ffprobe.exe"
+                    } else {
+                        "ffprobe"
+                    })
+                })
+                .find(|f| f.is_file())
+                .unwrap();
+            let tools = crate::editor::Tools {
+                ffmpeg: ffprobe.with_file_name(if cfg!(windows) {
+                    "ffmpeg.exe"
+                } else {
+                    "ffmpeg"
+                }),
+                ffprobe,
+                version: String::new(),
+                source: "path".into(),
+                encoders: vec!["libx264".into()],
+            };
+            let r = verify(&tools, &out, &p).unwrap();
+            assert_eq!((r.width, r.height), (w, h));
+            let f = gray_frame(&out, 0.2);
+            assert_eq!(f.len(), (w * h) as usize);
+            assert!(f[(h / 2 * w + w / 2) as usize] > 200);
+        }
+    }
+
     #[test]
     fn animates_zoom_and_dips_in_a_real_render() {
         let Some(ffmpeg) = std::env::var_os("PATH").and_then(|p| {

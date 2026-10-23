@@ -180,6 +180,8 @@ test.describe.serial("Video Editor Milestone A (real app, real FFmpeg, exported 
 
   test.afterAll(async () => {
     await kill()
+    const panics = join(dataDir, "panic.log")
+    if (existsSync(panics)) console.log("panic.log: " + readFileSync(panics, "utf8").slice(-4000))
     for (let i = 0; i < 20; i++) {
       try {
         rmSync(run, { recursive: true, force: true })
@@ -246,6 +248,8 @@ test.describe.serial("Video Editor Milestone A (real app, real FFmpeg, exported 
     await newProject("Zoom test")
     await importAndPlace("box.mp4")
     await clickClip(clips().first())
+    // Motion presets live in the inspector's Motion tab (also reachable through the "Zoom" quick action).
+    await page.getByTestId("qa-zoom").click()
     const motion = page.getByTestId("clip-motion")
     await motion.getByTestId("motion-preset").click()
     await page.getByRole("option", { name: "Smooth zoom in" }).click()

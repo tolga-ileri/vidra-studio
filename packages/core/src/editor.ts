@@ -71,6 +71,60 @@ const cropSchema = z
   .refine((c) => c.l + c.r < 0.95 && c.t + c.b < 0.95, "crop leaves no picture")
   .default({ l: 0, t: 0, r: 0, b: 0 })
 
+/** Corner pin: TL, TR, BL, BR as fractions of the frame (x0,y0,x1,y1,x2,y2,x3,y3). */
+export const cornersSchema = z.array(z.number().finite().min(-3).max(4)).length(8)
+export type Corners = z.infer<typeof cornersSchema>
+export const cornerKeyframeSchema = z.object({ s: z.number().finite().min(-1).max(24 * 3600), v: cornersSchema, ease: z.enum(EASES).default("linear") })
+export type CornerKeyframe = z.infer<typeof cornerKeyframeSchema>
+
+export const MASK_SHAPES = ["none", "ellipse", "roundRect"] as const
+export type MaskShape = (typeof MASK_SHAPES)[number]
+export const maskSchema = z
+  .object({
+    shape: z.enum(MASK_SHAPES).default("none"),
+    /** Soft edge as a fraction of the overlay size. */
+    feather: z.number().min(0).max(0.5).default(0),
+    /** Corner radius as a fraction of the shorter overlay side (roundRect). */
+    radius: z.number().min(0).max(0.5).default(0.1),
+  })
+  .default({ shape: "none", feather: 0, radius: 0.1 })
+export type Mask = z.infer<typeof maskSchema>
+
+export const REGION_KINDS = ["blur", "color"] as const
+export const REGION_SHAPES = ["rect", "ellipse"] as const
+/** A fix drawn over a clip: blurs or covers a rectangle / ellipse of the frame. */
+export const regionSchema = z.object({
+  id,
+  kind: z.enum(REGION_KINDS).default("blur"),
+  shape: z.enum(REGION_SHAPES).default("rect"),
+  /** Left / top / width / height as fractions of the frame. */
+  x: z.number().min(-1).max(2),
+  y: z.number().min(-1).max(2),
+  w: z.number().min(0.005).max(2),
+  h: z.number().min(0.005).max(2),
+  color: hex.default("#000000"),
+  /** Blur radius as a fraction of the frame height. */
+  blur: z.number().min(0.002).max(0.1).default(0.03),
+  feather: z.number().min(0).max(0.5).default(0),
+  /** Position keyframes (source time, like the clip's). */
+  keyframes: z.array(z.object({ s: z.number().finite().min(-1).max(24 * 3600), x: z.number().min(-1).max(2), y: z.number().min(-1).max(2), ease: z.enum(EASES).default("linear") })).max(500).default([]),
+})
+export type Region = z.infer<typeof regionSchema>
+
+export const REFRAME_MODES = ["off", "auto", "manual", "blur"] as const
+export const reframeSchema = z
+  .object({
+    mode: z.enum(REFRAME_MODES).default("off"),
+    /** Chosen subject id from the last analysis. */
+    subject: z.string().max(64).nullable().default(null),
+    /** How the last analysis went; shown to the user, never claimed when tracking failed. */
+    status: z.enum(["ok", "weak", "failed"]).nullable().default(null),
+    method: z.enum(["face", "motion", "none"]).nullable().default(null),
+  })
+  .default({ mode: "off", subject: null, status: null, method: null })
+export type Reframe = z.infer<typeof reframeSchema>
+
+
 export const editorMediaSchema = z.object({
   id,
   kind: z.enum(["video", "audio", "image"]),
@@ -125,6 +179,14 @@ export const clipSchema = z.object({
   /** Fractions of the source cut from each side (before fitting). */
   crop: cropSchema,
   keyframes: keyframesSchema,
+  /** Frame-blend motion blur while the clip moves (zoom / pan). */
+  motionBlur: z.boolean().default(false),
+  /** Corner pin: when set, the picture is mapped onto this quad instead of fit/scale/x/y. */
+  corners: cornersSchema.nullable().default(null),
+  cornerKeyframes: z.array(cornerKeyframeSchema).max(500).default([]),
+  mask: maskSchema,
+  regions: z.array(regionSchema).max(50).default([]),
+  reframe: reframeSchema,
   /** Transition at the clip start (from the previous adjacent clip, or from nothing). */
   transIn: transitionSchema.nullable().default(null),
   /** Transition at the clip end when no clip follows directly (fade out). */
@@ -344,6 +406,12 @@ export function placeMedia(p: EditorProject, mediaId: string, opts: PlaceOptions
     rotation: 0,
     crop: { l: 0, t: 0, r: 0, b: 0 },
     keyframes: {},
+    motionBlur: false,
+    corners: null,
+    cornerKeyframes: [],
+    mask: { shape: "none", feather: 0, radius: 0.1 },
+    regions: [],
+    reframe: { mode: "off", subject: null, status: null, method: null },
     transIn: null,
     transOut: null,
   }
@@ -547,7 +615,7 @@ export function canJoin(a: Clip, b: Clip): boolean {
     a.mediaId === b.mediaId &&
     Math.abs(clipEnd(a) - b.start) < 1e-3 &&
     Math.abs(a.out - b.in) < 1e-3 &&
-    (["speed", "volume", "muted", "opacity", "fit", "x", "y", "scale", "rotation", "crop"] as const).every(same) &&
+    (["speed", "volume", "muted", "opacity", "fit", "x", "y", "scale", "rotation", "crop", "corners", "mask", "regions", "motionBlur"] as const).every(same) &&
     !a.transOut &&
     !b.transIn
   )
@@ -832,6 +900,104 @@ export function applyMotion(p: EditorProject, clipId: string, m: MotionParams, f
   return updateClip(p, clipId, { keyframes })
 }
 
+/* ── Corner pin, masks and region fixes ──────────────────────────────── */
+
+/** Default quad: the picture as placed by fit/scale/x/y (so turning on the pin changes nothing). */
+export function defaultCorners(c: Clip, frame: { W: number; H: number; sw: number; sh: number }): Corners {
+  const q = placement(c.fit === "fill" ? "fill" : "fit", frame.sw, frame.sh, frame.W, frame.H, c.scale, c.x, c.y)
+  const l = q.left / frame.W
+  const t = q.top / frame.H
+  const r = (q.left + q.w) / frame.W
+  const b = (q.top + q.h) / frame.H
+  return [l, t, r, t, l, b, r, b]
+}
+
+export function setCorners(p: EditorProject, clipId: string, corners: Corners | null): EditorProject {
+  return updateClip(p, clipId, corners ? { corners } : { corners: null, cornerKeyframes: [] })
+}
+
+/** Current corner quad at timeline time `t` (keyframes win over the static quad). */
+export function cornersAt(c: Clip, t: number): Corners | null {
+  if (!c.corners) return null
+  const list = c.cornerKeyframes
+  if (!list.length) return c.corners
+  const tl = list.map((k) => ({ t: kfTimeline(c, k.s), v: k.v, ease: k.ease }))
+  return vecAt(tl, t)
+}
+
+/** Interpolates a vector animation (same easing rules as `animAt`). */
+export function vecAt(list: { t: number; v: number[]; ease: Ease }[], t: number): number[] {
+  const first = list[0]
+  if (!first) return []
+  if (t <= first.t) return first.v
+  for (let i = 0; i < list.length - 1; i++) {
+    const a = list[i]
+    const b = list[i + 1]
+    if (!a || !b) break
+    if (t < b.t) {
+      const u = ease(a.ease, (t - a.t) / Math.max(1e-6, b.t - a.t))
+      return a.v.map((av, j) => av + ((b.v[j] ?? av) - av) * u)
+    }
+  }
+  return list[list.length - 1]?.v ?? first.v
+}
+
+export function setCornerKeyframe(p: EditorProject, clipId: string, t: number, v: Corners, easeKind: Ease = "linear"): EditorProject {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c) return p
+  const s = kfSource(c, Math.min(Math.max(t, c.start), clipEnd(c)))
+  const list = [...c.cornerKeyframes.filter((k) => Math.abs(k.s - s) >= 1e-4), { s, v, ease: easeKind }].sort((a, b) => a.s - b.s)
+  return updateClip(p, clipId, { corners: c.corners ?? v, cornerKeyframes: list })
+}
+
+export function removeCornerKeyframe(p: EditorProject, clipId: string, index: number): EditorProject {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c?.cornerKeyframes[index]) return p
+  return updateClip(p, clipId, { cornerKeyframes: c.cornerKeyframes.filter((_, i) => i !== index) })
+}
+
+export function setMask(p: EditorProject, clipId: string, mask: Partial<Mask>): EditorProject {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c) return p
+  return updateClip(p, clipId, { mask: { ...c.mask, ...mask } })
+}
+
+export function addRegion(p: EditorProject, clipId: string, region: Partial<Omit<Region, "id">> = {}): { project: EditorProject; region: Region } {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c) throw new Error("Clip not found")
+  const r: Region = { id: newId("rgn"), kind: "blur", shape: "rect", x: 0.3, y: 0.3, w: 0.4, h: 0.4, color: "#000000", blur: 0.03, feather: 0, keyframes: [], ...region }
+  return { project: updateClip(p, clipId, { regions: [...c.regions, r] }), region: r }
+}
+
+export function updateRegion(p: EditorProject, clipId: string, regionId: string, patch: Partial<Omit<Region, "id">>): EditorProject {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c) return p
+  return updateClip(p, clipId, { regions: c.regions.map((r) => (r.id === regionId ? { ...r, ...patch } : r)) })
+}
+
+export function removeRegion(p: EditorProject, clipId: string, regionId: string): EditorProject {
+  const c = p.clips.find((x) => x.id === clipId)
+  if (!c) return p
+  return updateClip(p, clipId, { regions: c.regions.filter((r) => r.id !== regionId) })
+}
+
+/** Position of a region at timeline time `t`. */
+export function regionAt(c: Clip, r: Region, t: number): { x: number; y: number } {
+  if (!r.keyframes.length) return { x: r.x, y: r.y }
+  const list = r.keyframes.map((k) => ({ t: kfTimeline(c, k.s), v: [k.x, k.y], ease: k.ease }))
+  const [x = r.x, y = r.y] = vecAt(list, t)
+  return { x, y }
+}
+
+export function setRegionKeyframe(p: EditorProject, clipId: string, regionId: string, t: number, x: number, y: number): EditorProject {
+  const c = p.clips.find((q) => q.id === clipId)
+  const r = c?.regions.find((q) => q.id === regionId)
+  if (!c || !r) return p
+  const s = kfSource(c, Math.min(Math.max(t, c.start), clipEnd(c)))
+  const keyframes = [...r.keyframes.filter((k) => Math.abs(k.s - s) >= 1e-4), { s, x, y, ease: "linear" as const }].sort((a, b) => a.s - b.s)
+  return updateRegion(p, clipId, regionId, { keyframes })
+}
+
 /* ── Transitions ─────────────────────────────────────────────────────── */
 
 /** The clip that ends exactly where `c` starts on the same track, if any. */
@@ -929,6 +1095,28 @@ export interface PlanVideo {
   blur: number
   /** Wipe reveal ("in") or hide ("out") from left to right over [t0, t1]. */
   wipe: { t0: number; t1: number; mode: "in" | "out" } | null
+  /** Corner pin (fractions of the frame) and its keyframes (absolute times). */
+  corners: Corners | null
+  cornersAnim: { t: number; v: number[]; ease: Ease }[]
+  mask: Mask
+  motionBlur: boolean
+  /** Fixes drawn right after this item (blur / cover), in frame fractions. */
+  regions: PlanRegion[]
+}
+
+export interface PlanRegion {
+  id: string
+  kind: (typeof REGION_KINDS)[number]
+  shape: (typeof REGION_SHAPES)[number]
+  x: number
+  y: number
+  w: number
+  h: number
+  color: string
+  blur: number
+  feather: number
+  /** Position keyframes (absolute times). */
+  anim: { t: number; v: number[]; ease: Ease }[]
 }
 
 export interface PlanAudio {
@@ -1015,6 +1203,23 @@ export function renderPlan(p: EditorProject, size?: { width: number; height: num
         fades: [],
         blur: 0,
         wipe: null,
+        corners: c.corners,
+        cornersAnim: c.corners ? c.cornerKeyframes.map((k) => ({ t: kfTimeline(c, k.s), v: k.v, ease: k.ease })) : [],
+        mask: c.mask,
+        motionBlur: c.motionBlur,
+        regions: c.regions.map((r) => ({
+          id: r.id,
+          kind: r.kind,
+          shape: r.shape,
+          x: r.x,
+          y: r.y,
+          w: r.w,
+          h: r.h,
+          color: r.color,
+          blur: r.blur,
+          feather: r.feather,
+          anim: r.keyframes.map((k) => ({ t: kfTimeline(c, k.s), v: [k.x, k.y], ease: k.ease })),
+        })),
       }
       video.push(item)
       items.set(c.id, item)
@@ -1083,6 +1288,11 @@ export function renderPlan(p: EditorProject, size?: { width: number; height: num
     fades,
     blur: 0,
     wipe: null,
+    corners: null,
+    cornersAnim: [],
+    mask: { shape: "none", feather: 0, radius: 0.1 },
+    motionBlur: false,
+    regions: [],
   })
   const blurCopy = (it: PlanVideo, z: number, fades: PlanFade[], t0: number, t1: number): PlanVideo => ({
     ...it,
@@ -1096,6 +1306,7 @@ export function renderPlan(p: EditorProject, size?: { width: number; height: num
     holdEnd: 0,
     fades,
     blur: 0.025,
+    regions: [],
   })
   const incoming = (it: PlanVideo, kind: TransitionKind, t0: number, t1: number, color: string, extra: PlanVideo[]) => {
     const mid = (t0 + t1) / 2
@@ -1213,6 +1424,8 @@ export interface ItemState {
   /** Visible part from the left (wipe), 0..1. */
   revealFrom: number
   revealTo: number
+  /** Corner quad at `t` when the item is pinned. */
+  corners: Corners | null
 }
 
 /** The state the export renders for `item` at `t` (the preview draws exactly this). */
@@ -1234,7 +1447,15 @@ export function itemState(item: PlanVideo, t: number): ItemState {
     if (item.wipe.mode === "in") revealTo = u
     else revealFrom = u
   }
-  return { scale, x, y, rotation, opacity, revealFrom, revealTo }
+  const corners = item.corners ? (item.cornersAnim.length ? (vecAt(item.cornersAnim, t) as Corners) : item.corners) : null
+  return { scale, x, y, rotation, opacity, revealFrom, revealTo, corners }
+}
+
+/** Position of a plan region at `t`. */
+export function planRegionAt(r: PlanRegion, t: number): { x: number; y: number } {
+  if (!r.anim.length) return { x: r.x, y: r.y }
+  const [x = r.x, y = r.y] = vecAt(r.anim, t)
+  return { x, y }
 }
 
 /** Video items visible at time `t`, bottom first (used by the preview). */

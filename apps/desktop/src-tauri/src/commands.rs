@@ -472,6 +472,31 @@ pub async fn editor_thumbnails(
     blocking(move || crate::editor::thumbnails(&core, &project_id, &media_id, count)).await?
 }
 
+/// Smart Reframe analysis of a source range (offline face / motion tracking).
+#[tauri::command]
+pub async fn editor_analyze_subjects(
+    core: S<'_>,
+    project_id: String,
+    media_id: String,
+    from: f64,
+    to: f64,
+) -> AppResult<crate::editor_reframe::Analysis> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor_reframe::analyze(&core, &project_id, &media_id, from, to))
+        .await?
+}
+
+/// Preview proxy for large sources (created on first use; exports keep the original).
+#[tauri::command]
+pub async fn editor_proxy(
+    core: S<'_>,
+    project_id: String,
+    media_id: String,
+) -> AppResult<crate::editor_proxy::ProxyInfo> {
+    let core = core.inner().clone();
+    blocking(move || crate::editor_proxy::proxy(&core, &project_id, &media_id)).await?
+}
+
 #[tauri::command]
 pub async fn editor_waveform(
     core: S<'_>,
@@ -1187,6 +1212,8 @@ pub const COMMANDS: &[&str] = &[
     "editor_import_archive_asset",
     "editor_relink_media",
     "editor_thumbnails",
+    "editor_analyze_subjects",
+    "editor_proxy",
     "editor_waveform",
     "editor_save_project",
     "editor_open_project",

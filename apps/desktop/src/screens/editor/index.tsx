@@ -286,8 +286,14 @@ function Workspace({ project, tools }: { project: EditorProject; tools: EditorTo
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [safeArea, setSafeArea] = useState("none")
+  const exportSignal = useEditor((s) => s.exportSignal)
   const projectRef = useRef(project)
   projectRef.current = project
+
+  // Quick action "Export" from the inspector.
+  useEffect(() => {
+    if (exportSignal) setExporting(true)
+  }, [exportSignal])
 
   useEffect(() => {
     try {
@@ -455,7 +461,7 @@ function Workspace({ project, tools }: { project: EditorProject; tools: EditorTo
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["none", "reels", "tiktok", "shorts", "title"] as const).map((k) => (
+              {(["none", "reels", "tiktok", "shorts", "youtube", "title"] as const).map((k) => (
                 <SelectItem key={k} value={k}>
                   {t(`editor.safe.${k}`)}
                 </SelectItem>

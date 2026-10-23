@@ -868,6 +868,16 @@ export function createMockBackend(options: MockOptions = {}): MockBackend {
       if (!m || m.kind === "audio") return []
       return Array.from({ length: m.kind === "image" ? 1 : Math.min(count, 4) }, (_, i) => demoFrame(m.name, i + m.name.length, 160, 90))
     },
+    editorAnalyzeSubjects: async (_p, _m, from, to) => ({
+      method: "none" as const,
+      fps: 5,
+      from,
+      to,
+      frames: 0,
+      subjects: [],
+      warnings: ["No subject could be tracked. Choose a focus point or a blurred background instead."],
+    }),
+    editorProxy: async (_p, mediaId) => ({ mediaId, path: null, width: 0, height: 0 }),
     editorWaveform: async (_p, mediaId) => {
       const m = editorMedia.get(mediaId)
       if (!m?.hasAudio) return { perSec: 0, peaks: [] }

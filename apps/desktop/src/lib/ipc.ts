@@ -34,6 +34,7 @@ import type {
   StorageStats,
   StorageStatus,
   StoreEvent,
+  Analysis,
 } from "@vidra/core"
 
 /**
@@ -198,6 +199,14 @@ export interface EditorRecovery {
   file: string | null
 }
 
+export interface EditorProxyInfo {
+  mediaId: string
+  /** null when the source is small enough to preview directly. */
+  path: string | null
+  width: number
+  height: number
+}
+
 export interface EditorExportOptions {
   encoder: "auto" | "software" | "hardware"
   videoKbps: number
@@ -284,6 +293,9 @@ export const ipc = {
   editorThumbnails: (projectId: string, mediaId: string, count: number) =>
     call<string[]>("editor_thumbnails", { projectId, mediaId, count }),
   editorWaveform: (projectId: string, mediaId: string) => call<EditorWaveform>("editor_waveform", { projectId, mediaId }),
+  editorAnalyzeSubjects: (projectId: string, mediaId: string, from: number, to: number) =>
+    call<Analysis>("editor_analyze_subjects", { projectId, mediaId, from, to }),
+  editorProxy: (projectId: string, mediaId: string) => call<EditorProxyInfo>("editor_proxy", { projectId, mediaId }),
   editorSaveProject: (doc: EditorProject, saveAs: boolean) => call<SavedEditorProject | null>("editor_save_project", { doc, saveAs }),
   editorOpenProject: () => call<SavedEditorProject | null>("editor_open_project"),
   editorOpenRecent: (recentId: string) => call<SavedEditorProject>("editor_open_recent", { recentId }),

@@ -40,6 +40,8 @@ fn main() {
             "editor_import_archive_asset",
             "editor_relink_media",
             "editor_thumbnails",
+            "editor_analyze_subjects",
+            "editor_proxy",
             "editor_waveform",
             "editor_save_project",
             "editor_open_project",

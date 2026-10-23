@@ -1,40 +1,86 @@
 import { useEffect, useState } from "react"
-import { AlertTriangle, ClipboardCopy, ClipboardPaste, Diamond, Film, ImageIcon, Link2, Music, Plus, RotateCcw, Trash2, Upload, Wand2 } from "lucide-react"
+import {
+  AlertTriangle,
+  ClipboardCopy,
+  ClipboardPaste,
+  Crosshair,
+  Diamond,
+  Download,
+  Film,
+  Focus,
+  ImageIcon,
+  ImagePlus,
+  Link2,
+  Loader2,
+  Music,
+  Plus,
+  RotateCcw,
+  Scan,
+  Scissors,
+  Trash2,
+  Upload,
+  Wand2,
+  ZoomIn,
+} from "lucide-react"
 import { toast } from "sonner"
 import {
+  addMedia,
+  addRegion,
+  addTrack,
+  applyBlurFallback,
   applyMotion,
+  applyReframe,
   ASPECTS,
   clearKeyframes,
+  clearReframe,
   clipDuration,
   clipEnd,
   clipValueAt,
+  cornersAt,
+  defaultCorners,
   EASES,
   formatTimecode,
   kfTimeline,
+  MASK_SHAPES,
   motionDefaults,
   MOTION_PRESETS,
   nextAdjacent,
   pasteKeyframes,
   placeMedia,
   previousAdjacent,
+  REGION_KINDS,
+  REGION_SHAPES,
+  removeCornerKeyframe,
   removeKeyframe,
+  removeRegion,
+  sameAspect,
+  setCornerKeyframe,
+  setCorners,
   setFormat,
   setKeyframe,
   setKeyframeEase,
+  setMask,
+  setRegionKeyframe,
   setTransition,
+  splitAt,
   TRANSITIONS,
   updateClip,
-  type Ease,
-  type KfProp,
-  type MotionParams,
-  type MotionPreset,
-  type Transition,
-  type TransitionKind,
+  updateRegion,
+  type Analysis,
   type Aspect,
   type Clip,
+  type Ease,
   type EditorMedia,
   type EditorProject,
   type FitMode,
+  type KfProp,
+  type MaskShape,
+  type MotionParams,
+  type MotionPreset,
+  type Region,
+  type Subject,
+  type Transition,
+  type TransitionKind,
 } from "@vidra/core"
 
 import { Button } from "@/components/ui/button"
@@ -43,6 +89,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useI18n } from "@/i18n"
 import { api, fileSrc } from "@/lib/backend"
@@ -154,6 +201,7 @@ export function MediaPanel({ project, onImport, importing }: { project: EditorPr
           </ul>
         )}
         <p className="mt-3 px-1 text-[11px] leading-relaxed text-muted-foreground">{t("editor.media.hint")}</p>
+        <ProxyToggle project={project} />
         <TransitionLibrary />
       </div>
     </div>
@@ -262,6 +310,7 @@ function ProjectInspector({ project, count }: { project: EditorProject; count: n
         <p className="text-[11px] text-muted-foreground" data-testid="editor-frame-size">
           {s.width}×{s.height} · {t(`editor.aspectHint.${s.aspect}`)}
         </p>
+        <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.format.hint")}</p>
       </Row>
       <Row label={t("editor.insp.custom")}>
         <div className="grid grid-cols-2 gap-2">
@@ -306,6 +355,9 @@ function ClipInspector({ project, clip }: { project: EditorProject; clip: Clip }
   const visual = track?.kind === "video"
   const hasAudio = !!media?.hasAudio
   const len = clipDuration(clip)
+  const wantTab = useEditor((s) => s.inspectorTab)
+  const tab = !visual && wantTab !== "motion" ? "edit" : wantTab
+  const setTab = useEditor.getState().setInspectorTab
   return (
     <div className="space-y-4" data-testid="clip-inspector">
       <div>
@@ -318,6 +370,30 @@ function ClipInspector({ project, clip }: { project: EditorProject; clip: Clip }
           })}
         </p>
       </div>
+      {visual && media && <QuickActions project={project} clip={clip} media={media} />}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <TabsList className="flex w-full flex-wrap">
+          <TabsTrigger value="edit" className="flex-1 text-xs" data-testid="tab-edit">
+            {t("editor.tab.edit")}
+          </TabsTrigger>
+          <TabsTrigger value="motion" className="flex-1 text-xs" data-testid="tab-motion">
+            {t("editor.tab.motion")}
+          </TabsTrigger>
+          {visual && (
+            <>
+              <TabsTrigger value="reframe" className="flex-1 text-xs" data-testid="tab-reframe">
+                {t("editor.tab.reframe")}
+              </TabsTrigger>
+              <TabsTrigger value="overlay" className="flex-1 text-xs" data-testid="tab-overlay">
+                {t("editor.tab.overlay")}
+              </TabsTrigger>
+              <TabsTrigger value="transitions" className="flex-1 text-xs" data-testid="tab-transitions">
+                {t("editor.tab.transitions")}
+              </TabsTrigger>
+            </>
+          )}
+        </TabsList>
+        <TabsContent value="edit" className="space-y-4 pt-3">
       {hasAudio && (
         <fieldset className="space-y-3">
           <legend className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.insp.audio")}</legend>
@@ -436,9 +512,25 @@ function ClipInspector({ project, clip }: { project: EditorProject; clip: Clip }
           </div>
         </fieldset>
       )}
+        </TabsContent>
+        <TabsContent value="motion" className="space-y-4 pt-3">
       {visual && media && <MotionSection project={project} clip={clip} media={media} />}
       <KeyframeSection project={project} clip={clip} props={[...(visual ? (["scale", "x", "y", "rotation", "opacity"] as const) : []), ...(hasAudio ? (["gain"] as const) : [])]} />
+        </TabsContent>
+        {visual && media && (
+          <TabsContent value="reframe" className="space-y-4 pt-3">
+            <ReframeSection project={project} clip={clip} media={media} />
+          </TabsContent>
+        )}
+        {visual && media && (
+          <TabsContent value="overlay" className="space-y-4 pt-3">
+            <OverlaySection project={project} clip={clip} media={media} />
+          </TabsContent>
+        )}
+        <TabsContent value="transitions" className="space-y-4 pt-3">
       {visual && <TransitionSection project={project} clip={clip} />}
+        </TabsContent>
+      </Tabs>
       {media && !media.available && (
         <p className="flex items-center gap-1.5 text-xs text-destructive">
           <AlertTriangle className="size-3.5" />
@@ -797,5 +889,472 @@ function KeyframeSection({ project, clip, props }: { project: EditorProject; cli
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.kf.hint")}</p>
     </fieldset>
+  )
+}
+
+/* ── Proxies ───────────────────────────────────────────────────────────── */
+
+function ProxyToggle({ project }: { project: EditorProject }) {
+  const { t } = useI18n()
+  const useProxies = useEditor((s) => s.useProxies)
+  const proxies = useEditor((s) => s.proxies)
+  const setUseProxies = useEditor.getState().setUseProxies
+  const large = project.media.filter((m) => m.kind === "video" && Math.max(m.width ?? 0, m.height ?? 0) > 1920)
+  if (!large.length) return null
+  return (
+    <div className="mt-3 space-y-1.5 rounded-md border bg-black/20 p-2" data-testid="proxy-panel">
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="use-proxies" className="text-[11px] leading-snug text-muted-foreground">
+          {t("editor.proxy.on")}
+        </Label>
+        <Switch id="use-proxies" checked={useProxies} onCheckedChange={setUseProxies} data-testid="proxy-toggle" />
+      </div>
+      {large.map((m) => {
+        const px = proxies[m.id]
+        const ready = !!px?.path
+        return (
+          <p key={m.id} className="flex items-center gap-1 text-[10px] text-muted-foreground" data-testid="proxy-status" data-media-id={m.id} data-ready={ready}>
+            {!ready && px && px.width >= 0 && <Loader2 className="size-3 animate-spin" />}
+            {ready ? t("editor.proxy.ready", { name: m.name }) : t("editor.proxy.making", { name: m.name })}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ── Quick actions ─────────────────────────────────────────────────────── */
+
+/** The video track directly above the clip's track (created when there is none). */
+function trackAbove(p: EditorProject, clip: Clip): { project: EditorProject; trackId: string } {
+  const videos = p.tracks.filter((t) => t.kind === "video")
+  const i = videos.findIndex((t) => t.id === clip.trackId)
+  const above = videos[i - 1]
+  if (above) return { project: p, trackId: above.id }
+  const next = addTrack(p, "video")
+  const created = next.tracks.find((t) => t.kind === "video" && !p.tracks.some((o) => o.id === t.id))
+  if (!created) return { project: p, trackId: clip.trackId }
+  // Keep the new track above the clip's track in draw order.
+  const tracks = next.tracks.filter((t) => t.id !== created.id)
+  const at = tracks.findIndex((t) => t.id === clip.trackId)
+  tracks.splice(at, 0, created)
+  return { project: { ...next, tracks }, trackId: created.id }
+}
+
+/** Imports a file and places it over the clip at the playhead (overlay / picture-in-picture). */
+async function importOverlay(project: EditorProject, clip: Clip, kind: "image" | "video", pin: boolean, t: (k: never, v?: Record<string, string | number>) => string) {
+  const st = useEditor.getState()
+  const tr = t as (k: string) => string
+  try {
+    const r = await api.editorImportMedia(project.id)
+    if (!r) return
+    for (const f of r.failed) toast.error(f.name, { description: f.message })
+    const picked = r.media.find((m) => (kind === "image" ? m.kind === "image" : m.kind === "video")) ?? r.media.find((m) => m.kind !== "audio")
+    if (!picked) return
+    let createdId = ""
+    st.apply((p) => {
+      let next = addMedia(p, r.media)
+      const { project: q, trackId } = trackAbove(next, clip)
+      next = q
+      const start = Math.min(Math.max(st.playhead, clip.start), clipEnd(clip) - 0.1)
+      const placed = placeMedia(next, picked.id, { trackId, start })
+      createdId = placed.clip.id
+      next = placed.project
+      if (pin) {
+        const m = picked
+        const W = next.settings.width
+        const H = next.settings.height
+        const sw = m.width ?? W
+        const sh = m.height ?? H
+        next = setCorners(next, createdId, defaultCorners(placed.clip, { W, H, sw, sh }))
+      }
+      return next
+    })
+    if (createdId) {
+      st.select([createdId])
+      st.setInspectorTab("overlay")
+      if (pin) {
+        st.setEditMode("corners")
+        toast.info(tr("editor.quick.fixScreenHint"))
+      }
+    }
+  } catch (e) {
+    toastError(e)
+  }
+}
+
+function QuickActions({ project, clip, media }: { project: EditorProject; clip: Clip; media: EditorMedia }) {
+  const { t } = useI18n()
+  const st = useEditor.getState()
+  const isOverlay = project.tracks.filter((x) => x.kind === "video").findIndex((x) => x.id === clip.trackId) > 0
+  const Btn = ({ icon, label, onClick, testId }: { icon: React.ReactNode; label: string; onClick: () => void; testId: string }) => (
+    <Button size="sm" variant="outline" className="h-auto flex-col gap-1 px-1 py-1.5 text-[10px] leading-tight" onClick={onClick} data-testid={testId} title={label}>
+      {icon}
+      <span className="truncate">{label}</span>
+    </Button>
+  )
+  return (
+    <div className="space-y-1.5" data-testid="quick-actions">
+      <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.quick.title")}</p>
+      <div className="grid grid-cols-4 gap-1">
+        {media.kind === "video" && <Btn icon={<Scan />} label={t("editor.quick.reframe")} onClick={() => st.setInspectorTab("reframe")} testId="qa-reframe" />}
+        <Btn icon={<ZoomIn />} label={t("editor.quick.zoom")} onClick={() => st.setInspectorTab("motion")} testId="qa-zoom" />
+        <Btn icon={<Scissors />} label={t("editor.quick.cut")} onClick={() => st.apply((p) => splitAt(p, st.playhead, [clip.id]).project)} testId="qa-cut" />
+        <Btn icon={<Download />} label={t("editor.quick.export")} onClick={() => st.requestExport()} testId="qa-export" />
+        <Btn icon={<ImagePlus />} label={t("editor.quick.addImage")} onClick={() => void importOverlay(project, clip, "image", false, t)} testId="qa-add-image" />
+        <Btn icon={<Film />} label={t("editor.quick.addVideo")} onClick={() => void importOverlay(project, clip, "video", false, t)} testId="qa-add-video" />
+        <Btn icon={<Crosshair />} label={t("editor.quick.fixScreen")} onClick={() => void importOverlay(project, clip, "image", true, t)} testId="qa-fix-screen" />
+        <Btn
+          icon={<Focus />}
+          label={t("editor.quick.blur")}
+          onClick={() => {
+            let id = ""
+            st.apply((p) => {
+              const r = addRegion(p, clip.id, { kind: "blur" })
+              id = r.region.id
+              return r.project
+            })
+            st.setInspectorTab("overlay")
+            st.setEditMode("region", id)
+          }}
+          testId="qa-blur"
+        />
+        {isOverlay && (
+          <Btn
+            icon={<Crosshair />}
+            label={t("editor.quick.align")}
+            onClick={() => {
+              if (!clip.corners) {
+                const W = project.settings.width
+                const H = project.settings.height
+                st.apply((p) => setCorners(p, clip.id, defaultCorners(clip, { W, H, sw: media.width ?? W, sh: media.height ?? H })))
+              }
+              st.setInspectorTab("overlay")
+              st.setEditMode("corners")
+            }}
+            testId="qa-align"
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Smart Reframe ─────────────────────────────────────────────────────── */
+
+function ReframeSection({ project, clip, media }: { project: EditorProject; clip: Clip; media: EditorMedia }) {
+  const { t } = useI18n()
+  const { apply, setAnalysis, setAnalyzing, setEditMode } = useEditor.getState()
+  const analysis = useEditor((s) => s.analyses[clip.id])
+  const analyzing = useEditor((s) => s.analyzing === clip.id)
+  const editMode = useEditor((s) => s.editMode)
+  const W = project.settings.width
+  const H = project.settings.height
+  const sw = (media.width ?? W) * (1 - clip.crop.l - clip.crop.r)
+  const sh = (media.height ?? H) * (1 - clip.crop.t - clip.crop.b)
+  const frame = { W, H, sw, sh }
+  const same = sameAspect(frame)
+  const run = async () => {
+    setAnalyzing(clip.id)
+    try {
+      const a = await api.editorAnalyzeSubjects(project.id, media.id, clip.in, clip.out)
+      setAnalysis(clip.id, a)
+      for (const w of a.warnings) toast.warning(w)
+    } catch (e) {
+      toastError(e)
+    } finally {
+      setAnalyzing(null)
+    }
+  }
+  const follow = (s: Subject, a: Analysis) => apply((p) => applyReframe(p, clip.id, s, frame, a))
+  const mode = clip.reframe.mode
+  return (
+    <fieldset className="space-y-3" data-testid="reframe-section">
+      <legend className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.reframe.title")}</legend>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.reframe.intro")}</p>
+      {media.kind !== "video" && <p className="text-[11px] text-muted-foreground">{t("editor.reframe.notVideo")}</p>}
+      {same && <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 text-[11px] leading-relaxed" data-testid="reframe-same-aspect">{t("editor.reframe.sameAspect")}</p>}
+      {mode !== "off" && (
+        <div className="space-y-1 rounded-md border bg-black/20 p-2 text-[11px]" data-testid="reframe-status" data-mode={mode} data-status={clip.reframe.status ?? ""}>
+          <p className="font-medium">{t(`editor.reframe.mode.${mode}`)}</p>
+          {mode === "auto" && clip.reframe.status && <p className={cn("leading-relaxed", clip.reframe.status === "ok" ? "text-muted-foreground" : "text-warning")}>{t(`editor.reframe.status.${clip.reframe.status}`)}</p>}
+          {mode === "auto" && clip.reframe.method && <p className="text-muted-foreground">{t(`editor.reframe.method.${clip.reframe.method}`)}</p>}
+          {mode === "auto" && <p className="text-muted-foreground">{t("editor.reframe.editHint")}</p>}
+        </div>
+      )}
+      {media.kind === "video" && !same && (
+        <Button size="sm" className="w-full" onClick={() => void run()} disabled={analyzing} data-testid="reframe-analyze">
+          {analyzing ? <Loader2 className="animate-spin" /> : <Scan />}
+          {analyzing ? t("editor.reframe.analyzing") : t("editor.reframe.analyze")}
+        </Button>
+      )}
+      {analysis && !same && (
+        <div className="space-y-2" data-testid="reframe-result" data-method={analysis.method}>
+          <p className={cn("text-[11px] leading-relaxed", analysis.method === "none" ? "text-warning" : "text-muted-foreground")}>{t(`editor.reframe.method.${analysis.method as "face" | "motion" | "none"}`)}</p>
+          {analysis.subjects.length > 0 && <p className="text-[11px] font-medium">{t("editor.reframe.subjects")}</p>}
+          {analysis.subjects.map((s, i) => (
+            <div key={s.id} className={cn("flex items-center gap-2 rounded-md border p-1.5 text-[11px]", clip.reframe.subject === s.id && "border-sky-400/60 bg-sky-500/10")} data-testid="reframe-subject">
+              <span className="min-w-0 flex-1 truncate">{t("editor.reframe.subject", { n: i + 1, pct: Math.round(s.coverage * 100) })}</span>
+              <Button size="xs" onClick={() => follow(s, analysis)} data-testid="reframe-follow">
+                {t("editor.reframe.apply")}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+      {!same && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-medium">{t("editor.reframe.fallbacks")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            <Button size="xs" variant={editMode === "focus" ? "secondary" : "outline"} onClick={() => setEditMode(editMode === "focus" ? "none" : "focus")} data-testid="reframe-focus">
+              <Crosshair />
+              {t("editor.reframe.focus")}
+            </Button>
+            <Button size="xs" variant="outline" onClick={() => apply((p) => applyBlurFallback(p, clip.id))} data-testid="reframe-blur">
+              {t("editor.reframe.blur")}
+            </Button>
+            {mode !== "off" && (
+              <Button size="xs" variant="ghost" onClick={() => apply((p) => clearReframe(p, clip.id))} data-testid="reframe-clear">
+                <RotateCcw />
+                {t("editor.reframe.clear")}
+              </Button>
+            )}
+          </div>
+          {editMode === "focus" && <p className="text-[11px] text-muted-foreground">{t("editor.reframe.focusHint")}</p>}
+        </div>
+      )}
+    </fieldset>
+  )
+}
+
+/* ── Overlay: corner pin, masks, region fixes ──────────────────────────── */
+
+function OverlaySection({ project, clip, media }: { project: EditorProject; clip: Clip; media: EditorMedia }) {
+  const { t } = useI18n()
+  const { apply, setEditMode } = useEditor.getState()
+  const editMode = useEditor((s) => s.editMode)
+  const activeRegion = useEditor((s) => s.activeRegion)
+  const playhead = useEditor((s) => s.playhead)
+  const fps = project.settings.fps
+  const W = project.settings.width
+  const H = project.settings.height
+  const frame = { W, H, sw: (media.width ?? W) * (1 - clip.crop.l - clip.crop.r), sh: (media.height ?? H) * (1 - clip.crop.t - clip.crop.b) }
+  const quad = cornersAt(clip, playhead)
+  const pinned = !!clip.corners
+  const addRgn = (kind: "blur" | "color") => {
+    let id = ""
+    apply((p) => {
+      const r = addRegion(p, clip.id, { kind })
+      id = r.region.id
+      return r.project
+    })
+    setEditMode("region", id)
+  }
+  return (
+    <div className="space-y-4" data-testid="overlay-section">
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.overlay.intro")}</p>
+      <fieldset className="space-y-2">
+        <legend className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.overlay.pin")}</legend>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="pin-on" className="text-[11px] text-muted-foreground">
+            {pinned ? t("editor.overlay.pinOff") : t("editor.overlay.pinOn")}
+          </Label>
+          <Switch
+            id="pin-on"
+            checked={pinned}
+            onCheckedChange={(v) => {
+              apply((p) => setCorners(p, clip.id, v ? defaultCorners(clip, frame) : null))
+              if (!v && editMode === "corners") setEditMode("none")
+            }}
+            data-testid="pin-toggle"
+          />
+        </div>
+        {pinned && quad && (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              <Button size="xs" variant={editMode === "corners" ? "secondary" : "outline"} onClick={() => setEditMode(editMode === "corners" ? "none" : "corners")} data-testid="pin-edit">
+                <Crosshair />
+                {editMode === "corners" ? t("editor.overlay.pinDone") : t("editor.overlay.pinEdit")}
+              </Button>
+              <Button size="xs" variant="ghost" onClick={() => apply((p) => setCorners(p, clip.id, defaultCorners(clip, frame)))} data-testid="pin-reset">
+                <RotateCcw />
+                {t("editor.overlay.pinReset")}
+              </Button>
+              <Button size="xs" variant="outline" onClick={() => apply((p) => setCornerKeyframe(p, clip.id, playhead, quad))} data-testid="pin-keyframe">
+                <Diamond />
+                {t("editor.overlay.pinKf")}
+              </Button>
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="space-y-0.5">
+                  <p className="text-[10px] text-muted-foreground">{t("editor.overlay.corner", { n: i + 1 })}</p>
+                  {[0, 1].map((k) => (
+                    <Num
+                      key={k}
+                      id={`corner-${i}-${k}`}
+                      value={Math.round((quad[i * 2 + k] ?? 0) * 1000) / 10}
+                      min={-300}
+                      max={400}
+                      step={0.1}
+                      onCommit={(v) => {
+                        const next = [...quad] as typeof quad
+                        next[i * 2 + k] = v / 100
+                        apply((p) => (clip.cornerKeyframes.length ? setCornerKeyframe(p, clip.id, playhead, next) : setCorners(p, clip.id, next)))
+                      }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+            {clip.cornerKeyframes.length > 0 && (
+              <ul className="space-y-1 rounded-md border bg-black/20 p-1.5" data-testid="pin-keyframes">
+                <li className="text-[10px] text-muted-foreground">{t("editor.overlay.pinKfs")}</li>
+                {clip.cornerKeyframes.map((k, i) => (
+                  <li key={`${k.s}-${i}`} className="flex items-center gap-1.5 text-[11px] tabular-nums">
+                    <button type="button" className="flex-1 text-left font-mono hover:underline" onClick={() => useEditor.getState().setPlayhead(kfTimeline(clip, k.s))}>
+                      {formatTimecode(kfTimeline(clip, k.s), fps)}
+                    </button>
+                    <Button size="icon-xs" variant="ghost" aria-label={t("editor.kf.delete")} onClick={() => apply((p) => removeCornerKeyframe(p, clip.id, i))}>
+                      <Trash2 />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="text-[11px] leading-relaxed text-muted-foreground">{t("editor.overlay.pinHint")}</p>
+          </>
+        )}
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <legend className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.overlay.mask")}</legend>
+        <Select value={clip.mask.shape} onValueChange={(v) => apply((p) => setMask(p, clip.id, { shape: v as MaskShape }))}>
+          <SelectTrigger size="sm" className="w-full" data-testid="mask-shape">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MASK_SHAPES.map((m) => (
+              <SelectItem key={m} value={m}>
+                {t(`editor.overlay.maskShape.${m}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {clip.mask.shape !== "none" && (
+          <div className="grid grid-cols-2 gap-2">
+            <Row label={t("editor.overlay.feather")} htmlFor="mask-feather">
+              <Num id="mask-feather" value={Math.round(clip.mask.feather * 100)} min={0} max={50} step={1} onCommit={(v) => apply((p) => setMask(p, clip.id, { feather: v / 100 }))} />
+            </Row>
+            {clip.mask.shape === "roundRect" && (
+              <Row label={t("editor.overlay.radius")} htmlFor="mask-radius">
+                <Num id="mask-radius" value={Math.round(clip.mask.radius * 100)} min={0} max={50} step={1} onCommit={(v) => apply((p) => setMask(p, clip.id, { radius: v / 100 }))} />
+              </Row>
+            )}
+          </div>
+        )}
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <legend className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{t("editor.overlay.regions")}</legend>
+        <div className="flex gap-1.5">
+          <Button size="xs" variant="outline" onClick={() => addRgn("blur")} data-testid="region-add-blur">
+            <Plus />
+            {t("editor.overlay.addBlur")}
+          </Button>
+          <Button size="xs" variant="outline" onClick={() => addRgn("color")} data-testid="region-add-color">
+            <Plus />
+            {t("editor.overlay.addCover")}
+          </Button>
+        </div>
+        {clip.regions.map((r, i) => (
+          <RegionEditor key={r.id} clip={clip} region={r} index={i} active={activeRegion === r.id && editMode === "region"} />
+        ))}
+      </fieldset>
+
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor="motion-blur" className="text-[11px] leading-snug text-muted-foreground">
+          {t("editor.overlay.motionBlur")}
+        </Label>
+        <Switch id="motion-blur" checked={clip.motionBlur} onCheckedChange={(v) => apply((p) => updateClip(p, clip.id, { motionBlur: v }))} data-testid="motion-blur" />
+      </div>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        <span className="font-medium">{t("editor.overlay.pip")}: </span>
+        {t("editor.overlay.pipHint")}
+      </p>
+    </div>
+  )
+}
+
+function RegionEditor({ clip, region: r, index, active }: { clip: Clip; region: Region; index: number; active: boolean }) {
+  const { t } = useI18n()
+  const { apply, setEditMode } = useEditor.getState()
+  const playhead = useEditor((s) => s.playhead)
+  const set = (patch: Partial<Omit<Region, "id">>) => apply((p) => updateRegion(p, clip.id, r.id, patch))
+  return (
+    <div className={cn("space-y-1.5 rounded-md border p-2", active && "border-amber-400/60 bg-amber-500/5")} data-testid="region-item" data-region-id={r.id}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[11px] font-medium">{t("editor.overlay.region", { n: index + 1 })}</span>
+        <Select value={r.kind} onValueChange={(v) => set({ kind: v as Region["kind"] })}>
+          <SelectTrigger size="sm" className="h-7 flex-1 text-[11px]" data-testid="region-kind">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {REGION_KINDS.map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`editor.overlay.regionKind.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={r.shape} onValueChange={(v) => set({ shape: v as Region["shape"] })}>
+          <SelectTrigger size="sm" className="h-7 flex-1 text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {REGION_SHAPES.map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`editor.overlay.regionShape.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button size="icon-xs" variant="ghost" aria-label={t("common.delete")} onClick={() => apply((p) => removeRegion(p, clip.id, r.id))} data-testid="region-delete">
+          <Trash2 />
+        </Button>
+      </div>
+      <Row label={t("editor.overlay.regionBox")}>
+        <div className="grid grid-cols-4 gap-1">
+          {(["x", "y", "w", "h"] as const).map((k) => (
+            <Num key={k} id={`region-${r.id}-${k}`} value={Math.round(r[k] * 100)} min={k === "w" || k === "h" ? 1 : -100} max={200} step={1} onCommit={(v) => set({ [k]: v / 100 })} />
+          ))}
+        </div>
+      </Row>
+      <div className="grid grid-cols-2 gap-2">
+        {r.kind === "blur" ? (
+          <Row label={t("editor.overlay.regionStrength")} htmlFor={`region-${r.id}-blur`}>
+            <Num id={`region-${r.id}-blur`} value={Math.round(r.blur * 1000) / 10} min={0.2} max={10} step={0.1} onCommit={(v) => set({ blur: v / 100 })} />
+          </Row>
+        ) : (
+          <Row label={t("editor.tr.color")} htmlFor={`region-${r.id}-color`}>
+            <input id={`region-${r.id}-color`} type="color" value={r.color} onChange={(e) => set({ color: e.target.value })} className="h-7 w-14 cursor-pointer rounded border bg-transparent" />
+          </Row>
+        )}
+        <Row label={t("editor.overlay.feather")} htmlFor={`region-${r.id}-feather`}>
+          <Num id={`region-${r.id}-feather`} value={Math.round(r.feather * 100)} min={0} max={50} step={1} onCommit={(v) => set({ feather: v / 100 })} />
+        </Row>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Button size="xs" variant={active ? "secondary" : "outline"} onClick={() => setEditMode(active ? "none" : "region", r.id)} data-testid="region-edit">
+          <Crosshair />
+          {t("editor.overlay.regionEdit")}
+        </Button>
+        <Button size="xs" variant="outline" onClick={() => apply((p) => setRegionKeyframe(p, clip.id, r.id, playhead, r.x, r.y))} data-testid="region-keyframe">
+          <Diamond />
+          {t("editor.overlay.regionKf")}
+          {r.keyframes.length > 0 && ` (${r.keyframes.length})`}
+        </Button>
+      </div>
+    </div>
   )
 }
