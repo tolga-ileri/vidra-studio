@@ -77,7 +77,7 @@ impl EditorState {
         Ok((PathBuf::from(&m.path), m.clone()))
     }
 
-    fn register(&self, project_id: &str, media: &[MediaInfo]) {
+    pub(crate) fn register(&self, project_id: &str, media: &[MediaInfo]) {
         let mut s = self.sessions.lock().unwrap_or_else(|p| p.into_inner());
         let session = s.entry(project_id.to_string()).or_default();
         for m in media {
@@ -588,7 +588,7 @@ pub fn cache_dir(core: &Core) -> PathBuf {
     core.data_dir.join("editor-cache")
 }
 
-fn cache_key(info: &MediaInfo) -> String {
+pub(crate) fn cache_key(info: &MediaInfo) -> String {
     let mtime = std::fs::metadata(&info.path)
         .and_then(|m| m.modified())
         .ok()

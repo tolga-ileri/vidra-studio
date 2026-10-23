@@ -29,3 +29,7 @@ it can connect to. It does not use their logos and makes no claim of
 affiliation, endorsement or sponsorship.
 
 The Vidra Studio name and mark (`branding/`) are original to this project.
+
+## Bundled third-party components
+
+- **SeetaFace Detection model** (`apps/desktop/src-tauri/models/seeta_fd_frontal_v1.0.bin`) and the `rustface` crate — Copyright (c) 2016 VIPL, Institute of Computing Technology, Chinese Academy of Sciences; Rust port by the rustface authors. BSD-2-Clause; the licence text is in `apps/desktop/src-tauri/models/LICENSE-SeetaFace.txt`. Used for offline face detection in Smart Reframe. No images or data leave the computer.

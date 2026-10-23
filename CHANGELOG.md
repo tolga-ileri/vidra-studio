@@ -21,10 +21,22 @@ All notable changes to this project are documented here. The format follows
 
 - Reopening the export dialog after a finished export showed the old result instead of a fresh export form.
 
+- **Video Editor Phase 2 — Milestone B** (Smart Reframe, overlays, professional export):
+  - **Smart Reframe**: finds the main person in a clip and keeps them in the frame when the project is narrower than the source (16:9 → 9:16 Reels/Shorts). Faces are detected with the SeetaFace cascade (rustface, BSD-2, bundled; no download, no network); when no face is visible the moving area is followed instead. Several people are listed and one can be chosen. The result is smooth X/Y keyframes you can edit by hand. When tracking is weak or fails the app says so and offers a focus point (click on the preview) or a blurred background. A source that already has the frame's aspect ratio is left untouched.
+  - **Overlays / screen replacement**: images (PNG, JPEG, WebP) and videos (MP4, WebM…) as layers with size, position, rotation, opacity and keyframes; picture-in-picture with or without sound. **Corner pin** maps an overlay onto four draggable corners (a laptop, monitor, phone or tablet screen at an angle), with corner keyframes to follow a moving screen. Shape masks (ellipse, rounded rectangle) with a soft edge. **Blur / cover areas**: blur a rectangle or ellipse of the frame, or cover it with a solid colour, with position keyframes.
+  - **Quick actions** on a selected clip: Smart Reframe, Zoom, Cut, Export, Add image, Add video, Fix screen (import + corner pin in one step), Blur area, Align overlay.
+  - **Export**: platform targets (Reels, Stories, TikTok, Shorts, YouTube 1080p/4K, Instagram feed, custom), 24/25/30/60 fps, automatic or custom bitrate, software/hardware encoder, estimated file size, a warning when the project's aspect differs from the platform's (with a one-click conversion), and an honest note when exporting above the sources' resolution (upscaling adds no detail). 3840×2160 and 2160×3840 H.264 exports are validated with FFprobe.
+  - **Proxies**: sources above 1080p preview through 720p proxies (made once, cached); exports always read the originals. A switch turns proxies off.
+  - **Motion blur** (frame blend) for zoom / pan, export only.
+  - Safe-area guide for YouTube; one-click format conversion keeps every edit.
+  - A crash log (`panic.log` in the app data folder) records unexpected failures.
+
 ### Known limitations
 
-- Motion blur for zoom/pan is not implemented yet.
-- The crop is static; it cannot be keyframed yet. Reframing animation arrives with Smart Reframe (Milestone B).
+- Face detection is frontal-only (SeetaFace); side views fall back to motion tracking, which the app reports. Tracking quality on real footage should be checked in the preview.
+- Motion blur is a frame blend and is not shown in the preview.
+- Rounded-rectangle feather and rectangular region feather are export-only; the preview shows a hard edge for those two cases.
+- Region size is static (position can be keyframed).
 
 ## [0.3.0] - 2026-10-18
 

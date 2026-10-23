@@ -11,6 +11,8 @@ pub mod db;
 pub mod downloads;
 pub mod e2e;
 pub mod editor;
+mod editor_proxy;
+mod editor_reframe;
 mod editor_render;
 pub mod error;
 pub mod jobs;
@@ -121,6 +123,27 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
             let root_default = default_root(&handle);
+            // Crash log: panics are appended to <app data>/panic.log so a failure
+            // leaves a trace even when no console is attached.
+            if let Ok(dir) = handle.path().app_data_dir() {
+                let dir = std::env::var_os("VIDRA_E2E_DATA_DIR")
+                    .map(std::path::PathBuf::from)
+                    .unwrap_or(dir);
+                let file = dir.join("panic.log");
+                let previous = std::panic::take_hook();
+                std::panic::set_hook(Box::new(move |info| {
+                    use std::io::Write as _;
+                    let _ = std::fs::create_dir_all(file.parent().unwrap_or(&file));
+                    if let Ok(mut f) = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(&file)
+                    {
+                        let _ = writeln!(f, "{} {info}", crate::types::now_ms());
+                    }
+                    previous(info);
+                }));
+            }
             if std::env::args().any(|a| a == "--smoke-test") {
                 let result = smoke_test(&std::env::temp_dir().join("vidra-smoke-root"));
                 println!("{result}");
@@ -237,6 +260,8 @@ pub fn run() {
             commands::editor_import_archive_asset,
             commands::editor_relink_media,
             commands::editor_thumbnails,
+            commands::editor_analyze_subjects,
+            commands::editor_proxy,
             commands::editor_waveform,
             commands::editor_save_project,
             commands::editor_open_project,
